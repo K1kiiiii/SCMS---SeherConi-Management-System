@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.MainController" prefWidth="800" prefHeight="600">
+    <top>
+        <HBox spacing="10" styleClass="top-bar" prefHeight="40" alignment="CENTER_LEFT">
+            <children>
+                <Label text="SCMS Dashboard" styleClass="top-title"/>
+            </children>
+        </HBox>
+    </top>
+    <center>
+        <StackPane>
+            <children>
+                <Label fx:id="welcomeLabel"/>
+            </children>
+        </StackPane>
+    </center>
+</BorderPane>

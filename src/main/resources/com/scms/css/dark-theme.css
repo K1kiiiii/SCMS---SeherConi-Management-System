@@ -1,0 +1,53 @@
+.root {
+    -fx-font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    -fx-background-color: #121212;
+    -fx-text-fill: #e0e0e0;
+}
+
+.app-title {
+    -fx-font-size: 28px;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+}
+
+.app-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #bdbdbd;
+    -fx-padding: 0 0 16 0;
+}
+
+.text-field, .password-field {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-color: #2a2a2a;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.button {
+    -fx-background-color: linear-gradient(#2a2a2a, #3a3a3a);
+    -fx-text-fill: #eaeaea;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 6;
+}
+
+.top-bar {
+    -fx-background-color: #1a1a1a;
+    -fx-padding: 8 12 8 12;
+}
+
+.top-title {
+    -fx-text-fill: #e8e8e8;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.label-small {
+    -fx-text-fill: #cfcfcf;
+    -fx-font-size: 11px;
+}
+
+.message-label {
+    -fx-text-fill: #f44336;
+    -fx-font-size: 11px;
+}
