@@ -8,8 +8,19 @@ public class DatabaseConfig {
     private static final String HOST = "localhost";
     private static final int PORT = 3306;
     private static final String DB_NAME = "scms_db";
-    private static final String USER = "root";
-    private static final String PASS = "12345";
+
+    // Allow overriding DB credentials via environment variables to avoid committing secrets
+    private static final String DEFAULT_USER = "root";
+    private static final String DEFAULT_PASS = "Auth_*#13wow"; // fallback; prefer env var
+    private static final String USER;
+    private static final String PASS;
+
+    static {
+        String envUser = System.getenv("SCMS_DB_USER");
+        String envPass = System.getenv("SCMS_DB_PASS");
+        USER = (envUser != null && !envUser.isBlank()) ? envUser : DEFAULT_USER;
+        PASS = (envPass != null) ? envPass : DEFAULT_PASS;
+    }
 
     private static final String BASE_URL = "jdbc:mysql://" + HOST + ":" + PORT + "/?serverTimezone=UTC&allowPublicKeyRetrieval=true";
 
@@ -70,6 +81,28 @@ public class DatabaseConfig {
                     ) ENGINE=InnoDB;
                     """);
 
+                // recipes and recipe_items
+                st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS recipes (
+                      id INT AUTO_INCREMENT PRIMARY KEY,
+                      name VARCHAR(150) NOT NULL,
+                      description TEXT,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    ) ENGINE=InnoDB;
+                    """);
+
+                st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS recipe_items (
+                      id INT AUTO_INCREMENT PRIMARY KEY,
+                      recipe_id INT NOT NULL,
+                      material_id INT NOT NULL,
+                      quantity DOUBLE,
+                      unit VARCHAR(30),
+                      FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+                      FOREIGN KEY (material_id) REFERENCES materials(id)
+                    ) ENGINE=InnoDB;
+                    """);
+
                 // Insert default roles if not present
                 st.executeUpdate("INSERT IGNORE INTO roles (name, description) VALUES ('admin','Administrator'),('worker','Worker'),('storekeeper','Storekeeper');");
 
@@ -100,5 +133,16 @@ public class DatabaseConfig {
     public static Connection getConnection() throws SQLException {
         String dbUrl = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME + "?serverTimezone=UTC&allowPublicKeyRetrieval=true";
         return DriverManager.getConnection(dbUrl, USER, PASS);
+    }
+
+    // Helper for quick debugging from command line
+    public static void testConnection() {
+        try (Connection c = getConnection()) {
+            System.out.println("DB URL: " + c.getMetaData().getURL());
+            System.out.println("DB Product: " + c.getMetaData().getDatabaseProductName() + " v" + c.getMetaData().getDatabaseProductVersion());
+        } catch (SQLException ex) {
+            System.err.println("DB test failed: " + ex.getClass().getName() + " - " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 }
