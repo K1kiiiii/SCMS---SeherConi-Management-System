@@ -2,20 +2,107 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.MainController" prefWidth="800" prefHeight="600">
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.scms.controller.MainController"
+            prefWidth="900" prefHeight="600">
+
     <top>
-        <HBox spacing="10" styleClass="top-bar" prefHeight="40" alignment="CENTER_LEFT">
+        <VBox spacing="0">
             <children>
-                <Label text="SCMS Dashboard" styleClass="top-title"/>
+
+                <!-- Glavni meni -->
+                <MenuBar fx:id="menuBar">
+                    <menus>
+
+                        <!-- Sistem -->
+                        <Menu text="Sistem" fx:id="systemMenu">
+                            <items>
+                                <MenuItem text="Odjava"
+                                          fx:id="logoutMenuItem"
+                                          onAction="#handleLogout"/>
+                                <SeparatorMenuItem/>
+                                <MenuItem text="Izlaz"
+                                          fx:id="exitMenuItem"
+                                          onAction="#handleExit"/>
+                            </items>
+                        </Menu>
+
+                        <!-- Korisnici (Admin only) -->
+                        <Menu text="Korisnici" fx:id="usersMenu">
+                            <items>
+                                <MenuItem text="Upravljanje korisnicima"
+                                          fx:id="manageUsersMenuItem"
+                                          onAction="#handleManageUsers"/>
+                            </items>
+                        </Menu>
+
+                        <!-- Skladište (Admin + Magacioner) -->
+                        <Menu text="Skladište" fx:id="warehouseMenu">
+                            <items>
+                                <MenuItem text="Materijali"
+                                          fx:id="viewItemsMenuItem"
+                                          onAction="#handleViewItems"/>
+                            </items>
+                        </Menu>
+
+                        <!-- Radni nalozi (Admin + Radnik) -->
+                        <Menu text="Radni nalozi" fx:id="workMenu">
+                            <items>
+                                <MenuItem text="Pregled radnih naloga"
+                                          fx:id="workOrdersMenuItem"
+                                          onAction="#handleWorkOrders"/>
+                            </items>
+                        </Menu>
+
+                        <!-- Statistika (Admin only) -->
+                        <Menu text="Statistika" fx:id="statisticsMenu">
+                            <items>
+                                <MenuItem text="Pregled statistike"
+                                          fx:id="statisticsOverviewMenuItem"
+                                          onAction="#handleStatisticsOverview"/>
+                            </items>
+                        </Menu>
+
+                        <!-- Pomoć -->
+                        <Menu text="Pomoć" fx:id="helpMenu">
+                            <items>
+                                <MenuItem text="O aplikaciji"
+                                          fx:id="aboutMenuItem"
+                                          onAction="#handleAbout"/>
+                            </items>
+                        </Menu>
+
+                    </menus>
+                </MenuBar>
+
+                <!-- Gornja traka sa naslovom i prikazom korisnika -->
+                <HBox spacing="10" alignment="CENTER_LEFT" prefHeight="40">
+                    <children>
+                        <Label text="SCMS Dashboard"
+                               style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <Label fx:id="userInfoLabel" text="Niste prijavljeni"/>
+                    </children>
+                    <padding>
+                        <Insets top="5" right="10" bottom="5" left="10"/>
+                    </padding>
+                </HBox>
+
             </children>
-        </HBox>
+        </VBox>
     </top>
+
+    <!-- Centralni dio u koji se učitavaju pod-ekrani (materijali, radni nalozi, ...) -->
     <center>
-        <StackPane>
+        <StackPane fx:id="contentArea">
             <children>
-                <Label fx:id="welcomeLabel"/>
+                <Label fx:id="welcomeLabel" text="Dobrodošli u SCMS"/>
             </children>
         </StackPane>
     </center>
+
 </BorderPane>

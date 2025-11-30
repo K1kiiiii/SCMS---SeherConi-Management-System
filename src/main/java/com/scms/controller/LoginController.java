@@ -3,6 +3,7 @@ package com.scms.controller;
 import com.scms.model.User;
 import com.scms.service.AuthService;
 import com.scms.service.ServiceException;
+import com.scms.util.RoleManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -37,6 +38,7 @@ public class LoginController {
             User auth = AuthService.authenticate(user, pass);
             if (auth != null) {
                 // open main window
+                RoleManager.setLoggedInUser(auth);
                 try {
                     Parent root = FXMLLoader.load(getClass().getResource("/com/scms/view/main.fxml"));
                     Stage stage = (Stage) loginButton.getScene().getWindow();
