@@ -6,10 +6,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 
@@ -95,15 +97,25 @@ public class MainController {
         }
     }
 
-    /* =======================
-       ️ Menu handlers (stubs)
-       ======================= */
-
     // System
     @FXML
     private void handleLogout(ActionEvent event) {
-        // TODO: switch back to login scene and clear RoleManager if needed
-        System.out.println("Logout clicked");
+        try {
+            RoleManager.setLoggedInUser(null);
+
+            Parent loginView = FXMLLoader.load(
+                    getClass().getResource("/com/scms/view/login.fxml")
+            );
+            Scene scene =  new Scene(loginView);
+            String css = getClass().getResource("/com/scms/css/dark-theme.css").toExternalForm();
+            scene.getStylesheets().add(css);
+            Stage stage = (Stage) contentArea.getScene().getWindow();
+            stage.setScene(scene);
+            stage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -115,8 +127,14 @@ public class MainController {
     // Users
     @FXML
     private void handleManageUsers(ActionEvent event) {
-        // TODO: load "Manage Users" view into contentArea
-        System.out.println("Manage Users clicked");
+        try {
+            Parent view = FXMLLoader.load(
+                    getClass().getResource("/com/scms/view/users.fxml")
+            );
+            contentArea.getChildren().setAll(view);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // warehouse

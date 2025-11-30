@@ -52,10 +52,6 @@ public class MaterialManagementController {
         applyRolePermissions();
     }
 
-    /* ==============
-       Inicijalizacija
-       ============== */
-
     private void setupTableColumns() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -111,10 +107,6 @@ public class MaterialManagementController {
         deleteButton.setDisable(!canEdit);
     }
 
-    /* ============
-       Filter logika
-       ============ */
-
     @FXML
     private void handleSearch() {
         applyFilterPredicate();
@@ -161,10 +153,6 @@ public class MaterialManagementController {
             return matchesSearch && matchesSupplier;
         });
     }
-
-    /* ============
-       CRUD akcije
-       ============ */
 
     @FXML
     private void handleAddMaterial(ActionEvent event) {
@@ -238,9 +226,7 @@ public class MaterialManagementController {
         }
     }
 
-    /* ============
-       Dijalog Add/Edit
-       ============ */
+
 
     private Material showMaterialDialog(Material material) {
         boolean editMode = (material != null);
@@ -316,10 +302,6 @@ public class MaterialManagementController {
         Optional<Material> result = dialog.showAndWait();
         return result.orElse(null);
     }
-
-    /* ============
-       Helper poruke
-       ============ */
 
     private void showWarning(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
