@@ -8,7 +8,6 @@
             fx:controller="com.scms.controller.MaterialManagementController"
             prefWidth="900" prefHeight="600">
 
-    <!-- Gornji dio: naslov + pretraga + filter dobavljača -->
     <top>
         <VBox spacing="5">
             <children>
@@ -20,9 +19,7 @@
                         <Region HBox.hgrow="ALWAYS"/>
 
                         <Label text="Pretraga:"/>
-                        <TextField fx:id="searchField"
-                                   promptText="Naziv ili dobavljač..."
-                                   onKeyReleased="#handleSearch"/>
+                        <TextField fx:id="searchField" promptText="Naziv ili dobavljač..." onKeyReleased="#handleSearch"/>
                     </children>
                     <padding>
                         <Insets top="10" right="10" bottom="5" left="10"/>
@@ -32,10 +29,7 @@
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <children>
                         <Label text="Dobavljač:"/>
-                        <ComboBox fx:id="supplierFilter"
-                                  prefWidth="200"
-                                  promptText="Svi dobavljači"
-                                  onAction="#handleFilterChanged"/>
+                        <ComboBox fx:id="supplierFilter" prefWidth="200" promptText="Svi dobavljači" onAction="#handleFilterChanged"/>
 
                         <Button text="Očisti filtere" onAction="#handleClearFilters"/>
                         <Region HBox.hgrow="ALWAYS"/>
@@ -49,26 +43,25 @@
         </VBox>
     </top>
 
-    <!-- Centralni dio: tabela materijala -->
+    <!-- glavna tabela -->
     <center>
         <TableView fx:id="materialTable">
             <columns>
-                <TableColumn fx:id="colId"        text="ID"         prefWidth="60"/>
-                <TableColumn fx:id="colName"      text="Naziv"      prefWidth="220"/>
-                <TableColumn fx:id="colQuantity"  text="Količina"   prefWidth="90"/>
-                <TableColumn fx:id="colUnit"      text="Jedinica"   prefWidth="90"/>
-                <TableColumn fx:id="colSupplier"  text="Dobavljač"  prefWidth="180"/>
-                <TableColumn fx:id="colUpdatedAt" text="Ažurirano"  prefWidth="160"/>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colName" text="Naziv" prefWidth="220"/>
+                <TableColumn fx:id="colQuantity" text="Količina" prefWidth="90"/>
+                <TableColumn fx:id="colUnit" text="Jedinica" prefWidth="90"/>
+                <TableColumn fx:id="colSupplier" text="Dobavljač" prefWidth="180"/>
+                <TableColumn fx:id="colUpdatedAt" text="Ažurirano" prefWidth="160"/>
             </columns>
         </TableView>
     </center>
 
-    <!-- Donji dio: akcijski dugmići -->
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT">
             <children>
-                <Button fx:id="addButton"    text="Dodaj" onAction="#handleAddMaterial"/>
-                <Button fx:id="editButton"   text="Uredi" onAction="#handleEditMaterial"/>
+                <Button fx:id="addButton" text="Dodaj" onAction="#handleAddMaterial"/>
+                <Button fx:id="editButton" text="Uredi" onAction="#handleEditMaterial"/>
                 <Button fx:id="deleteButton" text="Obriši" onAction="#handleDeleteMaterial"/>
             </children>
             <padding>

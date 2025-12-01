@@ -11,73 +11,47 @@
     <top>
         <VBox spacing="0">
             <children>
-
-                <!-- Glavni meni -->
                 <MenuBar fx:id="menuBar">
                     <menus>
-
-                        <!-- Sistem -->
                         <Menu text="Sistem" fx:id="systemMenu">
                             <items>
-                                <MenuItem text="Odjava"
-                                          fx:id="logoutMenuItem"
-                                          onAction="#handleLogout"/>
+                                <MenuItem text="Odjava" fx:id="logoutMenuItem" onAction="#handleLogout"/>
                                 <SeparatorMenuItem/>
-                                <MenuItem text="Izlaz"
-                                          fx:id="exitMenuItem"
-                                          onAction="#handleExit"/>
+                                <MenuItem text="Izlaz" fx:id="exitMenuItem" onAction="#handleExit"/>
                             </items>
                         </Menu>
-
-                        <!-- Korisnici (Admin only) -->
+                        <!-- ovo je admin only -->
                         <Menu text="Korisnici" fx:id="usersMenu">
                             <items>
-                                <MenuItem text="Upravljanje korisnicima"
-                                          fx:id="manageUsersMenuItem"
-                                          onAction="#handleManageUsers"/>
+                                <MenuItem text="Upravljanje korisnicima" fx:id="manageUsersMenuItem" onAction="#handleManageUsers"/>
                             </items>
                         </Menu>
-
-                        <!-- Skladište (Admin + Magacioner) -->
+                        <!-- admin & magacioner -->
                         <Menu text="Skladište" fx:id="warehouseMenu">
                             <items>
-                                <MenuItem text="Materijali"
-                                          fx:id="viewItemsMenuItem"
-                                          onAction="#handleViewItems"/>
+                                <MenuItem text="Materijali" fx:id="viewItemsMenuItem" onAction="#handleViewItems"/>
                             </items>
                         </Menu>
-
-                        <!-- Radni nalozi (Admin + Radnik) -->
                         <Menu text="Radni nalozi" fx:id="workMenu">
                             <items>
-                                <MenuItem text="Pregled radnih naloga"
-                                          fx:id="workOrdersMenuItem"
-                                          onAction="#handleWorkOrders"/>
+                                <MenuItem text="Pregled radnih naloga" fx:id="workOrdersMenuItem" onAction="#handleWorkOrders"/>
                             </items>
                         </Menu>
 
-                        <!-- Statistika (Admin only) -->
+                        <!-- admin only -->
                         <Menu text="Statistika" fx:id="statisticsMenu">
                             <items>
-                                <MenuItem text="Pregled statistike"
-                                          fx:id="statisticsOverviewMenuItem"
-                                          onAction="#handleStatisticsOverview"/>
+                                <MenuItem text="Pregled statistike" fx:id="statisticsOverviewMenuItem" onAction="#handleStatisticsOverview"/>
                             </items>
                         </Menu>
 
-                        <!-- Pomoć -->
                         <Menu text="Pomoć" fx:id="helpMenu">
                             <items>
-                                <MenuItem text="O aplikaciji"
-                                          fx:id="aboutMenuItem"
-                                          onAction="#handleAbout"/>
+                                <MenuItem text="O aplikaciji" fx:id="aboutMenuItem" onAction="#handleAbout"/>
                             </items>
                         </Menu>
-
                     </menus>
                 </MenuBar>
-
-                <!-- Gornja traka sa naslovom i prikazom korisnika -->
                 <HBox spacing="10" alignment="CENTER_LEFT" prefHeight="40">
                     <children>
                         <Label text="SCMS Dashboard"
@@ -95,8 +69,6 @@
             </children>
         </VBox>
     </top>
-
-    <!-- Centralni dio u koji se učitavaju pod-ekrani (materijali, radni nalozi, ...) -->
     <center>
         <StackPane fx:id="contentArea">
             <children>

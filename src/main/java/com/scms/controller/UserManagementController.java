@@ -83,7 +83,7 @@ public class UserManagementController {
                 if (created != null) {
                     allUsers.add(created);
                 } else {
-                    // fallback: ponovo učitaj sve
+                    // fallback: ponovno učitavanje svega
                     loadUsers();
                 }
             } catch (ServiceException ex) {

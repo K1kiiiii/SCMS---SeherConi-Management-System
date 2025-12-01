@@ -21,7 +21,6 @@ public class MainController {
     @FXML private Label userInfoLabel;
     @FXML private StackPane contentArea;
 
-    // Menus
     @FXML private Menu systemMenu;
     @FXML private Menu usersMenu;
     @FXML private Menu warehouseMenu;
@@ -29,14 +28,11 @@ public class MainController {
     @FXML private Menu statisticsMenu;
     @FXML private Menu helpMenu;
 
-    // System menu items
     @FXML private MenuItem logoutMenuItem;
     @FXML private MenuItem exitMenuItem;
 
-    // Users
     @FXML private MenuItem manageUsersMenuItem;
 
-    // Warehouse
     @FXML private MenuItem viewItemsMenuItem;
     @FXML private MenuItem createItemMenuItem;
     @FXML private MenuItem viewWarehouseMenuItem;
@@ -44,23 +40,18 @@ public class MainController {
     @FXML private MenuItem goodsOutMenuItem;
     @FXML private MenuItem ordersMenuItem;
 
-    // Work orders
     @FXML private MenuItem workOrdersMenuItem;
     @FXML private MenuItem updateWorkOrderStatusMenuItem;
     @FXML private MenuItem materialRequestMenuItem;
     @FXML private MenuItem reportsMenuItem;
 
-    // Statistics
     @FXML private MenuItem statisticsOverviewMenuItem;
 
-    // Help
     @FXML private MenuItem aboutMenuItem;
 
     @FXML
     public void initialize() {
-        // Show who is logged in
         User u = RoleManager.getLoggedInUser();
-
         if (u != null) {
             String role = u.getRole() != null ? u.getRole() : "";
             userInfoLabel.setText("Prijavljen: " + u.getUsername() + " (" + role + ")");
@@ -69,35 +60,31 @@ public class MainController {
             userInfoLabel.setText("Niste prijavljeni");
             welcomeLabel.setText("Dobrodošli u SCMS");
         }
-
         applyRoleVisibility();
     }
 
     private void applyRoleVisibility() {
-        // Admin → full access
+        // puni access za admina
         if (RoleManager.isAdmin()) {
             return;
         }
 
-        // Magacioner
         if (RoleManager.isMagacioner()) {
-            // No user management, no statistics, no work-order menu
+            // magacioner nece upravljati radnicima i poslovnom statistikom
             usersMenu.setVisible(false);
             statisticsMenu.setVisible(false);
             workMenu.setVisible(false);
             return;
         }
 
-        // Radnik
         if (RoleManager.isRadnik()) {
-            // Only work orders + reports + basic system/help
+            //
             usersMenu.setVisible(false);
             statisticsMenu.setVisible(false);
             warehouseMenu.setVisible(false);
         }
     }
 
-    // System
     @FXML
     private void handleLogout(ActionEvent event) {
         try {
@@ -124,7 +111,6 @@ public class MainController {
         System.exit(0);
     }
 
-    // Users
     @FXML
     private void handleManageUsers(ActionEvent event) {
         try {
@@ -137,7 +123,6 @@ public class MainController {
         }
     }
 
-    // warehouse
     @FXML
     private void handleViewItems(ActionEvent event) {
         try {
@@ -150,7 +135,8 @@ public class MainController {
         }
     }
 
-    // Work orders
+    // funkcije to be implemented
+
     @FXML
     private void handleWorkOrders(ActionEvent event) {
         System.out.println("Work Orders clicked");
@@ -171,13 +157,11 @@ public class MainController {
         System.out.println("Reports clicked");
     }
 
-    // Statistics
     @FXML
     private void handleStatisticsOverview(ActionEvent event) {
         System.out.println("Statistics Overview clicked");
     }
 
-    // Help
     @FXML
     private void handleAbout(ActionEvent event) {
         System.out.println("About clicked");

@@ -100,7 +100,7 @@ public class MaterialManagementController {
     }
 
     private void applyRolePermissions() {
-        // Admin + Magacioner mogu uređivati; Radnik je read-only
+        // admin + magacioner mogu uređivati; radnik je read-only
         boolean canEdit = RoleManager.isAdmin() || RoleManager.isMagacioner();
         addButton.setDisable(!canEdit);
         editButton.setDisable(!canEdit);
