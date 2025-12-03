@@ -11,6 +11,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -39,10 +40,12 @@ public class MainController {
     @FXML private MenuItem goodsInMenuItem;
     @FXML private MenuItem goodsOutMenuItem;
     @FXML private MenuItem ordersMenuItem;
+    @FXML private MenuItem pendingRequestsMenuItem;
 
     @FXML private MenuItem workOrdersMenuItem;
     @FXML private MenuItem updateWorkOrderStatusMenuItem;
     @FXML private MenuItem materialRequestMenuItem;
+    @FXML private MenuItem allRequestsMenuItem;
     @FXML private MenuItem reportsMenuItem;
 
     @FXML private MenuItem statisticsOverviewMenuItem;
@@ -139,6 +142,13 @@ public class MainController {
 
     @FXML
     private void handleWorkOrders(ActionEvent event) {
+        // Radnik should see their assignment requests history
+        if (RoleManager.isRadnik()) {
+            loadIntoContent("/com/scms/view/my_requests.fxml");
+            return;
+        }
+
+        // For others, show the generic work orders placeholder page (reuse existing behavior)
         System.out.println("Work Orders clicked");
     }
 
@@ -149,8 +159,38 @@ public class MainController {
 
     @FXML
     private void handleMaterialRequest(ActionEvent event) {
-        System.out.println("Material Request clicked");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/scms/view/assignment-request.fxml"));
+            Parent root = loader.load();
+            Stage dialog = new Stage();
+            dialog.initOwner(contentArea.getScene().getWindow());
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setTitle("Zahtjev za materijal");
+            Scene scene = new Scene(root);
+            String css = getClass().getResource("/com/scms/css/dark-theme.css").toExternalForm();
+            scene.getStylesheets().add(css);
+            dialog.setScene(scene);
+            dialog.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+    @FXML
+    private void handleAllRequests(ActionEvent event) {
+        // Only warehouse keepers (magacioner) and admins may view all pending requests
+        if (!RoleManager.isMagacioner() && !RoleManager.isAdmin()) {
+            javafx.scene.control.Alert a = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
+            a.setTitle("Pristup odbijen");
+            a.setHeaderText(null);
+            a.setContentText("Nemate ovlasti za pregled zahtjeva. Ova stranica je dostupna magacioneru.");
+            a.showAndWait();
+            return;
+        }
+
+        loadIntoContent("/com/scms/view/all_requests_history.fxml");
+    }
+
 
     @FXML
     private void handleReports(ActionEvent event) {
@@ -166,4 +206,29 @@ public class MainController {
     private void handleAbout(ActionEvent event) {
         System.out.println("About clicked");
     }
+
+    @FXML
+    private void handlePendingRequests(ActionEvent event) {
+        // Only magacioner/admin should open pending requests list
+        if (!RoleManager.isMagacioner() && !RoleManager.isAdmin()) {
+            javafx.scene.control.Alert a = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
+            a.setTitle("Pristup odbijen");
+            a.setHeaderText(null);
+            a.setContentText("Nemate ovlasti za pregled zahtjeva na čekanju.");
+            a.showAndWait();
+            return;
+        }
+
+        loadIntoContent("/com/scms/view/assignment_list.fxml");
+    }
+
+    private void loadIntoContent(String fxmlPath) {
+        try {
+            Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
+            contentArea.getChildren().setAll(view);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
