@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.scms.controller.MainController"
+            prefWidth="900" prefHeight="600">
+
+    <top>
+        <VBox spacing="0">
+            <children>
+                <MenuBar fx:id="menuBar">
+                    <menus>
+                        <Menu text="Sistem" fx:id="systemMenu">
+                            <items>
+                                <MenuItem text="Odjava" fx:id="logoutMenuItem" onAction="#handleLogout"/>
+                                <SeparatorMenuItem/>
+                                <MenuItem text="Izlaz" fx:id="exitMenuItem" onAction="#handleExit"/>
+                            </items>
+                        </Menu>
+                        <!-- ovo je admin only -->
+                        <Menu text="Korisnici" fx:id="usersMenu">
+                            <items>
+                                <MenuItem text="Upravljanje korisnicima" fx:id="manageUsersMenuItem" onAction="#handleManageUsers"/>
+                            </items>
+                        </Menu>
+                        <!-- admin & magacioner -->
+                        <Menu text="Skladište" fx:id="warehouseMenu">
+                            <items>
+                                <MenuItem text="Materijali" fx:id="viewItemsMenuItem" onAction="#handleViewItems"/>
+                                <MenuItem text="Zahtjevi (na čekanju)" fx:id="pendingRequestsMenuItem" onAction="#handlePendingRequests" />
+                                <MenuItem text="Zahtjevi za zaduženje" fx:id="allRequestsMenuItem" onAction="#handleAllRequests"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Radni nalozi" fx:id="workMenu">
+                            <items>
+                                <MenuItem text="Pregled mojih radnih naloga" fx:id="workOrdersMenuItem" onAction="#handleWorkOrders"/>
+                                <MenuItem text="Novi zahtjev za materijale" fx:id="materialRequestMenuItem" onAction="#handleMaterialRequest"/>
+                            </items>
+                        </Menu>
+
+                        <!-- admin only -->
+                        <Menu text="Statistika" fx:id="statisticsMenu">
+                            <items>
+                                <MenuItem text="Pregled statistike" fx:id="statisticsOverviewMenuItem" onAction="#handleStatisticsOverview"/>
+                            </items>
+                        </Menu>
+
+                        <Menu text="Pomoć" fx:id="helpMenu">
+                            <items>
+                                <MenuItem text="O aplikaciji" fx:id="aboutMenuItem" onAction="#handleAbout"/>
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+                <HBox spacing="10" alignment="CENTER_LEFT" prefHeight="40">
+                    <children>
+                        <Label text="SCMS Dashboard"
+                               style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <Label fx:id="userInfoLabel" text="Niste prijavljeni"/>
+                    </children>
+                    <padding>
+                        <Insets top="5" right="10" bottom="5" left="10"/>
+                    </padding>
+                </HBox>
+
+            </children>
+        </VBox>
+    </top>
+    <center>
+        <StackPane fx:id="contentArea">
+            <children>
+                <Label fx:id="welcomeLabel" text="Dobrodošli u SCMS"/>
+            </children>
+        </StackPane>
+    </center>
+
+</BorderPane>
