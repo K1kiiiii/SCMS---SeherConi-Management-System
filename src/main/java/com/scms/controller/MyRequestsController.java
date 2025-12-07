@@ -13,6 +13,7 @@ import javafx.scene.control.*;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MyRequestsController {
 
@@ -24,6 +25,7 @@ public class MyRequestsController {
     @FXML private TableColumn<AssignmentRequest, String> colStatus;
     @FXML private TableColumn<AssignmentRequest, String> colRequestedAt;
     @FXML private Button refreshBtn;
+    @FXML private ComboBox<String> statusCombo;
 
     private final AssignmentRequestService requestService = new AssignmentRequestService();
     private final MaterialService materialService = new MaterialService();
@@ -33,6 +35,7 @@ public class MyRequestsController {
     @FXML
     public void initialize() {
         setupColumns();
+        setupStatusFilter();
         loadMyRequests();
         refreshBtn.setOnAction(e -> loadMyRequests());
     }
@@ -53,6 +56,12 @@ public class MyRequestsController {
         requestsTable.setItems(data);
     }
 
+    private void setupStatusFilter() {
+        statusCombo.setItems(FXCollections.observableArrayList("Svi", "PENDING", "APPROVED", "REJECTED"));
+        statusCombo.getSelectionModel().select("Svi");
+        statusCombo.setOnAction(e -> loadMyRequests());
+    }
+
     private void loadMyRequests() {
         User u = RoleManager.getLoggedInUser();
         if (u == null) {
@@ -61,7 +70,14 @@ public class MyRequestsController {
         }
 
         try {
-            List<AssignmentRequest> list = requestService.listByUser(u.getId());
+            String sel = statusCombo.getSelectionModel().getSelectedItem();
+            List<AssignmentRequest> list;
+            if (sel == null || sel.equals("Svi")) {
+                list = requestService.listByUser(u.getId());
+            } else {
+                // fetch by status then filter to this user
+                list = requestService.listByStatus(sel).stream().filter(r -> r.getUserId() == u.getId()).collect(Collectors.toList());
+            }
             data.setAll(list);
         } catch (ServiceException ex) {
             showError("Greška pri učitavanju", ex.getMessage());
@@ -76,4 +92,3 @@ public class MyRequestsController {
         a.showAndWait();
     }
 }
-

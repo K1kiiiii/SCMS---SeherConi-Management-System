@@ -1,34 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
-<AnchorPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.scms.controller.AllRequestsController"
-            prefWidth="900" prefHeight="600">
-    <children>
-        <VBox spacing="10" AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10">
-            <children>
-                <HBox spacing="10" alignment="CENTER_LEFT">
-                    <children>
-                        <Label text="Svi zahtjevi (istorija)" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Button text="Osveži" fx:id="refreshBtn" />
-                    </children>
-                </HBox>
-
-                <TableView fx:id="requestsTable" VBox.vgrow="ALWAYS">
-                    <columns>
-                        <TableColumn fx:id="colId" text="#" prefWidth="60" />
-                        <TableColumn fx:id="colUser" text="Korisnik" prefWidth="150" />
-                        <TableColumn fx:id="colMaterial" text="Materijal" prefWidth="200" />
-                        <TableColumn fx:id="colQty" text="Količina" prefWidth="100" />
-                        <TableColumn fx:id="colNotes" text="Napomena" prefWidth="200" />
-                        <TableColumn fx:id="colStatus" text="Status" prefWidth="100" />
-                        <TableColumn fx:id="colRequestedAt" text="Zahtjev" prefWidth="150" />
-                    </columns>
-                </TableView>
-            </children>
-        </VBox>
-    </children>
-</AnchorPane>
+<!-- all_requests_history.fxml removed — replaced with placeholder by automated refactor -->
+<!-- This view was removed because filtering on the Zahtjevi / Moji zahtjevi pages now covers history. -->

@@ -12,6 +12,7 @@
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <children>
                         <Label text="Moji zahtjevi" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+                        <ComboBox fx:id="statusCombo" prefWidth="160" />
                         <Region HBox.hgrow="ALWAYS" />
                         <Button text="Osvježi" fx:id="refreshBtn" />
                     </children>

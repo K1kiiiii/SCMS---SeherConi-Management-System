@@ -21,9 +21,11 @@ public class AssignmentListController {
     @FXML private TableColumn<AssignmentRequest, Double> colQty;
     @FXML private TableColumn<AssignmentRequest, String> colNotes;
     @FXML private TableColumn<AssignmentRequest, String> colStatus;
+    @FXML private TableColumn<AssignmentRequest, String> colRequestedAt;
     @FXML private Button refreshBtn;
     @FXML private Button approveBtn;
     @FXML private Button rejectBtn;
+    @FXML private ComboBox<String> statusCombo;
 
     private final AssignmentRequestService requestService = new AssignmentRequestService();
     private final UserService userService = new UserService();
@@ -34,8 +36,9 @@ public class AssignmentListController {
     @FXML
     public void initialize() {
         setupColumns();
-        loadPending();
-        refreshBtn.setOnAction(e -> loadPending());
+        setupStatusFilter();
+        loadBySelectedStatus();
+        refreshBtn.setOnAction(e -> loadBySelectedStatus());
         approveBtn.setOnAction(e -> handleApprove());
         rejectBtn.setOnAction(e -> handleReject());
     }
@@ -55,13 +58,28 @@ public class AssignmentListController {
         colQty.setCellValueFactory(cell -> new javafx.beans.property.SimpleObjectProperty<>(cell.getValue().getQuantity()));
         colNotes.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getNotes() == null ? "" : cell.getValue().getNotes()));
         colStatus.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getStatus()));
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        colRequestedAt.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(cell.getValue().getRequestedAt() == null ? "" : cell.getValue().getRequestedAt().format(fmt)));
 
         requestsTable.setItems(data);
     }
 
-    private void loadPending() {
+    private void setupStatusFilter() {
+        statusCombo.setItems(FXCollections.observableArrayList("Svi", "PENDING", "APPROVED", "REJECTED"));
+        // default to PENDING to match previous behavior
+        statusCombo.getSelectionModel().select("PENDING");
+        statusCombo.setOnAction(e -> loadBySelectedStatus());
+    }
+
+    private void loadBySelectedStatus() {
+        String sel = statusCombo.getSelectionModel().getSelectedItem();
         try {
-            List<AssignmentRequest> list = requestService.listByStatus("PENDING");
+            List<AssignmentRequest> list;
+            if (sel == null || sel.equals("Svi")) {
+                list = requestService.listAll();
+            } else {
+                list = requestService.listByStatus(sel);
+            }
             data.setAll(list);
         } catch (ServiceException ex) {
             showError("Greška pri učitavanju", ex.getMessage());
@@ -89,7 +107,7 @@ public class AssignmentListController {
         try {
             requestService.approveRequest(sel.getId());
             showInfo("Odobreno", "Zahtjev je odobren i materijal je zadužen.");
-            loadPending();
+            loadBySelectedStatus();
         } catch (ServiceException ex) {
             showError("Greška pri odobrenju", ex.getMessage());
         }
@@ -108,7 +126,7 @@ public class AssignmentListController {
         try {
             requestService.rejectRequest(sel.getId());
             showInfo("Odbijeno", "Zahtjev je odbijen.");
-            loadPending();
+            loadBySelectedStatus();
         } catch (ServiceException ex) {
             showError("Greška pri odbijanju", ex.getMessage());
         }

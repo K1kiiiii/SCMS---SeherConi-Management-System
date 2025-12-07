@@ -45,7 +45,6 @@ public class MainController {
     @FXML private MenuItem workOrdersMenuItem;
     @FXML private MenuItem updateWorkOrderStatusMenuItem;
     @FXML private MenuItem materialRequestMenuItem;
-    @FXML private MenuItem allRequestsMenuItem;
     @FXML private MenuItem reportsMenuItem;
 
     @FXML private MenuItem statisticsOverviewMenuItem;
@@ -175,22 +174,6 @@ public class MainController {
             e.printStackTrace();
         }
     }
-
-    @FXML
-    private void handleAllRequests(ActionEvent event) {
-        // Only warehouse keepers (magacioner) and admins may view all pending requests
-        if (!RoleManager.isMagacioner() && !RoleManager.isAdmin()) {
-            javafx.scene.control.Alert a = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.WARNING);
-            a.setTitle("Pristup odbijen");
-            a.setHeaderText(null);
-            a.setContentText("Nemate ovlasti za pregled zahtjeva. Ova stranica je dostupna magacioneru.");
-            a.showAndWait();
-            return;
-        }
-
-        loadIntoContent("/com/scms/view/all_requests_history.fxml");
-    }
-
 
     @FXML
     private void handleReports(ActionEvent event) {

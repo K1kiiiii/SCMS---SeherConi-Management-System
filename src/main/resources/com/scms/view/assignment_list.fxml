@@ -14,8 +14,9 @@
                 <HBox alignment="CENTER_LEFT" spacing="10">
                     <children>
                         <Label text="Zahtjevi" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+                        <ComboBox fx:id="statusCombo" prefWidth="160" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button text="Osveži" fx:id="refreshBtn" />
+                        <Button text="Osvježi" fx:id="refreshBtn" />
                     </children>
                 </HBox>
 
@@ -27,6 +28,7 @@
                         <TableColumn fx:id="colQty" text="Količina" prefWidth="100" />
                         <TableColumn fx:id="colNotes" text="Napomena" prefWidth="200" />
                         <TableColumn fx:id="colStatus" text="Status" prefWidth="100" />
+                        <TableColumn fx:id="colRequestedAt" text="Zahtjev" prefWidth="150" />
                     </columns>
                 </TableView>
 
