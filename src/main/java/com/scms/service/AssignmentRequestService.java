@@ -8,7 +8,6 @@ import java.util.List;
 
 public class AssignmentRequestService {
     private final AssignmentRequestDao dao = new AssignmentRequestDao();
-    private final AssignmentService assignmentService = new AssignmentService();
 
     public AssignmentRequest createRequest(int userId, int materialId, double quantity, String notes) {
         if (userId <= 0) throw new ServiceException("user.invalid");
@@ -55,9 +54,10 @@ public class AssignmentRequestService {
     public void approveRequest(int requestId) {
         try {
             AssignmentRequest req = dao.findById(requestId).orElseThrow(() -> new ServiceException("request.not_found"));
-            // Try to create real assignment; AssignmentService will validate stock and throw if insufficient
-            assignmentService.assignMaterial(req.getUserId(), req.getMaterialId(), req.getQuantity());
-            // If successful, mark request as APPROVED
+            // Only allow approving pending requests
+            if (!"PENDING".equalsIgnoreCase(req.getStatus())) {
+                throw new ServiceException("request.invalid_state");
+            }
             boolean ok = dao.updateStatus(requestId, "APPROVED");
             if (!ok) throw new ServiceException("Failed updating request status");
         } catch (SQLException ex) {
@@ -68,6 +68,10 @@ public class AssignmentRequestService {
     public void rejectRequest(int requestId) {
         try {
             AssignmentRequest req = dao.findById(requestId).orElseThrow(() -> new ServiceException("request.not_found"));
+            // Only allow rejecting pending requests
+            if (!"PENDING".equalsIgnoreCase(req.getStatus())) {
+                throw new ServiceException("request.invalid_state");
+            }
             boolean ok = dao.updateStatus(requestId, "REJECTED");
             if (!ok) throw new ServiceException("Failed updating request status");
         } catch (SQLException ex) {
