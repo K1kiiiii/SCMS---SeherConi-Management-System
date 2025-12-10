@@ -89,5 +89,24 @@ public class MaterialDao {
             return ps.executeUpdate() > 0;
         }
     }
-}
 
+    // Transactional overload: operate using provided connection and ensure quantity doesn't go negative.
+    public boolean adjustQuantity(Connection conn, int id, double delta) throws SQLException {
+        String selectSql = "SELECT quantity FROM materials WHERE id = ? FOR UPDATE";
+        try (PreparedStatement ps = conn.prepareStatement(selectSql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return false; // material not found
+                double current = rs.getDouble(1);
+                double updated = current + delta;
+                if (updated < 0) return false; // insufficient stock
+            }
+        }
+        String updateSql = "UPDATE materials SET quantity = quantity + ? WHERE id = ?";
+        try (PreparedStatement ps2 = conn.prepareStatement(updateSql)) {
+            ps2.setDouble(1, delta);
+            ps2.setInt(2, id);
+            return ps2.executeUpdate() > 0;
+        }
+    }
+}

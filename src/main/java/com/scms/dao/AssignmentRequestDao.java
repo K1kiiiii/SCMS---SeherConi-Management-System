@@ -78,6 +78,16 @@ public class AssignmentRequestDao {
         }
     }
 
+    // Transactional overload: update status using provided Connection
+    public boolean updateStatus(Connection conn, int id, String status) throws SQLException {
+        String sql = "UPDATE assignment_requests SET status = ? WHERE id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     private AssignmentRequest mapRequest(ResultSet rs) throws SQLException {
         AssignmentRequest r = new AssignmentRequest();
         r.setId(rs.getInt("id"));
