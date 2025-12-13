@@ -81,21 +81,6 @@ public class DatabaseConfig {
                     ) ENGINE=InnoDB;
                     """);
 
-                // assignment_requests table
-                st.executeUpdate("""
-                    CREATE TABLE IF NOT EXISTS assignment_requests (
-                      id INT AUTO_INCREMENT PRIMARY KEY,
-                      user_id INT,
-                      material_id INT,
-                      quantity DOUBLE,
-                      notes TEXT,
-                      status VARCHAR(30) DEFAULT 'PENDING',
-                      requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                      FOREIGN KEY (user_id) REFERENCES users(id),
-                      FOREIGN KEY (material_id) REFERENCES materials(id)
-                    ) ENGINE=InnoDB;
-                    """);
-
                 // recipes and recipe_items
                 st.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS recipes (

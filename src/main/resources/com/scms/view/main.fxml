@@ -30,13 +30,11 @@
                         <Menu text="Skladište" fx:id="warehouseMenu">
                             <items>
                                 <MenuItem text="Materijali" fx:id="viewItemsMenuItem" onAction="#handleViewItems"/>
-                                <MenuItem text="Zahtjevi (na čekanju)" fx:id="pendingRequestsMenuItem" onAction="#handlePendingRequests" />
                             </items>
                         </Menu>
                         <Menu text="Radni nalozi" fx:id="workMenu">
                             <items>
-                                <MenuItem text="Pregled mojih radnih naloga" fx:id="workOrdersMenuItem" onAction="#handleWorkOrders"/>
-                                <MenuItem text="Novi zahtjev za materijale" fx:id="materialRequestMenuItem" onAction="#handleMaterialRequest"/>
+                                <MenuItem text="Pregled radnih naloga" fx:id="workOrdersMenuItem" onAction="#handleWorkOrders"/>
                             </items>
                         </Menu>
 
