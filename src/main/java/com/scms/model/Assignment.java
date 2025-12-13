@@ -8,11 +8,27 @@ public class Assignment {
     private int materialId;
     private double quantity;
     private LocalDateTime assignedAt;
+    private String status; // e.g. PENDING, CONFIRMED
+    private String notes;
 
     public Assignment() {}
 
     public Assignment(int id, int userId, int materialId, double quantity, LocalDateTime assignedAt) {
-        this.id = id; this.userId = userId; this.materialId = materialId; this.quantity = quantity; this.assignedAt = assignedAt;
+        this.id = id;
+        this.userId = userId;
+        this.materialId = materialId;
+        this.quantity = quantity;
+        this.assignedAt = assignedAt;
+    }
+
+    public Assignment(int id, int userId, int materialId, double quantity, LocalDateTime assignedAt, String status, String notes) {
+        this.id = id;
+        this.userId = userId;
+        this.materialId = materialId;
+        this.quantity = quantity;
+        this.assignedAt = assignedAt;
+        this.status = status;
+        this.notes = notes;
     }
 
     public int getId() { return id; }
@@ -29,5 +45,10 @@ public class Assignment {
 
     public LocalDateTime getAssignedAt() { return assignedAt; }
     public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
-}
 
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+}

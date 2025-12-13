@@ -13,7 +13,7 @@
             <children>
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <children>
-                        <Label text="Materijali"
+                        <Label text="Dostupne sirovine"
                                style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
@@ -63,6 +63,7 @@
                 <Button fx:id="addButton" text="Dodaj" onAction="#handleAddMaterial"/>
                 <Button fx:id="editButton" text="Uredi" onAction="#handleEditMaterial"/>
                 <Button fx:id="deleteButton" text="Obriši" onAction="#handleDeleteMaterial"/>
+                <Button fx:id="requestButton" text="Zatraži" onAction="#handleRequestMaterial"/>
             </children>
             <padding>
                 <Insets top="10" right="10" bottom="10" left="10"/>

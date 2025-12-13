@@ -39,6 +39,7 @@ public class MainController {
     @FXML private MenuItem goodsInMenuItem;
     @FXML private MenuItem goodsOutMenuItem;
     @FXML private MenuItem ordersMenuItem;
+    @FXML private MenuItem viewRequestsMenuItem;
 
     @FXML private MenuItem workOrdersMenuItem;
     @FXML private MenuItem updateWorkOrderStatusMenuItem;
@@ -66,6 +67,7 @@ public class MainController {
     private void applyRoleVisibility() {
         // puni access za admina
         if (RoleManager.isAdmin()) {
+            workMenu.setVisible(false); //iako bi mogao imati pristup, adminu ovo aposlutno ne treba,, valjda
             return;
         }
 
@@ -78,11 +80,8 @@ public class MainController {
         }
 
         if (RoleManager.isRadnik()) {
-            //
             usersMenu.setVisible(false);
-            statisticsMenu.setVisible(false);
-            warehouseMenu.setVisible(false);
-        }
+            statisticsMenu.setVisible(false);}
     }
 
     @FXML
@@ -128,6 +127,18 @@ public class MainController {
         try {
             Parent view = FXMLLoader.load(
                     getClass().getResource("/com/scms/view/materials.fxml")
+            );
+            contentArea.getChildren().setAll(view);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleViewRequests(ActionEvent event) {
+        try {
+            Parent view = FXMLLoader.load(
+                    getClass().getResource("/com/scms/view/requests.fxml")
             );
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {

@@ -76,6 +76,8 @@ public class DatabaseConfig {
                       material_id INT,
                       quantity DOUBLE,
                       assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      status VARCHAR(50) DEFAULT 'CONFIRMED',
+                      notes TEXT,
                       FOREIGN KEY (user_id) REFERENCES users(id),
                       FOREIGN KEY (material_id) REFERENCES materials(id)
                     ) ENGINE=InnoDB;
@@ -129,7 +131,7 @@ public class DatabaseConfig {
         }
     }
 
-    // Provides a connection to the application DB
+    // glavna veza sa bazom podataka
     public static Connection getConnection() throws SQLException {
         String dbUrl = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME + "?serverTimezone=UTC&allowPublicKeyRetrieval=true";
         return DriverManager.getConnection(dbUrl, USER, PASS);

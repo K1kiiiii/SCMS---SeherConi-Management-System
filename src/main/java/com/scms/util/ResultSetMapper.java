@@ -45,6 +45,8 @@ public class ResultSetMapper {
         a.setQuantity(rs.getDouble("quantity"));
         Timestamp t = rs.getTimestamp("assigned_at");
         if (t != null) a.setAssignedAt(t.toLocalDateTime());
+        try { a.setStatus(rs.getString("status")); } catch (SQLException ignored) {}
+        try { a.setNotes(rs.getString("notes")); } catch (SQLException ignored) {}
         return a;
     }
 

@@ -22,7 +22,26 @@ public class AssignmentService {
             a.setQuantity(qty);
             return dao.create(a);
         } catch (SQLException ex) {
-            throw new ServiceException("Failed creating assignment", ex);
+            throw new ServiceException("Greška pri kreiranju zahtjeva", ex);
+        }
+    }
+
+    // kreiranje zahtjeva
+    public Assignment requestMaterial(int userId, int materialId, double qty, String notes) {
+        if (userId <= 0) throw new ServiceException("user.invalid");
+        if (materialId <= 0) throw new ServiceException("material.invalid");
+        if (qty <= 0) throw new ServiceException("quantity.invalid");
+
+        try {
+            Assignment a = new Assignment();
+            a.setUserId(userId);
+            a.setMaterialId(materialId);
+            a.setQuantity(qty);
+            a.setStatus("PENDING");
+            a.setNotes(notes);
+            return dao.createRequest(a);
+        } catch (SQLException ex) {
+            throw new ServiceException("Greška pri kreiranju zahtjeva", ex);
         }
     }
 
@@ -30,7 +49,7 @@ public class AssignmentService {
         try {
             return dao.findById(id).orElseThrow(() -> new ServiceException("assignment.not_found"));
         } catch (SQLException ex) {
-            throw new ServiceException("Failed fetching assignment", ex);
+            throw new ServiceException("Greška pri dobavljanju zahtjeva", ex);
         }
     }
 
@@ -38,7 +57,32 @@ public class AssignmentService {
         try {
             return dao.findByUserId(userId);
         } catch (SQLException ex) {
-            throw new ServiceException("Failed fetching assignments", ex);
+            throw new ServiceException("Greška pri dobavljanju zahtjeva", ex);
+        }
+    }
+
+    public List<Assignment> listAll() {
+        try {
+            return dao.findAll();
+        } catch (SQLException ex) {
+            throw new ServiceException("Greška pri dobavljanju zahtjeva", ex);
+        }
+    }
+
+    public Assignment approveRequest(int assignmentId) {
+        try {
+            return dao.approveRequest(assignmentId).orElseThrow(() -> new ServiceException("assignment.not_found"));
+        } catch (SQLException ex) {
+            throw new ServiceException("Greška pri odobravanju zahtjeva", ex);
+        }
+    }
+
+    public Assignment rejectRequest(int assignmentId, String reason) {
+        try {
+            return dao.rejectRequest(assignmentId, reason).orElseThrow(() -> new ServiceException("assignment.not_found"));
+        } catch (SQLException ex) {
+            throw new ServiceException("Greška pri odbijanju zahtjeva", ex);
+
         }
     }
 
@@ -46,8 +90,7 @@ public class AssignmentService {
         try {
             if (!dao.delete(id)) throw new ServiceException("assignment.not_found");
         } catch (SQLException ex) {
-            throw new ServiceException("Failed deleting assignment", ex);
+            throw new ServiceException("Greška pri brisanju zahtjeva", ex);
         }
     }
 }
-

@@ -26,10 +26,10 @@
                                 <MenuItem text="Upravljanje korisnicima" fx:id="manageUsersMenuItem" onAction="#handleManageUsers"/>
                             </items>
                         </Menu>
-                        <!-- admin & magacioner -->
                         <Menu text="Skladište" fx:id="warehouseMenu">
                             <items>
-                                <MenuItem text="Materijali" fx:id="viewItemsMenuItem" onAction="#handleViewItems"/>
+                                <MenuItem text="Sirovine" fx:id="viewItemsMenuItem" onAction="#handleViewItems"/>
+                                <MenuItem text="Zahtjevi za sirovine" fx:id="viewRequestsMenuItem" onAction="#handleViewRequests"/>
                             </items>
                         </Menu>
                         <Menu text="Radni nalozi" fx:id="workMenu">

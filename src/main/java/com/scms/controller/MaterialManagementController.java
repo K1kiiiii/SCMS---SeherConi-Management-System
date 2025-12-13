@@ -3,6 +3,7 @@ package com.scms.controller;
 import com.scms.model.Material;
 import com.scms.service.MaterialService;
 import com.scms.service.ServiceException;
+import com.scms.service.AssignmentService;
 import com.scms.util.RoleManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -36,8 +37,10 @@ public class MaterialManagementController {
     @FXML private Button addButton;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
+    @FXML private Button requestButton;
 
     private final MaterialService materialService = new MaterialService();
+    private final AssignmentService assignmentService = new AssignmentService();
     private ObservableList<Material> allMaterials = FXCollections.observableArrayList();
     private FilteredList<Material>   filteredMaterials;
 
@@ -80,7 +83,7 @@ public class MaterialManagementController {
             filteredMaterials = new FilteredList<>(allMaterials, m -> true);
             materialTable.setItems(filteredMaterials);
         } catch (ServiceException ex) {
-            showError("Greška pri učitavanju materijala", ex.getMessage());
+            showError("Greška pri učitavanju liste sirovina", ex.getMessage());
         }
     }
 
@@ -105,6 +108,8 @@ public class MaterialManagementController {
         addButton.setDisable(!canEdit);
         editButton.setDisable(!canEdit);
         deleteButton.setDisable(!canEdit);
+        // ostali nemaju opciju za zahtjev sirovina
+        requestButton.setDisable(!RoleManager.isRadnik());
     }
 
     @FXML
@@ -171,7 +176,7 @@ public class MaterialManagementController {
                     setupFilters();
                 }
             } catch (ServiceException ex) {
-                showError("Greška pri kreiranju materijala", ex.getMessage());
+                showError("Greška pri kreiranju sirovine", ex.getMessage());
             }
         }
     }
@@ -195,7 +200,7 @@ public class MaterialManagementController {
                 materialTable.refresh();
                 setupFilters();
             } catch (ServiceException ex) {
-                showError("Greška pri ažuriranju materijala", ex.getMessage());
+                showError("Greška pri ažuriranju sirovine", ex.getMessage());
             }
         }
     }
@@ -204,14 +209,14 @@ public class MaterialManagementController {
     private void handleDeleteMaterial(ActionEvent event) {
         Material selected = materialTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showWarning("Nije odabran materijal",
-                    "Molimo odaberite materijal koji želite obrisati.");
+            showWarning("Nije odabrana sirovina",
+                    "Molimo odaberite sirovinu koji želite obrisati.");
             return;
         }
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Brisanje materijala");
-        confirm.setHeaderText("Da li ste sigurni da želite obrisati odabrani materijal?");
+        confirm.setTitle("Brisanje sirovina");
+        confirm.setHeaderText("Da li ste sigurni da želite obrisati odabranu sirovinu?");
         confirm.setContentText(selected.getName());
 
         Optional<ButtonType> result = confirm.showAndWait();
@@ -221,8 +226,79 @@ public class MaterialManagementController {
                 allMaterials.remove(selected);
                 setupFilters();
             } catch (ServiceException ex) {
-                showError("Greška pri brisanju materijala", ex.getMessage());
+                showError("Greška pri brisanju sirovina", ex.getMessage());
             }
+        }
+    }
+
+    @FXML
+    private void handleRequestMaterial(ActionEvent event) {
+        Material selected = materialTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showWarning("Nije odabrana sirovina",
+                    "Molimo odaberite sirovinu koji želite zatražiti.");
+            return;
+        }
+
+        Dialog<Boolean> dialog = new Dialog<>();
+        dialog.setTitle("Zatraži sirovinu");
+        dialog.setHeaderText("Unesite količinu i eventualne napomene");
+
+        ButtonType reqButtonType = new ButtonType("Pošalji", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(reqButtonType, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField quantityField = new TextField();
+        quantityField.setPromptText("Količina");
+        TextArea notesArea = new TextArea();
+        notesArea.setPromptText("Napomene (opcionalno)");
+        notesArea.setPrefRowCount(4);
+
+        grid.add(new Label("Materijal:"), 0, 0);
+        grid.add(new Label(selected.getName()), 1, 0);
+        grid.add(new Label("Količina:"), 0, 1);
+        grid.add(quantityField, 1, 1);
+        grid.add(new Label("Napomene:"), 0, 2);
+        grid.add(notesArea, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == reqButtonType) {
+                try {
+                    double qty = Double.parseDouble(quantityField.getText());
+                    if (qty <= 0) {
+                        showWarning("Neispravan unos", "Količina mora biti veća od 0.");
+                        return false;
+                    }
+
+                    int userId = RoleManager.getLoggedInUser().getId();
+                    String notes = notesArea.getText();
+
+                    assignmentService.requestMaterial(userId, selected.getId(), qty, notes);
+                    return true;
+                } catch (NumberFormatException ex) {
+                    showWarning("Neispravan unos", "Količina mora biti broj.");
+                    return false;
+                } catch (ServiceException ex) {
+                    showError("Greška pri slanju zahtjeva", ex.getMessage());
+                    return false;
+                }
+            }
+            return false;
+        });
+
+        Optional<Boolean> result = dialog.showAndWait();
+        if (result.isPresent() && result.get()) {
+            Alert info = new Alert(Alert.AlertType.INFORMATION);
+            info.setTitle("Zahtjev poslan");
+            info.setHeaderText(null);
+            info.setContentText("Zahtjev za sirovinu je poslan. Čekajte odobrenje od strane magacionera.");
+            info.showAndWait();
         }
     }
 
@@ -232,9 +308,9 @@ public class MaterialManagementController {
         boolean editMode = (material != null);
 
         Dialog<Material> dialog = new Dialog<>();
-        dialog.setTitle(editMode ? "Uredi materijal" : "Novi materijal");
-        dialog.setHeaderText(editMode ? "Uredi postojeći materijal"
-                : "Unesite podatke o materijalu");
+        dialog.setTitle(editMode ? "Uredi sirovinu" : "Nova sirovina");
+        dialog.setHeaderText(editMode ? "Uredi postojeću sirovinu"
+                : "Unesite podatke o sirovini");
 
         ButtonType saveButtonType = new ButtonType("Snimi", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
