@@ -5,6 +5,10 @@ import com.scms.util.PasswordUtil;
 import java.sql.*;
 
 public class DatabaseConfig {
+    /*
+
+    setup lokalne baze,,
+
     private static final String HOST = "localhost";
     private static final int PORT = 3306;
     private static final String DB_NAME = "scms_db";
@@ -15,26 +19,23 @@ public class DatabaseConfig {
     private static final String USER;
     private static final String PASS;
 
-    static {
-        String envUser = System.getenv("SCMS_DB_USER");
-        String envPass = System.getenv("SCMS_DB_PASS");
-        USER = (envUser != null && !envUser.isBlank()) ? envUser : DEFAULT_USER;
-        PASS = (envPass != null) ? envPass : DEFAULT_PASS;
-    }
+    */
 
-    private static final String BASE_URL = "jdbc:mysql://" + HOST + ":" + PORT + "/?serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    private static final String BASE_URL = "jdbc:mysql://avnadmin:AVNS_nutl3nT8fn4JNvY39Bv@scms-db-scms.g.aivencloud.com:19009/defaultdb?ssl-mode=REQUIRED";
+    private static final String USER = "avnadmin";
+    private static final String PASS = "AVNS_nutl3nT8fn4JNvY39Bv";
+    private static final String HOST = "scms-db-scms.g.aivencloud.com";
+
 
     public static void initDatabase() {
         try {
             // 1) Connect to server (no DB) to create DB if not exists
             try (Connection conn = DriverManager.getConnection(BASE_URL, USER, PASS);
                  Statement st = conn.createStatement()) {
-                st.executeUpdate("CREATE DATABASE IF NOT EXISTS " + DB_NAME + " CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;");
+                st.executeUpdate("CREATE DATABASE IF NOT EXISTS scms_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;");
             }
-
             // 2) Connect to the created DB to create tables
-            String dbUrl = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME + "?serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            try (Connection conn = DriverManager.getConnection(dbUrl, USER, PASS);
+            try (Connection conn = DriverManager.getConnection(BASE_URL, USER, PASS);
                  Statement st = conn.createStatement()) {
 
                 // users table
@@ -124,7 +125,6 @@ public class DatabaseConfig {
                 }
             }
 
-            System.out.println("Database initialization completed (db=" + DB_NAME + ").");
         } catch (SQLException ex) {
             System.err.println("Failed initializing database: " + ex.getMessage());
             ex.printStackTrace();
@@ -133,8 +133,7 @@ public class DatabaseConfig {
 
     // glavna veza sa bazom podataka
     public static Connection getConnection() throws SQLException {
-        String dbUrl = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME + "?serverTimezone=UTC&allowPublicKeyRetrieval=true";
-        return DriverManager.getConnection(dbUrl, USER, PASS);
+        return DriverManager.getConnection(BASE_URL, USER, PASS);
     }
 
     // Helper for quick debugging from command line
