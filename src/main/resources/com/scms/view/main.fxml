@@ -9,66 +9,31 @@
             prefWidth="900" prefHeight="600">
 
     <top>
-        <VBox spacing="0">
+        <HBox spacing="10" alignment="CENTER_LEFT" prefHeight="48" style="-fx-background-color: -fx-background;">
             <children>
-                <MenuBar fx:id="menuBar">
-                    <menus>
-                        <Menu text="Sistem" fx:id="systemMenu">
-                            <items>
-                                <MenuItem text="Odjava" fx:id="logoutMenuItem" onAction="#handleLogout"/>
-                                <SeparatorMenuItem/>
-                                <MenuItem text="Izlaz" fx:id="exitMenuItem" onAction="#handleExit"/>
-                            </items>
-                        </Menu>
-                        <!-- ovo je admin only -->
-                        <Menu text="Korisnici" fx:id="usersMenu">
-                            <items>
-                                <MenuItem text="Upravljanje korisnicima" fx:id="manageUsersMenuItem" onAction="#handleManageUsers"/>
-                            </items>
-                        </Menu>
-                        <Menu text="Skladište" fx:id="warehouseMenu">
-                            <items>
-                                <MenuItem text="Sirovine" fx:id="viewItemsMenuItem" onAction="#handleViewItems"/>
-                                <MenuItem text="Zahtjevi za sirovine" fx:id="viewRequestsMenuItem" onAction="#handleViewRequests"/>
-                            </items>
-                        </Menu>
-                        <Menu text="Radni nalozi" fx:id="workMenu">
-                            <items>
-                                <MenuItem text="Pregled radnih naloga" fx:id="workOrdersMenuItem" onAction="#handleWorkOrders"/>
-                            </items>
-                        </Menu>
+                <Label text="SCMS" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="userInfoLabel" text="Niste prijavljeni" />
+                <Button text="Odjava" onAction="#handleLogout" />
+            </children>
+            <padding>
+                <Insets top="6" right="10" bottom="6" left="10"/>
+            </padding>
+        </HBox>
+    </top>
 
-                        <!-- admin only -->
-                        <Menu text="Statistika" fx:id="statisticsMenu">
-                            <items>
-                                <MenuItem text="Pregled statistike" fx:id="statisticsOverviewMenuItem" onAction="#handleStatisticsOverview"/>
-                            </items>
-                        </Menu>
-
-                        <Menu text="Pomoć" fx:id="helpMenu">
-                            <items>
-                                <MenuItem text="O aplikaciji" fx:id="aboutMenuItem" onAction="#handleAbout"/>
-                            </items>
-                        </Menu>
-                    </menus>
-                </MenuBar>
-                <HBox spacing="10" alignment="CENTER_LEFT" prefHeight="40">
-                    <children>
-                        <Label text="SCMS Dashboard"
-                               style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
-
-                        <Region HBox.hgrow="ALWAYS"/>
-
-                        <Label fx:id="userInfoLabel" text="Niste prijavljeni"/>
-                    </children>
-                    <padding>
-                        <Insets top="5" right="10" bottom="5" left="10"/>
-                    </padding>
-                </HBox>
-
+    <left>
+        <VBox fx:id="sideMenu" spacing="8" alignment="TOP_LEFT" prefWidth="160" style="-fx-background-color: #2b2b2b; -fx-padding: 10;">
+            <children>
+                <Button fx:id="btnDashboard" text="Nadzorna ploča" maxWidth="Infinity" onAction="#handleDashboard" />
+                <Button fx:id="btnWarehouse" text="Skladište" maxWidth="Infinity" onAction="#handleViewItems" />
+                <Button fx:id="btnRequests" text="Zahtjevi" maxWidth="Infinity" onAction="#handleViewRequests" />
+                <Button fx:id="btnUsers" text="Korisnici" maxWidth="Infinity" onAction="#handleManageUsers" />
+                <Button fx:id="btnStatistics" text="Statistika" maxWidth="Infinity" onAction="#handleStatisticsOverview" />
             </children>
         </VBox>
-    </top>
+    </left>
+
     <center>
         <StackPane fx:id="contentArea">
             <children>

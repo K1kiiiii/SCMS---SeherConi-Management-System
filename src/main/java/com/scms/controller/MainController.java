@@ -5,12 +5,12 @@ import com.scms.util.RoleManager;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -21,34 +21,13 @@ public class MainController {
     @FXML private Label userInfoLabel;
     @FXML private StackPane contentArea;
 
-    @FXML private Menu systemMenu;
-    @FXML private Menu usersMenu;
-    @FXML private Menu warehouseMenu;
-    @FXML private Menu workMenu;
-    @FXML private Menu statisticsMenu;
-    @FXML private Menu helpMenu;
-
-    @FXML private MenuItem logoutMenuItem;
-    @FXML private MenuItem exitMenuItem;
-
-    @FXML private MenuItem manageUsersMenuItem;
-
-    @FXML private MenuItem viewItemsMenuItem;
-    @FXML private MenuItem createItemMenuItem;
-    @FXML private MenuItem viewWarehouseMenuItem;
-    @FXML private MenuItem goodsInMenuItem;
-    @FXML private MenuItem goodsOutMenuItem;
-    @FXML private MenuItem ordersMenuItem;
-    @FXML private MenuItem viewRequestsMenuItem;
-
-    @FXML private MenuItem workOrdersMenuItem;
-    @FXML private MenuItem updateWorkOrderStatusMenuItem;
-    @FXML private MenuItem materialRequestMenuItem;
-    @FXML private MenuItem reportsMenuItem;
-
-    @FXML private MenuItem statisticsOverviewMenuItem;
-
-    @FXML private MenuItem aboutMenuItem;
+    // side menu and buttons
+    @FXML private VBox sideMenu;
+    @FXML private Button btnDashboard;
+    @FXML private Button btnWarehouse;
+    @FXML private Button btnRequests;
+    @FXML private Button btnUsers;
+    @FXML private Button btnStatistics;
 
     @FXML
     public void initialize() {
@@ -62,26 +41,29 @@ public class MainController {
             welcomeLabel.setText("Dobrodošli u SCMS");
         }
         applyRoleVisibility();
+
+        // default dashboard
+        loadPage("/com/scms/view/dashboard.fxml");
     }
 
     private void applyRoleVisibility() {
-        // puni access za admina
+        // admin ima pristup svemu
         if (RoleManager.isAdmin()) {
-            workMenu.setVisible(false); //iako bi mogao imati pristup, adminu ovo aposlutno ne treba,, valjda
             return;
         }
 
         if (RoleManager.isMagacioner()) {
-            // magacioner nece upravljati radnicima i poslovnom statistikom
-            usersMenu.setVisible(false);
-            statisticsMenu.setVisible(false);
-            workMenu.setVisible(false);
+            // magacioner ne upravlja korisnicima i statistikama
+            btnUsers.setVisible(false);
+            btnStatistics.setVisible(false);
             return;
         }
 
         if (RoleManager.isRadnik()) {
-            usersMenu.setVisible(false);
-            statisticsMenu.setVisible(false);}
+            // radnik ne upravlja korisnicima i statistikama
+            btnUsers.setVisible(false);
+            btnStatistics.setVisible(false);
+        }
     }
 
     @FXML
@@ -92,7 +74,7 @@ public class MainController {
             Parent loginView = FXMLLoader.load(
                     getClass().getResource("/com/scms/view/login.fxml")
             );
-            Scene scene =  new Scene(loginView);
+            javafx.scene.Scene scene =  new javafx.scene.Scene(loginView);
             String css = getClass().getResource("/com/scms/css/dark-theme.css").toExternalForm();
             scene.getStylesheets().add(css);
             Stage stage = (Stage) contentArea.getScene().getWindow();
@@ -105,76 +87,43 @@ public class MainController {
     }
 
     @FXML
-    private void handleExit(ActionEvent event) {
-        System.out.println("Exit clicked");
-        System.exit(0);
-    }
-
-    @FXML
-    private void handleManageUsers(ActionEvent event) {
-        try {
-            Parent view = FXMLLoader.load(
-                    getClass().getResource("/com/scms/view/users.fxml")
-            );
-            contentArea.getChildren().setAll(view);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void handleDashboard(ActionEvent event) {
+        loadPage("/com/scms/view/dashboard.fxml");
     }
 
     @FXML
     private void handleViewItems(ActionEvent event) {
-        try {
-            Parent view = FXMLLoader.load(
-                    getClass().getResource("/com/scms/view/materials.fxml")
-            );
-            contentArea.getChildren().setAll(view);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        loadPage("/com/scms/view/materials.fxml");
     }
 
     @FXML
     private void handleViewRequests(ActionEvent event) {
-        try {
-            Parent view = FXMLLoader.load(
-                    getClass().getResource("/com/scms/view/requests.fxml")
-            );
-            contentArea.getChildren().setAll(view);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // funkcije to be implemented
-
-    @FXML
-    private void handleWorkOrders(ActionEvent event) {
-        System.out.println("Work Orders clicked");
+        loadPage("/com/scms/view/requests.fxml");
     }
 
     @FXML
-    private void handleUpdateWorkOrderStatus(ActionEvent event) {
-        System.out.println("Update Work Order Status clicked");
-    }
-
-    @FXML
-    private void handleMaterialRequest(ActionEvent event) {
-        System.out.println("Material Request clicked");
-    }
-
-    @FXML
-    private void handleReports(ActionEvent event) {
-        System.out.println("Reports clicked");
+    private void handleManageUsers(ActionEvent event) {
+        loadPage("/com/scms/view/users.fxml");
     }
 
     @FXML
     private void handleStatisticsOverview(ActionEvent event) {
-        System.out.println("Statistics Overview clicked");
+        loadPage("/com/scms/view/statistics.fxml");
     }
 
     @FXML
-    private void handleAbout(ActionEvent event) {
-        System.out.println("About clicked");
+    private void handleExit(ActionEvent event) {
+        System.exit(0);
+    }
+
+    // reusable page loader
+    public void loadPage(String fxmlPath) {
+        try {
+            Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
+            // clear and set single child
+            contentArea.getChildren().setAll(view);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
