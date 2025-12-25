@@ -2,11 +2,12 @@ package com.scms.controller;
 
 import com.scms.model.User;
 import com.scms.util.RoleManager;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
@@ -42,8 +43,33 @@ public class MainController {
         }
         applyRoleVisibility();
 
-        // default dashboard
+        // load default dashboard
         loadPage("/com/scms/view/dashboard.fxml");
+        // highlight dashboard as active
+        setActiveButton(btnDashboard);
+
+        // Ensure the app stylesheet is applied to the main scene; the scene may not be available yet
+        Platform.runLater(() -> {
+            if (contentArea == null) return;
+            Scene scene = contentArea.getScene();
+            if (scene != null) {
+                addAppStylesheet(scene);
+            } else {
+                // listen for when the scene becomes available
+                contentArea.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                    if (newScene != null) addAppStylesheet(newScene);
+                });
+            }
+        });
+    }
+
+    private void addAppStylesheet(Scene scene) {
+        try {
+            String css = getClass().getResource("/com/scms/css/dark-theme.css").toExternalForm();
+            if (!scene.getStylesheets().contains(css)) scene.getStylesheets().add(css);
+        } catch (Exception ex) {
+            System.err.println("Could not load app stylesheet: " + ex.getMessage());
+        }
     }
 
     private void applyRoleVisibility() {
@@ -88,32 +114,50 @@ public class MainController {
 
     @FXML
     private void handleDashboard(ActionEvent event) {
+        setActiveButton(btnDashboard);
         loadPage("/com/scms/view/dashboard.fxml");
     }
 
     @FXML
     private void handleViewItems(ActionEvent event) {
+        setActiveButton(btnWarehouse);
         loadPage("/com/scms/view/materials.fxml");
     }
 
     @FXML
     private void handleViewRequests(ActionEvent event) {
+        setActiveButton(btnRequests);
         loadPage("/com/scms/view/requests.fxml");
     }
 
     @FXML
     private void handleManageUsers(ActionEvent event) {
+        setActiveButton(btnUsers);
         loadPage("/com/scms/view/users.fxml");
     }
 
     @FXML
     private void handleStatisticsOverview(ActionEvent event) {
+        setActiveButton(btnStatistics);
         loadPage("/com/scms/view/statistics.fxml");
     }
 
     @FXML
     private void handleExit(ActionEvent event) {
         System.exit(0);
+    }
+
+    // helper to mark active menu button using CSS class
+    private void setActiveButton(Button active) {
+        Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnRequests, btnUsers, btnStatistics};
+        for (Button b : buttons) {
+            if (b == null) continue;
+            if (b.equals(active)) {
+                if (!b.getStyleClass().contains("menu-active")) b.getStyleClass().add("menu-active");
+            } else {
+                b.getStyleClass().removeAll("menu-active");
+            }
+        }
     }
 
     // reusable page loader

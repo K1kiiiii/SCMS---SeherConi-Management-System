@@ -51,3 +51,46 @@
     -fx-text-fill: #f44336;
     -fx-font-size: 11px;
 }
+
+/* Side menu button - moved from inline styles to CSS class for cleanliness */
+.side-menu-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #e0e0e0;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 10 14;
+    -fx-font-size: 13px;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+    -fx-max-width: Infinity;
+}
+
+.side-menu-button:hover {
+    -fx-background-color: rgba(255,255,255,0.03);
+}
+
+.side-menu-button:armed, .side-menu-button:pressed {
+    -fx-background-color: rgba(255,255,255,0.06);
+}
+
+.side-menu-button:focused {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 6, 0, 0, 0);
+}
+
+/* Active menu button using style class */
+.side-menu-button.menu-active {
+    -fx-background-color: rgba(100,149,237,0.12); /* subtle blue tint */
+    -fx-text-fill: #ffffff;
+    -fx-border-color: transparent transparent transparent rgba(100,149,237,0.9);
+    -fx-border-width: 0 0 0 4; /* left accent */
+}
+
+.side-menu-button.menu-active:hover {
+    -fx-background-color: rgba(100,149,237,0.14);
+}
+
+/* Page title style: used by top labels in pages */
+.page-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: bold;
+}

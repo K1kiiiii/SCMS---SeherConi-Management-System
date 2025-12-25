@@ -9,7 +9,7 @@
     <top>
         <HBox spacing="8">
             <children>
-                <Label text="Zahtjevi"/>
+                <Label text="Zahtjevi" styleClass="page-title"/>
                 <ComboBox fx:id="statusFilter" prefWidth="150"/>
                 <Button text="Refresh" onAction="#handleRefresh"/>
             </children>

@@ -14,7 +14,7 @@
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <children>
                         <Label text="Dostupne sirovine"
-                               style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                               styleClass="page-title" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
 
                         <Region HBox.hgrow="ALWAYS"/>
 
