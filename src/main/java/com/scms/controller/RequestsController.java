@@ -11,13 +11,17 @@ import com.scms.util.RoleManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.concurrent.Task;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -43,6 +47,10 @@ public class RequestsController {
     private FilteredList<Assignment> filteredRequests;
     private final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
+    // caches to avoid per-cell DB calls
+    private final Map<Integer, String> userNameMap = new HashMap<>();
+    private final Map<Integer, String> materialNameMap = new HashMap<>();
+
 
     @FXML
     public void initialize() {
@@ -66,6 +74,7 @@ public class RequestsController {
         colNotes.setCellValueFactory(new PropertyValueFactory<>("notes"));
         colAssignedAt.setCellValueFactory(new PropertyValueFactory<>("assignedAt"));
 
+        // Use cached maps to avoid hitting services per cell render
         colUser.setCellFactory(c -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -74,12 +83,9 @@ public class RequestsController {
                     setText(null);
                 } else {
                     Assignment a = (Assignment) getTableRow().getItem();
-                    try {
-                        User u = userService.getUserById(a.getUserId());
-                        setText(u.getUsername());
-                    } catch (ServiceException ex) {
-                        setText(String.valueOf(a.getUserId()));
-                    }
+                    String name = userNameMap.get(a.getUserId());
+                    if (name != null) setText(name);
+                    else setText(String.valueOf(a.getUserId()));
                 }
             }
         });
@@ -92,12 +98,9 @@ public class RequestsController {
                     setText(null);
                 } else {
                     Assignment a = (Assignment) getTableRow().getItem();
-                    try {
-                        Material m = materialService.getMaterial(a.getMaterialId());
-                        setText(m.getName());
-                    } catch (ServiceException ex) {
-                        setText(String.valueOf(a.getMaterialId()));
-                    }
+                    String name = materialNameMap.get(a.getMaterialId());
+                    if (name != null) setText(name);
+                    else setText(String.valueOf(a.getMaterialId()));
                 }
             }
         });
@@ -113,14 +116,41 @@ public class RequestsController {
     }
 
     private void loadRequests() {
-        try {
-            List<Assignment> list;
-            if (RoleManager.isAdmin() || RoleManager.isMagacioner()) {
-                list = assignmentService.listAll();
-            } else {
-                User current = RoleManager.getLoggedInUser();
-                list = assignmentService.listAssignmentsForUser(current.getId());
+        // Run DB/service work off the FX thread
+        Task<List<Assignment>> task = new Task<>() {
+            @Override
+            protected List<Assignment> call() throws Exception {
+                List<Assignment> list;
+                if (RoleManager.isAdmin() || RoleManager.isMagacioner()) {
+                    list = assignmentService.listAll();
+                } else {
+                    User current = RoleManager.getLoggedInUser();
+                    list = assignmentService.listAssignmentsForUser(current.getId());
+                }
+
+                // populate caches
+                try {
+                    List<User> users = userService.getAllUsers();
+                    userNameMap.clear();
+                    for (User u : users) userNameMap.put(u.getId(), u.getUsername());
+                } catch (ServiceException ex) {
+                    // ignore here; UI will still show ids
+                }
+
+                try {
+                    List<Material> materials = materialService.listMaterials();
+                    materialNameMap.clear();
+                    for (Material m : materials) materialNameMap.put(m.getId(), m.getName());
+                } catch (ServiceException ex) {
+                    // ignore here; UI will still show ids
+                }
+
+                return list;
             }
+        };
+
+        task.setOnSucceeded(e -> {
+            List<Assignment> list = task.getValue();
             allRequests = FXCollections.observableArrayList(list);
             filteredRequests = new FilteredList<>(allRequests, r -> true);
             requestsTable.setItems(filteredRequests);
@@ -132,10 +162,16 @@ public class RequestsController {
             statusFilter.getItems().add("Svi");
             statuses.stream().sorted(String.CASE_INSENSITIVE_ORDER).forEach(statusFilter.getItems()::add);
             statusFilter.getSelectionModel().selectFirst();
+        });
 
-        } catch (ServiceException ex) {
-            showError("Greška pri učitavanju zahtjeva", ex.getMessage());
-        }
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            showError("Greška pri učitavanju zahtjeva", ex == null ? "Unknown error" : ex.getMessage());
+        });
+
+        Thread th = new Thread(task, "requests-loader");
+        th.setDaemon(true);
+        th.start();
     }
 
     @FXML
