@@ -3,16 +3,24 @@ package com.scms.controller;
 import com.scms.dao.AssignmentDao;
 import com.scms.dao.MaterialDao;
 import com.scms.dao.UserDao;
+import com.scms.dao.TaskDao;
+import com.scms.dao.RecipeDao;
 import com.scms.model.Assignment;
 import com.scms.model.Material;
+import com.scms.model.Task;
 import com.scms.model.User;
+import com.scms.model.Recipe;
+import com.scms.model.RecipeItem;
 import com.scms.util.RoleManager;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.FlowPane;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -21,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class DashboardController {
@@ -29,10 +38,13 @@ public class DashboardController {
     @FXML private Label subtitleLabel;
 
     @FXML private GridPane cardsGrid;
+    @FXML private FlowPane tasksPane;
 
     private final MaterialDao materialDao = new MaterialDao();
     private final AssignmentDao assignmentDao = new AssignmentDao();
     private final UserDao userDao = new UserDao();
+    private final TaskDao taskDao = new TaskDao();
+    private final RecipeDao recipeDao = new RecipeDao();
 
     private static final double LOW_STOCK_THRESHOLD_DEFAULT = 5.0;
 
@@ -56,7 +68,7 @@ public class DashboardController {
         }
 
         // Use a JavaFX Task to run DB work off the FX thread and update UI on success
-        Task<List<CardInfo>> loadTask = new Task<>() {
+        javafx.concurrent.Task<List<CardInfo>> loadTask = new javafx.concurrent.Task<>() {
             @Override
             protected List<CardInfo> call() throws Exception {
                 return buildCardDataForRole();
@@ -68,6 +80,9 @@ public class DashboardController {
             List<VBox> uiCards = new ArrayList<>();
             for (CardInfo ci : cardData) uiCards.add(createCardUI(ci.title, ci.value));
             populateGrid(uiCards);
+
+            // load tasks for worker
+            try { loadWorkerTasks(); } catch (Exception ex) { logError(ex, "loadWorkerTasks"); }
         });
 
         loadTask.setOnFailed(evt -> {
@@ -79,6 +94,8 @@ public class DashboardController {
             fallback.add(createCardUI("Ukupno sirovina", "0"));
             fallback.add(createCardUI("Zahtjevi (ovaj mjesec)", "0"));
             populateGrid(fallback);
+
+            try { loadWorkerTasks(); } catch (Exception ex2) { logError(ex2, "loadWorkerTasks"); }
         });
 
         Thread t = new Thread(loadTask, "dashboard-loader");
@@ -148,6 +165,137 @@ public class DashboardController {
         VBox card = new VBox(6, titleLbl, valueLbl);
         card.setStyle("-fx-background-color:#ffffff; -fx-padding:12; -fx-border-radius:6; -fx-background-radius:6; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 6, 0, 0, 2);");
         return card;
+    }
+
+    // Load tasks for logged-in worker and populate tasksPane — runs on FX thread but calls DAO synchronously (small lists)
+    private void loadWorkerTasks() {
+        User u = RoleManager.getLoggedInUser();
+        tasksPane.getChildren().clear();
+        if (u == null) return;
+        String role = u.getRole() != null ? u.getRole().toUpperCase() : "";
+        if (!role.equals("RADNIK") && !role.equals("WORKER")) return;
+
+        try {
+            List<Task> tasks = taskDao.findByAssignedUser(u.getId());
+            for (Task t : tasks) {
+                VBox card = createTaskCard(t);
+                tasksPane.getChildren().add(card);
+            }
+        } catch (SQLException ex) {
+            logError(ex, "loadWorkerTasks");
+        }
+    }
+
+    private VBox createTaskCard(Task t) {
+        String recipeName = "Recept: " + t.getRecipeId();
+        try {
+            Optional<Recipe> r = recipeDao.findById(t.getRecipeId());
+            if (r.isPresent()) recipeName = r.get().getName();
+        } catch (SQLException ex) {
+            logError(ex, "fetchRecipeName");
+        }
+
+        Label title = new Label(recipeName);
+        title.setStyle("-fx-font-weight:bold;");
+        Label target = new Label(String.format("Cilj: %.2f %s", t.getQuantityTarget(), t.getUnit() != null ? t.getUnit() : ""));
+        Label status = new Label("Status: " + (t.getStatus()!=null? t.getStatus():"PENDING"));
+
+        HBox actions = new HBox(8);
+
+        Button requestBtn = new Button("Zatraži");
+        requestBtn.setOnAction(evt -> onRequestIngredients(t));
+
+        Button startBtn = new Button("Započni");
+        startBtn.setOnAction(evt -> {
+            try { boolean ok = taskDao.updateStatus(t.getId(), "IN_PROGRESS"); if (ok) { t.setStatus("IN_PROGRESS"); loadWorkerTasks(); } } catch (SQLException ex) { logError(ex, "updateStatus"); }
+        });
+
+        Button finishBtn = new Button("Završi");
+        finishBtn.setOnAction(evt -> onCompleteTask(t));
+
+        // show buttons depending on status
+        String st = t.getStatus() != null ? t.getStatus().toUpperCase() : "PENDING";
+        if (st.equals("PENDING")) {
+            actions.getChildren().addAll(startBtn, requestBtn);
+        } else if (st.equals("IN_PROGRESS")) {
+            actions.getChildren().add(finishBtn);
+        }
+
+        VBox card = new VBox(6, title, target, status, actions);
+        card.setStyle("-fx-background-color:#ffffff; -fx-padding:12; -fx-border-radius:6; -fx-background-radius:6;");
+        card.setPrefWidth(320);
+        return card;
+    }
+
+    private void onRequestIngredients(Task t) {
+        // Create pending Assignment requests for each recipe item.
+        // Assumption: RecipeItem.quantity represents quantity needed per 1 output unit; we scale by task.quantityTarget.
+        try {
+            Optional<Recipe> maybe = recipeDao.findById(t.getRecipeId());
+            if (maybe.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Greška", "Ne mogu pronaći recept za zadatak.");
+                return;
+            }
+
+            Recipe recipe = maybe.get();
+            List<RecipeItem> items = recipe.getItems();
+            if (items == null || items.isEmpty()) {
+                showAlert(Alert.AlertType.INFORMATION, "Info", "Recept nema dodanih sirovina.");
+                return;
+            }
+
+            User current = RoleManager.getLoggedInUser();
+            if (current == null) { showAlert(Alert.AlertType.ERROR, "Greška", "Niste prijavljeni."); return; }
+
+            int created = 0;
+            for (RecipeItem ri : items) {
+                Assignment a = new Assignment();
+                a.setUserId(current.getId());
+                a.setMaterialId(ri.getMaterialId());
+                double qty = ri.getQuantity() * t.getQuantityTarget();
+                a.setQuantity(qty);
+                a.setStatus("PENDING");
+                a.setNotes("Za zadatak id=" + t.getId() + ", recept=" + recipe.getName());
+                assignmentDao.createRequest(a);
+                created++;
+            }
+
+            showAlert(Alert.AlertType.INFORMATION, "Uspjeh", "Poslano " + created + " zahtjeva za sirovine.");
+        } catch (SQLException ex) {
+            logError(ex, "onRequestIngredients");
+            showAlert(Alert.AlertType.ERROR, "Greška", "Ne mogu poslati zahtjeve: " + ex.getMessage());
+        }
+    }
+
+    private void onCompleteTask(Task t) {
+        // prompt for produced quantity (simple input dialog)
+        javafx.scene.control.TextInputDialog d = new javafx.scene.control.TextInputDialog();
+        d.setTitle("Završi zadatak");
+        d.setHeaderText(null);
+        d.setContentText("Unesite proizvedenu količinu:");
+        java.util.Optional<String> res = d.showAndWait();
+        if (res.isPresent()) {
+            try {
+                Double produced = Double.parseDouble(res.get());
+                boolean ok = taskDao.completeTask(t.getId(), produced);
+                if (ok) loadWorkerTasks();
+            } catch (NumberFormatException ex) { logError(ex, "parseProduced"); }
+            catch (SQLException ex) { logError(ex, "completeTask"); }
+        }
+    }
+
+    // small helper to show alerts on FX thread
+    private void showAlert(Alert.AlertType type, String title, String msg) {
+        Alert a = new Alert(type);
+        a.setTitle(title);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
+    }
+
+    private void logError(Throwable ex, String context) {
+        System.err.println("[ERROR] " + context + ": " + (ex != null ? ex.getMessage() : "null"));
+        if (ex != null) ex.printStackTrace(System.err);
     }
 
     // Metric helpers (all safe to call on background thread)

@@ -69,4 +69,22 @@ public class ResultSetMapper {
         ri.setUnit(rs.getString("unit"));
         return ri;
     }
+
+    // map Task rows to Task model
+    public static Task mapTask(ResultSet rs) throws SQLException {
+        Task t = new Task();
+        t.setId(rs.getInt("id"));
+        t.setRecipeId(rs.getInt("recipe_id"));
+        try { int at = rs.getInt("assigned_to"); if (!rs.wasNull()) t.setAssignedTo(at); } catch (SQLException ignored) {}
+        try { int cb = rs.getInt("created_by"); if (!rs.wasNull()) t.setCreatedBy(cb); } catch (SQLException ignored) {}
+        try { t.setQuantityTarget(rs.getDouble("quantity_target")); } catch (SQLException ignored) {}
+        try { t.setUnit(rs.getString("unit")); } catch (SQLException ignored) {}
+        try { java.sql.Date d = rs.getDate("deadline"); if (d != null) t.setDeadline(d.toLocalDate()); } catch (SQLException ignored) {}
+        try { t.setStatus(rs.getString("status")); } catch (SQLException ignored) {}
+        try { Timestamp c = rs.getTimestamp("created_at"); if (c != null) t.setCreatedAt(c.toLocalDateTime()); } catch (SQLException ignored) {}
+        try { Timestamp s = rs.getTimestamp("started_at"); if (s != null) t.setStartedAt(s.toLocalDateTime()); } catch (SQLException ignored) {}
+        try { Timestamp co = rs.getTimestamp("completed_at"); if (co != null) t.setCompletedAt(co.toLocalDateTime()); } catch (SQLException ignored) {}
+        try { double pq = rs.getDouble("produced_quantity"); if (!rs.wasNull()) t.setProducedQuantity(pq); } catch (SQLException ignored) {}
+        return t;
+    }
 }

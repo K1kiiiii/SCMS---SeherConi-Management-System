@@ -27,6 +27,7 @@ public class MainController {
     @FXML private Button btnDashboard;
     @FXML private Button btnWarehouse;
     @FXML private Button btnRequests;
+    @FXML private Button btnRecipes;
     @FXML private Button btnUsers;
     @FXML private Button btnStatistics;
 
@@ -131,6 +132,12 @@ public class MainController {
     }
 
     @FXML
+    private void handleViewRecipes(ActionEvent event) {
+        setActiveButton(btnRecipes);
+        loadPage("/com/scms/view/recipes.fxml");
+    }
+
+    @FXML
     private void handleManageUsers(ActionEvent event) {
         setActiveButton(btnUsers);
         loadPage("/com/scms/view/users.fxml");
@@ -149,7 +156,7 @@ public class MainController {
 
     // helper to mark active menu button using CSS class
     private void setActiveButton(Button active) {
-        Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnRequests, btnUsers, btnStatistics};
+        Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnRequests, btnRecipes, btnUsers, btnStatistics};
         for (Button b : buttons) {
             if (b == null) continue;
             if (b.equals(active)) {

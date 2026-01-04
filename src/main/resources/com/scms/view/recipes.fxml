@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.RecipesController" spacing="16" alignment="TOP_LEFT" style="-fx-padding:20;">
+    <children>
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <children>
+                <VBox spacing="4">
+                    <children>
+                        <Label fx:id="titleLabel" text="Recepti" styleClass="page-title" style="-fx-font-size:20px; -fx-font-weight:bold;" />
+                        <Label fx:id="subtitleLabel" text="Pregled recepata" style="-fx-font-size:12px; -fx-text-fill: #666666;" />
+                    </children>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="addButton" text="Dodaj recept" onAction="#handleAddRecipe" />
+            </children>
+        </HBox>
+
+        <!-- Empty content area for recipes. Controller will populate when needed -->
+        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent; -fx-padding: 8; -fx-border-color: transparent;">
+            <content>
+                <FlowPane fx:id="recipesPane" hgap="12" vgap="12" prefWrapLength="600" />
+            </content>
+        </ScrollPane>
+
+    </children>
+</VBox>
+

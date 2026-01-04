@@ -22,5 +22,13 @@
             </columnConstraints>
         </GridPane>
 
+        <!-- Worker tasks area (will be empty for non-workers) -->
+        <VBox spacing="8">
+            <children>
+                <Label text="Moji zadaci" style="-fx-font-size:14px; -fx-font-weight:bold;" />
+                <FlowPane fx:id="tasksPane" hgap="12" vgap="12" />
+            </children>
+        </VBox>
+
     </children>
 </VBox>

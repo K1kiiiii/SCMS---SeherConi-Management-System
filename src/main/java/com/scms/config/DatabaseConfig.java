@@ -106,6 +106,27 @@ public class DatabaseConfig {
                     ) ENGINE=InnoDB;
                     """);
 
+                // tasks table for production tasks
+                st.executeUpdate("""
+                    CREATE TABLE IF NOT EXISTS tasks (
+                      id INT AUTO_INCREMENT PRIMARY KEY,
+                      recipe_id INT NOT NULL,
+                      assigned_to INT,
+                      created_by INT,
+                      quantity_target DOUBLE,
+                      unit VARCHAR(30),
+                      deadline DATE,
+                      status VARCHAR(50) DEFAULT 'PENDING',
+                      produced_quantity DOUBLE,
+                      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                      started_at TIMESTAMP NULL,
+                      completed_at TIMESTAMP NULL,
+                      FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+                      FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
+                      FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+                    ) ENGINE=InnoDB;
+                    """);
+
                 // Insert default roles if not present
                 st.executeUpdate("INSERT IGNORE INTO roles (name, description) VALUES ('admin','Administrator'),('worker','Worker'),('storekeeper','Storekeeper');");
 
@@ -115,7 +136,7 @@ public class DatabaseConfig {
                     rs.next();
                     if (rs.getInt(1) == 0) {
                         String hashed = PasswordUtil.hashPassword("admin");
-                        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)")) {
+                        try (PreparedStatement ps = conn.prepareStatement("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)") ) {
                             ps.setString(1, "admin");
                             ps.setString(2, hashed);
                             ps.setString(3, "admin");
