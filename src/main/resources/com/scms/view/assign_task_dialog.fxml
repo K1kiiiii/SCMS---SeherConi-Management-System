@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.AssignTaskController" prefWidth="420" prefHeight="240" style="-fx-padding:12;">
+    <children>
+        <VBox spacing="8" AnchorPane.topAnchor="8" AnchorPane.leftAnchor="8" AnchorPane.rightAnchor="8">
+            <children>
+                <Label text="Dodijeli radniku" style="-fx-font-size:16px; -fx-font-weight:bold;" />
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="Radnik:" />
+                        <ComboBox fx:id="workerCombo" prefWidth="240" />
+                    </children>
+                </HBox>
+
+                <HBox spacing="8">
+                    <children>
+                        <Label text="Količina:" />
+                        <TextField fx:id="quantityField" promptText="npr. 10" />
+                        <TextField fx:id="unitField" promptText="kom / kg" prefWidth="80" />
+                    </children>
+                </HBox>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="Rok:" />
+                        <DatePicker fx:id="deadlinePicker" />
+                    </children>
+                </HBox>
+
+                <HBox spacing="8" alignment="CENTER_RIGHT">
+                    <children>
+                        <Button text="Otkaži" onAction="#onCancel" />
+                        <Button text="Dodaj zadatak" onAction="#onConfirm" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>
+
