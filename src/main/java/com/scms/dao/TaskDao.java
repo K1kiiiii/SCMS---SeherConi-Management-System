@@ -73,6 +73,17 @@ public class TaskDao {
         return Optional.empty();
     }
 
+    public List<Task> findAll() throws SQLException {
+        List<Task> list = new ArrayList<>();
+        String sql = "SELECT * FROM tasks";
+        try (Connection conn = DatabaseConfig.getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) list.add(ResultSetMapper.mapTask(rs));
+        }
+        return list;
+    }
+
     public boolean completeTask(int taskId, Double producedQty) throws SQLException {
         String sql = "UPDATE tasks SET status = 'COMPLETED', produced_quantity = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ?";
         try (Connection conn = DatabaseConfig.getConnection();

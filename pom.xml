@@ -49,6 +49,14 @@
             <version>0.4</version>
         </dependency>
 
+        <!-- PDF and CSV generation libraries removed; using built-in fallback implementations to avoid hard runtime dependencies -->
+        <!-- OpenPDF for real PDF generation -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>1.3.30</version>
+        </dependency>
+
     </dependencies>
 
     <build>
