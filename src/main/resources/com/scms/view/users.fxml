@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.scms.controller.UserManagementController"
+            prefWidth="900" prefHeight="600">
+
+    <top>
+        <VBox spacing="5">
+            <children>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <children>
+                        <Label text="Korisnici" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+                        <Region HBox.hgrow="ALWAYS"/>
+
+                        <Label text="Pretraga:"/>
+                        <TextField fx:id="searchField" promptText="Korisničko ime ili id...">
+
+                        </TextField></children>
+                    <padding>
+                        <Insets top="10" right="10" bottom="5" left="10"/>
+                    </padding>
+                </HBox>
+
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <TableView fx:id="userTable">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colUsername" text="Korisničko ime" prefWidth="220"/>
+                <TableColumn fx:id="colRole" text="Uloga"  prefWidth="160"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <children>
+                <Button fx:id="addButton" text="Dodaj" onAction="#handleAddUser"/>
+                <Button fx:id="editButton" text="Uredi" onAction="#handleEditUser"/>
+                <Button fx:id="deleteButton" text="Obriši" onAction="#handleDeleteUser"/>
+            </children>
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+        </HBox>
+    </bottom>
+
+</BorderPane>

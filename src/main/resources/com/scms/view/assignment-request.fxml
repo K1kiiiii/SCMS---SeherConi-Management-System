@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.scms.controller.AssignmentRequestController"
+            prefHeight="220.0" prefWidth="420.0">
+
+    <children>
+        <GridPane layoutX="14.0" layoutY="14.0" hgap="10" vgap="10">
+            <columnConstraints>
+                <ColumnConstraints minWidth="100" />
+                <ColumnConstraints minWidth="250" />
+            </columnConstraints>
+
+            <rowConstraints>
+                <RowConstraints minHeight="30" />
+                <RowConstraints minHeight="30" />
+                <RowConstraints minHeight="80" />
+            </rowConstraints>
+
+            <Label text="Materijal:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+            <ComboBox fx:id="materialCombo" prefWidth="250" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+            <Label text="Količina:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+            <TextField fx:id="quantityField" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+            <Label text="Napomena:" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+            <TextArea fx:id="notesArea" prefRowCount="4" prefColumnCount="20" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+        </GridPane>
+
+        <HBox spacing="10.0" layoutX="220.0" layoutY="170.0">
+            <children>
+                <Button fx:id="saveButton" text="Pošalji" />
+                <Button fx:id="cancelButton" text="Otkaži" />
+            </children>
+        </HBox>
+    </children>
+
+</AnchorPane>

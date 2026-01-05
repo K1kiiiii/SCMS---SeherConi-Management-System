@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.scms.controller.AssignmentListController"
+            prefWidth="800" prefHeight="500">
+
+    <children>
+        <VBox spacing="10" AnchorPane.topAnchor="10" AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10">
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <children>
+                        <Label text="Zahtjevi" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <ComboBox fx:id="statusFilter" prefWidth="140" promptText="Status" />
+                        <Button text="Osveži" fx:id="refreshBtn" />
+                    </children>
+                </HBox>
+
+                <TableView fx:id="requestsTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colId" text="#" prefWidth="60" />
+                        <TableColumn fx:id="colUser" text="Korisnik" prefWidth="150" />
+                        <TableColumn fx:id="colMaterial" text="Materijal" prefWidth="200" />
+                        <TableColumn fx:id="colQty" text="Količina" prefWidth="100" />
+                        <TableColumn fx:id="colNotes" text="Napomena" prefWidth="200" />
+                        <TableColumn fx:id="colStatus" text="Status" prefWidth="100" />
+                    </columns>
+                </TableView>
+
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <children>
+                        <Button text="Odbij" fx:id="rejectBtn" />
+                        <Button text="Odobri" fx:id="approveBtn" />
+                    </children>
+                </HBox>
+
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>
