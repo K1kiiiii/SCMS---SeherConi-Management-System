@@ -12,6 +12,23 @@
             </children>
         </VBox>
 
+        <!-- Worker tasks area (will be empty for non-workers) -->
+        <VBox spacing="8">
+            <children>
+                <Label text="Moji zadaci" style="-fx-font-size:14px; -fx-font-weight:bold;" />
+                <FlowPane fx:id="tasksPane" hgap="12" vgap="12" />
+            </children>
+        </VBox>
+
+        <!-- Fixed critical materials card (always visible) -->
+        <VBox spacing="8" styleClass="dashboard-card" fx:id="criticalCard" prefWidth="380" prefHeight="220">
+            <children>
+                <Label text="⚠ Kritične sirovine" styleClass="card-title" />
+                <Separator />
+                <VBox fx:id="criticalCardContent" spacing="6" style="-fx-padding:8; -fx-alignment:TOP_LEFT;" />
+            </children>
+        </VBox>
+
         <!-- Dynamic cards grid: controller will populate cards based on role -->
         <GridPane fx:id="cardsGrid" hgap="12" vgap="12">
             <columnConstraints>
@@ -21,14 +38,6 @@
                 <ColumnConstraints hgrow="ALWAYS" percentWidth="25" />
             </columnConstraints>
         </GridPane>
-
-        <!-- Worker tasks area (will be empty for non-workers) -->
-        <VBox spacing="8">
-            <children>
-                <Label text="Moji zadaci" style="-fx-font-size:14px; -fx-font-weight:bold;" />
-                <FlowPane fx:id="tasksPane" hgap="12" vgap="12" />
-            </children>
-        </VBox>
 
     </children>
 </VBox>

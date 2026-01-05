@@ -21,6 +21,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Region;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import com.scms.service.NotificationService;
 
 public class DashboardController {
 
@@ -39,6 +41,8 @@ public class DashboardController {
 
     @FXML private GridPane cardsGrid;
     @FXML private FlowPane tasksPane;
+    @FXML private VBox criticalCardContent;
+    @FXML private VBox criticalCard;
 
     private final MaterialDao materialDao = new MaterialDao();
     private final AssignmentDao assignmentDao = new AssignmentDao();
@@ -46,7 +50,8 @@ public class DashboardController {
     private final TaskDao taskDao = new TaskDao();
     private final RecipeDao recipeDao = new RecipeDao();
 
-    private static final double LOW_STOCK_THRESHOLD_DEFAULT = 5.0;
+    // no hard-coded threshold — use per-material minimum from DB
+    private NotificationService notificationService;
 
     // simple holder for computed card data (safe to create on background thread)
     private static class CardInfo {
@@ -81,8 +86,22 @@ public class DashboardController {
             for (CardInfo ci : cardData) uiCards.add(createCardUI(ci.title, ci.value));
             populateGrid(uiCards);
 
+            // populate fixed critical materials card (UI-only)
+            try {
+                populateCriticalCard();
+            } catch (Exception ex) { logError(ex, "populateCriticalCard"); }
+
             // load tasks for worker
             try { loadWorkerTasks(); } catch (Exception ex) { logError(ex, "loadWorkerTasks"); }
+            // start notification service for warehouse staff / magacioner
+            try {
+                User u2 = RoleManager.getLoggedInUser();
+                String r2 = u2 != null && u2.getRole() != null ? u2.getRole().toUpperCase() : "";
+                if (r2.equals("MAGACIONER") || r2.equals("WAREHOUSE_STAFF")) {
+                    if (notificationService == null) notificationService = new NotificationService();
+                    notificationService.start();
+                }
+            } catch (Exception ex) { /* don't block dashboard */ }
         });
 
         loadTask.setOnFailed(evt -> {
@@ -96,7 +115,8 @@ public class DashboardController {
             populateGrid(fallback);
 
             try { loadWorkerTasks(); } catch (Exception ex2) { logError(ex2, "loadWorkerTasks"); }
-        });
+            try { populateCriticalCard(); } catch (Exception ex2) { logError(ex2, "populateCriticalCard"); }
+         });
 
         Thread t = new Thread(loadTask, "dashboard-loader");
         t.setDaemon(true);
@@ -114,12 +134,28 @@ public class DashboardController {
                 cards.add(new CardInfo("Ukupno sirovina", String.valueOf(materialDao.findAll().size())));
                 cards.add(new CardInfo("Zahtjevi za sirovine (ovaj mjesec)", String.valueOf(countRequestsThisMonth())));
                 cards.add(new CardInfo("Aktivni korisnici", String.valueOf(userDao.findAll().size())));
-                cards.add(new CardInfo("Sirovine ispod minimalne zalihe", String.valueOf(countLowStock())));
+                // add a card per material that is below its minimum
+                List<Material> below = materialDao.findMaterialsBelowMinimum();
+                if (below.isEmpty()) {
+                    cards.add(new CardInfo("Sirovine ispod minimalne zalihe", "0"));
+                } else {
+                    // single summary card for low-stock materials (details shown in fixed critical card)
+                    int lowCount = materialDao.findMaterialsBelowMinimum().size();
+                    cards.add(new CardInfo("Sirovine ispod minimalne zalihe", String.valueOf(lowCount)));
+                }
                 break;
             case "MAGACIONER": // local DB role is 'magacioner' — treat as WAREHOUSE_STAFF
             case "WAREHOUSE_STAFF":
                 cards.add(new CardInfo("Na čekanju - zahtjevi za sirovine", String.valueOf(countPendingRequests())));
-                cards.add(new CardInfo("Sirovine ispod minimalne zalihe", String.valueOf(countLowStock())));
+                // for warehouse staff, show pending list of low-stock materials as individual cards
+                List<Material> below2 = materialDao.findMaterialsBelowMinimum();
+                if (below2.isEmpty()) {
+                    cards.add(new CardInfo("Sirovine ispod minimalne zalihe", "0"));
+                } else {
+                    // single summary card for low-stock materials (details shown in fixed critical card)
+                    int lowCount2 = materialDao.findMaterialsBelowMinimum().size();
+                    cards.add(new CardInfo("Sirovine ispod minimalne zalihe", String.valueOf(lowCount2)));
+                }
                 cards.add(new CardInfo("Izdane sirovine danas", String.valueOf(countIssuedToday())));
                 break;
             case "RADNIK": // worker role mapping
@@ -158,12 +194,12 @@ public class DashboardController {
     // Create card UI nodes on the FX thread
     private VBox createCardUI(String title, String value) {
         Label titleLbl = new Label(title);
-        titleLbl.setStyle("-fx-font-size:11px; -fx-text-fill:#666666;");
+        titleLbl.setStyle("-fx-font-size:11px; -fx-text-fill:#ffffff;");
         Label valueLbl = new Label(value != null ? value : "0");
         valueLbl.setStyle("-fx-font-size:18px; -fx-font-weight:bold;");
 
         VBox card = new VBox(6, titleLbl, valueLbl);
-        card.setStyle("-fx-background-color:#ffffff; -fx-padding:12; -fx-border-radius:6; -fx-background-radius:6; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 6, 0, 0, 2);");
+        card.setStyle("-fx-background-color:#2b2b2b; -fx-padding:12; -fx-border-radius:6; -fx-background-radius:6; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 6, 0, 0, 2);");
         return card;
     }
 
@@ -320,8 +356,8 @@ public class DashboardController {
     }
 
     private int countLowStock() throws SQLException {
-        List<Material> materials = materialDao.findAll();
-        return (int) materials.stream().filter(m -> m.getQuantity() < LOW_STOCK_THRESHOLD_DEFAULT).count();
+        // legacy helper retained but prefer DAO method
+        return materialDao.findMaterialsBelowMinimum().size();
     }
 
     private int countPendingRequests() throws SQLException {
@@ -381,4 +417,45 @@ public class DashboardController {
             return "-";
         }
     }
+
+    // stop notification service when controller is garbage collected / app closes
+    @FXML
+    public void onClose() {
+        if (notificationService != null) notificationService.stop();
+    }
+
+    // Populate the single fixed critical materials card
+     private void populateCriticalCard() {
+         // clear previous content
+         criticalCardContent.getChildren().clear();
+         try {
+             List<Material> below = materialDao.findMaterialsBelowMinimum();
+             if (below == null || below.isEmpty()) {
+                 Label ok = new Label("✔ Trenutno nema kritičnih sirovina");
+                 ok.setStyle("-fx-text-fill: #2e7d32; -fx-font-weight: bold; -fx-alignment: center; -fx-padding:20;");
+                 criticalCardContent.getChildren().add(ok);
+                 return;
+             }
+
+             for (Material m : below) {
+                 HBox row = new HBox(8);
+                 Label warn = new Label("⚠");
+                 warn.setStyle("-fx-text-fill:#ff6b6b; -fx-font-size:14px;");
+                 Label name = new Label(m.getName());
+                 name.setStyle("-fx-font-weight:bold; -fx-text-fill:#ffffff;");
+                 String unit = m.getUnit() != null ? m.getUnit() : "";
+                 Label qty = new Label(String.format("%.2f %s / min %.2f %s", m.getQuantity(), unit, m.getMinimumQuantity(), unit));
+                 qty.setStyle("-fx-text-fill:#ff8a80;");
+                 Region spacer = new Region();
+                 HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+                 row.getChildren().addAll(warn, name, spacer, qty);
+                 row.setStyle("-fx-padding:8; -fx-background-color: rgba(255, 92, 92, 0.04); -fx-background-radius:6;");
+                 criticalCardContent.getChildren().add(row);
+             }
+         } catch (SQLException ex) {
+             logError(ex, "populateCriticalCard");
+             Label err = new Label("Greška pri učitavanju sirovina");
+             criticalCardContent.getChildren().add(err);
+         }
+     }
 }

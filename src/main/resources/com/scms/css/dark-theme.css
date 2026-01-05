@@ -94,3 +94,28 @@
     -fx-text-fill: #ffffff;
     -fx-font-weight: bold;
 }
+
+/* Dashboard card styles */
+.dashboard-card {
+    -fx-background-color: #1f2933; /* dark card */
+    -fx-padding: 12;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 8, 0, 0, 2);
+}
+
+.card-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 0 0 6 0;
+}
+
+.critical-item {
+    -fx-text-fill: #ff8a80;
+}
+
+.ok-message {
+    -fx-text-fill: #a5d6a7;
+    -fx-font-weight: bold;
+}

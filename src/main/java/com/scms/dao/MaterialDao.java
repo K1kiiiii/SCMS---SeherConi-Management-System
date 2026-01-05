@@ -12,13 +12,15 @@ import java.util.Optional;
 public class MaterialDao {
 
     public Material create(Material m) throws SQLException {
-        String sql = "INSERT INTO materials (name, quantity, unit, supplier) VALUES (?, ?, ?, ?)";
+        // include minimum_quantity when creating new material
+        String sql = "INSERT INTO materials (name, quantity, unit, supplier, minimum_quantity) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, m.getName());
             ps.setDouble(2, m.getQuantity());
             ps.setString(3, m.getUnit());
             ps.setString(4, m.getSupplier());
+            ps.setDouble(5, m.getMinimumQuantity());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) { if (keys.next()) m.setId(keys.getInt(1)); }
         }
@@ -47,6 +49,7 @@ public class MaterialDao {
 
     public List<Material> findAll() throws SQLException {
         List<Material> list = new ArrayList<>();
+        // select minimum_quantity as well
         String sql = "SELECT * FROM materials";
         try (Connection conn = DatabaseConfig.getConnection();
              Statement st = conn.createStatement();
@@ -57,14 +60,15 @@ public class MaterialDao {
     }
 
     public Optional<Material> update(Material m) throws SQLException {
-        String sql = "UPDATE materials SET name = ?, quantity = ?, unit = ?, supplier = ? WHERE id = ?";
+        String sql = "UPDATE materials SET name = ?, quantity = ?, unit = ?, supplier = ?, minimum_quantity = ? WHERE id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, m.getName());
             ps.setDouble(2, m.getQuantity());
             ps.setString(3, m.getUnit());
             ps.setString(4, m.getSupplier());
-            ps.setInt(5, m.getId());
+            ps.setDouble(5, m.getMinimumQuantity());
+            ps.setInt(6, m.getId());
             int updated = ps.executeUpdate();
             if (updated > 0) return findById(m.getId());
         }
@@ -89,5 +93,16 @@ public class MaterialDao {
             return ps.executeUpdate() > 0;
         }
     }
-}
 
+    // Return list of materials where current quantity is below the material's minimum
+    public List<Material> findMaterialsBelowMinimum() throws SQLException {
+        List<Material> list = new ArrayList<>();
+        String sql = "SELECT * FROM materials WHERE quantity < minimum_quantity";
+        try (Connection conn = DatabaseConfig.getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) list.add(ResultSetMapper.mapMaterial(rs));
+        }
+        return list;
+    }
+}

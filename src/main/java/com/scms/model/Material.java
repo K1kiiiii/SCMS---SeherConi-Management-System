@@ -5,7 +5,10 @@ import java.time.LocalDateTime;
 public class Material {
     private int id;
     private String name;
+    // current quantity in stock
     private double quantity;
+    // minimum allowed quantity for this material (from DB)
+    private double minimumQuantity;
     private String unit;
     private String supplier;
     private LocalDateTime updatedAt;
@@ -25,6 +28,14 @@ public class Material {
     public double getQuantity() { return quantity; }
     public void setQuantity(double quantity) { this.quantity = quantity; }
 
+    // new getter/setter for minimum quantity
+    public double getMinimumQuantity() { return minimumQuantity; }
+    public void setMinimumQuantity(double minimumQuantity) { this.minimumQuantity = minimumQuantity; }
+
+    // convenience alias to emphasize current quantity
+    public double getCurrentQuantity() { return quantity; }
+    public void setCurrentQuantity(double currentQuantity) { this.quantity = currentQuantity; }
+
     public String getUnit() { return unit; }
     public void setUnit(String unit) { this.unit = unit; }
 
@@ -34,4 +45,3 @@ public class Material {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
-

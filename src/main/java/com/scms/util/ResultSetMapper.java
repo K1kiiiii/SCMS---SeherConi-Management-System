@@ -30,6 +30,8 @@ public class ResultSetMapper {
         m.setId(rs.getInt("id"));
         m.setName(rs.getString("name"));
         m.setQuantity(rs.getDouble("quantity"));
+        // map minimum_quantity if present in resultset
+        try { double min = rs.getDouble("minimum_quantity"); if (!rs.wasNull()) m.setMinimumQuantity(min); } catch (SQLException ignored) {}
         m.setUnit(rs.getString("unit"));
         m.setSupplier(rs.getString("supplier"));
         Timestamp t = rs.getTimestamp("updated_at");
