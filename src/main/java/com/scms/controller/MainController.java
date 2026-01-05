@@ -30,6 +30,7 @@ public class MainController {
     @FXML private Button btnRecipes;
     @FXML private Button btnUsers;
     @FXML private Button btnStatistics;
+    @FXML private Button btnReports;
 
     @FXML
     public void initialize() {
@@ -90,6 +91,9 @@ public class MainController {
             // radnik ne upravlja korisnicima i statistikama
             btnUsers.setVisible(false);
             btnStatistics.setVisible(false);
+            // radnik nema pristup izvještajima
+            if (btnReports != null) btnReports.setVisible(false);
+            return;
         }
     }
 
@@ -138,6 +142,24 @@ public class MainController {
     }
 
     @FXML
+    private void handleReports(ActionEvent event) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/scms/view/report_dialog.fxml"));
+            javafx.scene.Parent root = loader.load();
+            javafx.scene.Scene scene = new javafx.scene.Scene(root);
+            String css = getClass().getResource("/com/scms/css/dark-theme.css").toExternalForm();
+            scene.getStylesheets().add(css);
+            javafx.stage.Stage stage = new javafx.stage.Stage();
+            stage.setTitle("Izvještaji");
+            stage.setScene(scene);
+            stage.initOwner(contentArea.getScene().getWindow());
+            stage.show();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @FXML
     private void handleManageUsers(ActionEvent event) {
         setActiveButton(btnUsers);
         loadPage("/com/scms/view/users.fxml");
@@ -156,7 +178,7 @@ public class MainController {
 
     // helper to mark active menu button using CSS class
     private void setActiveButton(Button active) {
-        Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnRequests, btnRecipes, btnUsers, btnStatistics};
+        Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnRequests, btnRecipes, btnReports, btnUsers, btnStatistics};
         for (Button b : buttons) {
             if (b == null) continue;
             if (b.equals(active)) {
