@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.scms.controller.RequestsController">
+    <top>
+        <HBox spacing="8">
+            <children>
+                <Label text="Zahtjevi" styleClass="page-title"/>
+                <ComboBox fx:id="statusFilter" prefWidth="150"/>
+                <Button text="Refresh" onAction="#handleRefresh"/>
+            </children>
+            <BorderPane.margin>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </BorderPane.margin>
+        </HBox>
+    </top>
+
+    <center>
+        <TableView fx:id="requestsTable">
+            <columns>
+                <TableColumn fx:id="colId" text="ID"/>
+                <TableColumn fx:id="colUser" text="Korisnik"/>
+                <TableColumn fx:id="colMaterial" text="Materijal"/>
+                <TableColumn fx:id="colQuantity" text="Količina"/>
+                <TableColumn fx:id="colStatus" text="Status"/>
+                <TableColumn fx:id="colNotes" text="Napomene"/>
+                <TableColumn fx:id="colAssignedAt" text="Vrijeme"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <HBox spacing="8" alignment="CENTER_RIGHT">
+            <children>
+                <Button fx:id="approveButton" text="Odobri" onAction="#handleApprove"/>
+                <Button fx:id="rejectButton" text="Odbij" onAction="#handleReject"/>
+            </children>
+            <BorderPane.margin>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </BorderPane.margin>
+        </HBox>
+    </bottom>
+</BorderPane>

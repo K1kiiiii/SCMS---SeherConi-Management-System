@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.DashboardController" spacing="16" alignment="TOP_LEFT" style="-fx-padding:20;">
+    <children>
+        <VBox spacing="4">
+            <children>
+                <Label fx:id="titleLabel" text="Dashboard" styleClass="page-title" style="-fx-font-size:20px; -fx-font-weight:bold;" />
+                <Label fx:id="subtitleLabel" text="System overview and key statistics" style="-fx-font-size:12px; -fx-text-fill: #666666;" />
+            </children>
+        </VBox>
+
+        <!-- Dynamic cards grid: controller will populate cards based on role -->
+        <GridPane fx:id="cardsGrid" hgap="12" vgap="12">
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="25" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="25" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="25" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="25" />
+            </columnConstraints>
+        </GridPane>
+
+        <!-- Worker tasks area (will be empty for non-workers) -->
+        <VBox spacing="8">
+            <children>
+                <Label text="Moji zadaci" style="-fx-font-size:14px; -fx-font-weight:bold;" />
+                <FlowPane fx:id="tasksPane" hgap="12" vgap="12" />
+            </children>
+        </VBox>
+
+    </children>
+</VBox>

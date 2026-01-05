@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.scms.controller.MainController"
+            prefWidth="900" prefHeight="600">
+
+    <top>
+        <HBox spacing="10" alignment="CENTER_LEFT" prefHeight="48" style="-fx-background-color: -fx-background;">
+            <children>
+                <Label text="Seherconi Management System" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Label fx:id="userInfoLabel" text="Niste prijavljeni" />
+                <Button text="Odjava" onAction="#handleLogout" />
+            </children>
+            <padding>
+                <Insets top="6" right="10" bottom="6" left="10"/>
+            </padding>
+        </HBox>
+    </top>
+
+    <left>
+        <VBox fx:id="sideMenu" id="sideMenu" spacing="8" alignment="TOP_LEFT" prefWidth="160" style="-fx-background-color: #2b2b2b; -fx-padding: 10;">
+            <children>
+                <Button fx:id="btnDashboard" text="Nadzorna ploča" maxWidth="Infinity" onAction="#handleDashboard" styleClass="side-menu-button" />
+                <Button fx:id="btnWarehouse" text="Skladište" maxWidth="Infinity" onAction="#handleViewItems" styleClass="side-menu-button" />
+                <Button fx:id="btnRequests" text="Zahtjevi" maxWidth="Infinity" onAction="#handleViewRequests" styleClass="side-menu-button" />
+                <Button fx:id="btnRecipes" text="Recepti" maxWidth="Infinity" onAction="#handleViewRecipes" styleClass="side-menu-button" />
+                <Button fx:id="btnReports" text="Izvještaji" maxWidth="Infinity" onAction="#handleReports" styleClass="side-menu-button" />
+                <Button fx:id="btnUsers" text="Korisnici" maxWidth="Infinity" onAction="#handleManageUsers" styleClass="side-menu-button" />
+                <Button fx:id="btnStatistics" text="Statistika" maxWidth="Infinity" onAction="#handleStatisticsOverview" styleClass="side-menu-button" />
+            </children>
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentArea">
+            <children>
+                <Label fx:id="welcomeLabel" text="Dobrodošli u SCMS"/>
+            </children>
+        </StackPane>
+    </center>
+
+</BorderPane>
