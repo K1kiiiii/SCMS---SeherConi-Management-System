@@ -119,3 +119,77 @@
     -fx-text-fill: #a5d6a7;
     -fx-font-weight: bold;
 }
+
+/* Tasks area */
+.tasks-scroll .viewport {
+    -fx-background-color: transparent; /* let the app background or parent card show */
+}
+
+.tasks-list {
+    -fx-padding: 6;
+}
+
+.task-row {
+    -fx-background-color: rgba(255,255,255,0.03);
+    -fx-background-radius: 6;
+    -fx-padding: 8;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.task-title {
+    -fx-font-weight: bold;
+    -fx-text-fill: #e6eef6; /* slightly off-white, less harsh */
+}
+
+.task-meta {
+    -fx-text-fill: #bdbdbd; /* muted grey */
+    -fx-font-size: 12px;
+}
+
+.task-badge {
+    -fx-background-color: #ff7043; /* orange badge */
+    -fx-text-fill: white;
+    -fx-padding: 4 8;
+    -fx-background-radius: 6;
+    -fx-font-size: 11px;
+}
+
+.task-card {
+    -fx-background-color: #1f2933; /* match .dashboard-card */
+    -fx-padding: 12;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.task-card Label {
+    -fx-text-fill: #e6eef6;
+}
+
+/* Stat / metric cards used in the dashboard grid */
+.stat-card {
+    -fx-background-color: #2b2b2b;
+    -fx-padding: 12;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 6, 0, 0, 2);
+}
+
+.stat-card .card-title {
+    -fx-font-size:11px;
+    -fx-text-fill: #e0e0e0;
+}
+
+.card-value {
+    -fx-font-size:18px;
+    -fx-font-weight:bold;
+    -fx-text-fill: #ffffff;
+}
+
+/* ensure labels inside dashboard card and task-row are white */
+.dashboard-card Label {
+    -fx-text-fill: #ffffff;
+}
+
+/* ensure task-row specific labels are styled by their classes (avoid broad Label selectors) */
+.task-row .task-title { -fx-text-fill: #e6eef6; }
+.task-row .task-meta { -fx-text-fill: #bdbdbd; }

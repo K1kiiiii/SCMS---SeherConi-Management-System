@@ -20,12 +20,13 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
+import javafx.scene.control.ScrollPane;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator;
@@ -40,7 +41,10 @@ public class DashboardController {
     @FXML private Label subtitleLabel;
 
     @FXML private GridPane cardsGrid;
-    @FXML private FlowPane tasksPane;
+    @FXML private VBox tasksList;
+    @FXML private ScrollPane tasksScroll;
+    @FXML private VBox tasksBox;
+    @FXML private Label tasksHeader;
     @FXML private VBox criticalCardContent;
     @FXML private VBox criticalCard;
 
@@ -52,6 +56,9 @@ public class DashboardController {
 
     // no hard-coded threshold — use per-material minimum from DB
     private NotificationService notificationService;
+
+    // cached role for the current session
+    private String currentRole = "";
 
     // simple holder for computed card data (safe to create on background thread)
     private static class CardInfo {
@@ -67,9 +74,26 @@ public class DashboardController {
             String role = u.getRole() != null ? u.getRole() : "";
             titleLabel.setText("Dobrodošli, " + u.getUsername());
             subtitleLabel.setText("Uloga: " + role + " — Pregled sistema i ključne statistike");
+            this.currentRole = role != null ? role.toUpperCase() : "";
         } else {
             titleLabel.setText("Dobrodošli");
             subtitleLabel.setText("Pregled sistema i ključne statistike");
+            this.currentRole = "";
+        }
+
+        // Set tasks area visibility and header synchronously to avoid UI flash
+        if (tasksBox != null) {
+            if (currentRole.equals("MAGACIONER") || currentRole.equals("WAREHOUSE_STAFF")) {
+                tasksBox.setManaged(false);
+                tasksBox.setVisible(false);
+            } else {
+                tasksBox.setManaged(true);
+                tasksBox.setVisible(true);
+            }
+        }
+        if (tasksHeader != null) {
+            if (currentRole.equals("ADMIN")) tasksHeader.setText("Zadaci u toku");
+            else tasksHeader.setText("Moji zadaci");
         }
 
         // Use a JavaFX Task to run DB work off the FX thread and update UI on success
@@ -91,8 +115,11 @@ public class DashboardController {
                 populateCriticalCard();
             } catch (Exception ex) { logError(ex, "populateCriticalCard"); }
 
-            // load tasks for worker
-            try { loadWorkerTasks(); } catch (Exception ex) { logError(ex, "loadWorkerTasks"); }
+            // role-driven tasks handling
+            try {
+                handleTasksForRole();
+            } catch (Exception ex) { logError(ex, "handleTasksForRole"); }
+
             // start notification service for warehouse staff / magacioner
             try {
                 User u2 = RoleManager.getLoggedInUser();
@@ -114,13 +141,74 @@ public class DashboardController {
             fallback.add(createCardUI("Zahtjevi (ovaj mjesec)", "0"));
             populateGrid(fallback);
 
-            try { loadWorkerTasks(); } catch (Exception ex2) { logError(ex2, "loadWorkerTasks"); }
+            try { handleTasksForRole(); } catch (Exception ex2) { logError(ex2, "handleTasksForRole"); }
             try { populateCriticalCard(); } catch (Exception ex2) { logError(ex2, "populateCriticalCard"); }
          });
 
         Thread t = new Thread(loadTask, "dashboard-loader");
         t.setDaemon(true);
         t.start();
+    }
+
+    // Decide what to do with the tasks card based on role
+    private void handleTasksForRole() {
+        if (currentRole.equals("MAGACIONER") || currentRole.equals("WAREHOUSE_STAFF")) {
+            // remove tasksBox entirely for magacioner
+            if (tasksBox != null) tasksBox.setManaged(false);
+            if (tasksBox != null) tasksBox.setVisible(false);
+            return;
+        }
+
+        if (currentRole.equals("ADMIN")) {
+            // admin: show all IN_PROGRESS tasks
+            if (tasksHeader != null) tasksHeader.setText("Zadaci u toku");
+            loadInProgressTasks();
+            return;
+        }
+
+        // default / RADNIK: load assigned tasks
+        loadWorkerTasks();
+    }
+
+    // Load tasks with status = IN_PROGRESS for ADMIN
+    private void loadInProgressTasks() {
+        if (tasksList == null) return;
+        tasksList.getChildren().clear();
+        try {
+            List<Task> all = taskDao.findAll();
+            List<Task> inProgress = new ArrayList<>();
+            for (Task t : all) if (t.getStatus() != null && t.getStatus().equalsIgnoreCase("IN_PROGRESS")) inProgress.add(t);
+            DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+            for (Task t : inProgress) {
+                String recipeName = "Recept: " + t.getRecipeId();
+                try { Optional<Recipe> r = recipeDao.findById(t.getRecipeId()); if (r.isPresent()) recipeName = r.get().getName(); } catch (SQLException ex) { logError(ex, "fetchRecipeName"); }
+
+                String workerName = "Nepoznato";
+                if (t.getAssignedTo() != null) {
+                    try { Optional<User> uu = userDao.findById(t.getAssignedTo()); if (uu.isPresent()) workerName = uu.get().getUsername(); } catch (SQLException ex) { logError(ex, "fetchWorkerName"); }
+                }
+
+                String target = String.format("%.2f %s", t.getQuantityTarget(), t.getUnit() != null ? t.getUnit() : "");
+                String started = t.getStartedAt() != null ? t.getStartedAt().format(timeFmt) : "-";
+
+                HBox row = new HBox(8);
+                row.getStyleClass().add("task-row");
+                Label title = new Label(recipeName);
+                title.getStyleClass().add("task-title");
+                Label meta = new Label(String.format("%s — %s — započeto u %s", workerName, target, started));
+                meta.getStyleClass().add("task-meta");
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+                Label badge = new Label("U TOKU");
+                badge.getStyleClass().add("task-badge");
+                row.getChildren().addAll(title, spacer, meta, badge);
+                tasksList.getChildren().add(row);
+            }
+            // ensure scroll shows top
+            if (tasksScroll != null) tasksScroll.setVvalue(0);
+        } catch (SQLException ex) {
+            logError(ex, "loadInProgressTasks");
+        }
     }
 
     // Build card data (title + computed value) depending on role — runs on background thread
@@ -191,22 +279,10 @@ public class DashboardController {
         }
     }
 
-    // Create card UI nodes on the FX thread
-    private VBox createCardUI(String title, String value) {
-        Label titleLbl = new Label(title);
-        titleLbl.setStyle("-fx-font-size:11px; -fx-text-fill:#ffffff;");
-        Label valueLbl = new Label(value != null ? value : "0");
-        valueLbl.setStyle("-fx-font-size:18px; -fx-font-weight:bold;");
-
-        VBox card = new VBox(6, titleLbl, valueLbl);
-        card.setStyle("-fx-background-color:#2b2b2b; -fx-padding:12; -fx-border-radius:6; -fx-background-radius:6; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.08), 6, 0, 0, 2);");
-        return card;
-    }
-
-    // Load tasks for logged-in worker and populate tasksPane — runs on FX thread but calls DAO synchronously (small lists)
+    // Load tasks for logged-in worker and populate tasksList — placed early to avoid forward-reference warnings
     private void loadWorkerTasks() {
         User u = RoleManager.getLoggedInUser();
-        tasksPane.getChildren().clear();
+        if (tasksList != null) tasksList.getChildren().clear();
         if (u == null) return;
         String role = u.getRole() != null ? u.getRole().toUpperCase() : "";
         if (!role.equals("RADNIK") && !role.equals("WORKER")) return;
@@ -215,11 +291,24 @@ public class DashboardController {
             List<Task> tasks = taskDao.findByAssignedUser(u.getId());
             for (Task t : tasks) {
                 VBox card = createTaskCard(t);
-                tasksPane.getChildren().add(card);
+                tasksList.getChildren().add(card);
             }
+            if (tasksScroll != null) tasksScroll.setVvalue(0);
         } catch (SQLException ex) {
             logError(ex, "loadWorkerTasks");
         }
+    }
+
+    // Create card UI nodes on the FX thread
+    private VBox createCardUI(String title, String value) {
+        Label titleLbl = new Label(title);
+        titleLbl.getStyleClass().add("card-title");
+        Label valueLbl = new Label(value != null ? value : "0");
+        valueLbl.getStyleClass().add("card-value");
+
+        VBox card = new VBox(6, titleLbl, valueLbl);
+        card.getStyleClass().add("stat-card");
+        return card;
     }
 
     private VBox createTaskCard(Task t) {
@@ -232,9 +321,11 @@ public class DashboardController {
         }
 
         Label title = new Label(recipeName);
-        title.setStyle("-fx-font-weight:bold;");
+        title.getStyleClass().add("task-title");
         Label target = new Label(String.format("Cilj: %.2f %s", t.getQuantityTarget(), t.getUnit() != null ? t.getUnit() : ""));
+        target.getStyleClass().add("task-meta");
         Label status = new Label("Status: " + (t.getStatus()!=null? t.getStatus():"PENDING"));
+        status.getStyleClass().add("task-meta");
 
         HBox actions = new HBox(8);
 
@@ -258,7 +349,7 @@ public class DashboardController {
         }
 
         VBox card = new VBox(6, title, target, status, actions);
-        card.setStyle("-fx-background-color:#ffffff; -fx-padding:12; -fx-border-radius:6; -fx-background-radius:6;");
+        card.getStyleClass().add("task-card");
         card.setPrefWidth(320);
         return card;
     }
@@ -425,37 +516,40 @@ public class DashboardController {
     }
 
     // Populate the single fixed critical materials card
-     private void populateCriticalCard() {
-         // clear previous content
-         criticalCardContent.getChildren().clear();
-         try {
-             List<Material> below = materialDao.findMaterialsBelowMinimum();
-             if (below == null || below.isEmpty()) {
-                 Label ok = new Label("✔ Trenutno nema kritičnih sirovina");
-                 ok.setStyle("-fx-text-fill: #2e7d32; -fx-font-weight: bold; -fx-alignment: center; -fx-padding:20;");
-                 criticalCardContent.getChildren().add(ok);
-                 return;
-             }
+    private void populateCriticalCard() {
+        // clear previous content
+        criticalCardContent.getChildren().clear();
+        try {
+            List<Material> below = materialDao.findMaterialsBelowMinimum();
+            if (below == null || below.isEmpty()) {
+                Label ok = new Label("✔ Trenutno nema kritičnih sirovina");
+                ok.getStyleClass().add("ok-message");
+                ok.setMaxWidth(Double.MAX_VALUE);
+                ok.setStyle("-fx-alignment:center; -fx-padding:20;");
+                criticalCardContent.getChildren().add(ok);
+                return;
+            }
 
-             for (Material m : below) {
-                 HBox row = new HBox(8);
-                 Label warn = new Label("⚠");
-                 warn.setStyle("-fx-text-fill:#ff6b6b; -fx-font-size:14px;");
-                 Label name = new Label(m.getName());
-                 name.setStyle("-fx-font-weight:bold; -fx-text-fill:#ffffff;");
-                 String unit = m.getUnit() != null ? m.getUnit() : "";
-                 Label qty = new Label(String.format("%.2f %s / min %.2f %s", m.getQuantity(), unit, m.getMinimumQuantity(), unit));
-                 qty.setStyle("-fx-text-fill:#ff8a80;");
-                 Region spacer = new Region();
-                 HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
-                 row.getChildren().addAll(warn, name, spacer, qty);
-                 row.setStyle("-fx-padding:8; -fx-background-color: rgba(255, 92, 92, 0.04); -fx-background-radius:6;");
-                 criticalCardContent.getChildren().add(row);
-             }
-         } catch (SQLException ex) {
-             logError(ex, "populateCriticalCard");
-             Label err = new Label("Greška pri učitavanju sirovina");
-             criticalCardContent.getChildren().add(err);
-         }
-     }
+            for (Material m : below) {
+                HBox row = new HBox(8);
+                Label warn = new Label("⚠");
+                warn.getStyleClass().add("critical-item");
+                Label name = new Label(m.getName());
+                name.getStyleClass().add("task-title");
+                String unit = m.getUnit() != null ? m.getUnit() : "";
+                Label qty = new Label(String.format("%.2f %s / min %.2f %s", m.getQuantity(), unit, m.getMinimumQuantity(), unit));
+                qty.getStyleClass().add("critical-item");
+                Region spacer = new Region();
+                HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+                row.getChildren().addAll(warn, name, spacer, qty);
+                row.getStyleClass().add("task-row");
+                criticalCardContent.getChildren().add(row);
+            }
+        } catch (SQLException ex) {
+            logError(ex, "populateCriticalCard");
+            Label err = new Label("Greška pri učitavanju sirovina");
+            criticalCardContent.getChildren().add(err);
+        }
+    }
+
 }

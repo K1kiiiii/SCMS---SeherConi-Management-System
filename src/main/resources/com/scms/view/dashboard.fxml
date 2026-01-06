@@ -12,11 +12,16 @@
             </children>
         </VBox>
 
-        <!-- Worker tasks area (will be empty for non-workers) -->
-        <VBox spacing="8">
+        <!-- Tasks area (role-aware): for RADNIK shows "Moji zadaci", for ADMIN shows "Zadaci u toku", hidden for MAGACIONER -->
+        <VBox fx:id="tasksBox" spacing="8" visible="false" managed="false">
             <children>
-                <Label text="Moji zadaci" style="-fx-font-size:14px; -fx-font-weight:bold;" />
-                <FlowPane fx:id="tasksPane" hgap="12" vgap="12" />
+                <Label fx:id="tasksHeader" text="" style="-fx-font-size:14px; -fx-font-weight:bold;" />
+                <!-- Scrollable area for task rows -->
+                <ScrollPane fx:id="tasksScroll" styleClass="tasks-scroll" fitToWidth="true" prefHeight="180" vbarPolicy="AS_NEEDED" hbarPolicy="NEVER">
+                    <content>
+                        <VBox fx:id="tasksList" spacing="8" styleClass="tasks-list" />
+                    </content>
+                </ScrollPane>
             </children>
         </VBox>
 

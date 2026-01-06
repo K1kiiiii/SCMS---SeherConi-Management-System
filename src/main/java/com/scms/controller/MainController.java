@@ -84,6 +84,9 @@ public class MainController {
             // magacioner ne upravlja korisnicima i statistikama
             btnUsers.setVisible(false);
             btnStatistics.setVisible(false);
+            // magacioner should not see recipes or reports
+            if (btnRecipes != null) { btnRecipes.setVisible(false); btnRecipes.setManaged(false); }
+            if (btnReports != null) { btnReports.setVisible(false); btnReports.setManaged(false); }
             return;
         }
 
@@ -91,8 +94,9 @@ public class MainController {
             // radnik ne upravlja korisnicima i statistikama
             btnUsers.setVisible(false);
             btnStatistics.setVisible(false);
-            // radnik nema pristup izvještajima
-            if (btnReports != null) btnReports.setVisible(false);
+            // radnik nema pristup izvještajima i receptima
+            if (btnReports != null) { btnReports.setVisible(false); btnReports.setManaged(false); }
+            if (btnRecipes != null) { btnRecipes.setVisible(false); btnRecipes.setManaged(false); }
             return;
         }
     }
