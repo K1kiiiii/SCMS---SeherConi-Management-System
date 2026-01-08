@@ -2,30 +2,50 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.LoginController" prefWidth="420" prefHeight="300">
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.LoginController" prefWidth="900" prefHeight="720" styleClass="login-root">
     <children>
-        <VBox alignment="CENTER" spacing="12.0" layoutX="0" layoutY="0" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+        <!-- Centered content -->
+        <VBox alignment="CENTER" spacing="20" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
             <children>
-                <Label text="SCMS" styleClass="app-title"/>
-                <Label text="Seherconi Management System" styleClass="app-subtitle"/>
-                <VBox spacing="8">
+                <ImageView fitWidth="180" fitHeight="180" preserveRatio="true">
+                    <image>
+                        <Image url="/com/scms/images/seherconi.png" />
+                    </image>
+                </ImageView>
+
+                <Label text="SISTEM ZA UPRAVLJANJE PROIZVODNJOM" styleClass="login-title" />
+                <Label text="Prijavite se da biste nastavili" styleClass="login-subtitle" />
+
+                <VBox spacing="12" maxWidth="520" styleClass="login-form">
                     <padding>
                         <Insets top="12" right="12" bottom="12" left="12" />
                     </padding>
                     <children>
-                        <Label text="Username" styleClass="label-small"/>
-                        <TextField fx:id="usernameField" promptText="Enter username" />
-                        <Label text="Password" styleClass="label-small" />
-                        <PasswordField fx:id="passwordField" promptText="Enter password" />
-                        <Label fx:id="messageLabel" styleClass="message-label"/>
-                        <Button fx:id="loginButton" text="Login" onAction="#onLogin" maxWidth="Infinity"/>
+                        <Label text="Korisničko ime:" styleClass="form-label" />
+                        <TextField fx:id="usernameField" promptText="Unesite korisničko ime" styleClass="form-input" />
+
+                        <Label text="Lozinka:" styleClass="form-label" />
+                        <PasswordField fx:id="passwordField" promptText="Unesite lozinku" styleClass="form-input" />
+
+                        <Label fx:id="messageLabel" styleClass="message-label" />
+
+                        <HBox alignment="CENTER" styleClass="login-action">
+                            <children>
+                                <Button fx:id="loginButton" text="PRIJAVA" onAction="#onLogin" styleClass="login-button" maxWidth="200" />
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
-                <Label text="(default admin/admin)" style="-fx-font-size:11; -fx-opacity:0.6;"/>
+
+                <Label text="(default admin/admin)" style="-fx-font-size:11; -fx-opacity:0.7;" />
             </children>
         </VBox>
+
+        <!-- Dark mode toggle (top-right) placed last so it sits on top and is clickable -->
+        <Button fx:id="darkModeToggle" onAction="#onToggleDarkMode" styleClass="dark-toggle" text="🌙" AnchorPane.topAnchor="24" AnchorPane.rightAnchor="24" />
     </children>
 </AnchorPane>

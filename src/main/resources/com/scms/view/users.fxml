@@ -43,9 +43,9 @@
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT">
             <children>
-                <Button fx:id="addButton" text="Dodaj" onAction="#handleAddUser"/>
-                <Button fx:id="editButton" text="Uredi" onAction="#handleEditUser"/>
-                <Button fx:id="deleteButton" text="Obriši" onAction="#handleDeleteUser"/>
+                <Button fx:id="addButton" text="Dodaj" onAction="#handleAddUser" styleClass="primary-button"/>
+                <Button fx:id="editButton" text="Uredi" onAction="#handleEditUser" styleClass="secondary-button"/>
+                <Button fx:id="deleteButton" text="Obriši" onAction="#handleDeleteUser" styleClass="danger-button"/>
             </children>
             <padding>
                 <Insets top="10" right="10" bottom="10" left="10"/>

@@ -14,7 +14,7 @@
                     </children>
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />
-                <Button fx:id="addButton" text="Dodaj recept" onAction="#handleAddRecipe" />
+                <Button fx:id="addButton" text="Dodaj recept" onAction="#handleAddRecipe" styleClass="primary-button" />
             </children>
         </HBox>
 
@@ -27,4 +27,3 @@
 
     </children>
 </VBox>
-

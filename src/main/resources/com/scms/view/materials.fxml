@@ -31,9 +31,9 @@
                         <Label text="Dobavljač:"/>
                         <ComboBox fx:id="supplierFilter" prefWidth="200" promptText="Svi dobavljači" onAction="#handleFilterChanged"/>
 
-                        <Button text="Očisti filtere" onAction="#handleClearFilters"/>
+                        <Button text="Očisti filtere" onAction="#handleClearFilters" />
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Button text="Osvježi" onAction="#handleRefresh"/>
+                        <Button text="Osvježi" onAction="#handleRefresh" />
                     </children>
                     <padding>
                         <Insets top="0" right="10" bottom="10" left="10"/>
@@ -60,10 +60,10 @@
     <bottom>
         <HBox spacing="10" alignment="CENTER_RIGHT">
             <children>
-                <Button fx:id="addButton" text="Dodaj" onAction="#handleAddMaterial"/>
-                <Button fx:id="editButton" text="Uredi" onAction="#handleEditMaterial"/>
-                <Button fx:id="deleteButton" text="Obriši" onAction="#handleDeleteMaterial"/>
-                <Button fx:id="requestButton" text="Zatraži" onAction="#handleRequestMaterial"/>
+                <Button fx:id="addButton" text="Dodaj" onAction="#handleAddMaterial" styleClass="primary-button"/>
+                <Button fx:id="editButton" text="Uredi" onAction="#handleEditMaterial" styleClass="secondary-button"/>
+                <Button fx:id="deleteButton" text="Obriši" onAction="#handleDeleteMaterial" styleClass="danger-button"/>
+                <Button fx:id="requestButton" text="Zatraži" onAction="#handleRequestMaterial" styleClass="primary-button"/>
             </children>
             <padding>
                 <Insets top="10" right="10" bottom="10" left="10"/>

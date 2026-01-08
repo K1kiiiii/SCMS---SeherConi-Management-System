@@ -1,0 +1,85 @@
+/* Light theme for SCMS login and app (simple, warm beige) */
+.root {
+    -fx-font-family: "League Spartan";
+    -fx-background-color: #F5F3EF; /* warm beige */
+    -fx-text-fill: #4A3428; /* dark brown */
+}
+
+/* Login page */
+.login-root {
+    -fx-background-color: #F5F3EF;
+}
+
+.login-title {
+    -fx-font-size: 28px;
+    -fx-text-fill: #4A3428;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 1px;
+}
+
+.login-subtitle {
+    -fx-font-size: 14px;
+    -fx-font-weight: 300;
+    -fx-text-fill: #6b4f3f;
+}
+
+.form-label {
+    -fx-text-fill: #4A3428;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+}
+
+.form-input {
+    -fx-background-color: #D98555; /* coral input */
+    -fx-text-fill: #FFFFFF;
+    -fx-border-radius: 28px;
+    -fx-background-radius: 28px;
+    -fx-padding: 0 24 0 24;
+    -fx-pref-height: 56px;
+    -fx-font-size: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(217,133,85,0.25), 12, 0, 0, 4);
+}
+.form-input.prompt-text {
+    -fx-text-fill: ffffff
+}
+
+.form-input:focused {
+    -fx-effect: dropshadow(gaussian, rgba(232,145,93,0.4), 16, 0, 0, 6);
+    -fx-translate-y: -2px;
+}
+
+.login-button {
+    -fx-background-color: #5C3D2E; /* dark brown */
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: 700;
+    -fx-border-radius: 27px;
+    -fx-background-radius: 27px;
+    -fx-pref-height: 54px;
+    -fx-min-width: 240px; /* increased width to match dark theme */
+    -fx-max-width: 320px;
+    -fx-font-size: 18px;
+    -fx-letter-spacing: 2px;
+    -fx-text-transform: uppercase;
+    -fx-effect: dropshadow(gaussian, rgba(92,61,46,0.25), 12, 0, 0, 6);
+    -fx-alignment: CENTER; /* ensure text is centered */
+}
+
+.login-button:hover {
+    -fx-translate-y: -3px;
+    -fx-effect: dropshadow(gaussian, rgba(92,61,46,0.4), 16, 0, 0, 10);
+}
+
+.dark-toggle {
+    -fx-background-color: transparent;
+    -fx-font-size: 28px;
+    -fx-text-fill: #4A3428;
+}
+
+/* center login action HBox */
+HBox.login-action { -fx-alignment: CENTER; }
+
+.message-label { -fx-text-fill: #f44336; }
+
+/* Keep defaults for other components in light mode (if needed) */
+.page-title { -fx-text-fill: #4A3428; }
+.dashboard-card { -fx-background-color: #ffffff; -fx-border-color: rgba(0,0,0,0.06); }

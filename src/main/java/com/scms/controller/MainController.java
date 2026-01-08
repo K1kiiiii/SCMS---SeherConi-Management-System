@@ -3,7 +3,6 @@ package com.scms.controller;
 import com.scms.model.User;
 import com.scms.util.RoleManager;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -67,8 +66,24 @@ public class MainController {
 
     private void addAppStylesheet(Scene scene) {
         try {
-            String css = getClass().getResource("/com/scms/css/dark-theme.css").toExternalForm();
-            if (!scene.getStylesheets().contains(css)) scene.getStylesheets().add(css);
+            java.util.prefs.Preferences prefs = java.util.prefs.Preferences.userNodeForPackage(com.scms.controller.LoginController.class);
+            boolean dark = prefs.getBoolean("dark_mode", false);
+            String darkPath = "/com/scms/css/dark-theme.css";
+            String lightPath = "/com/scms/css/light-theme.css";
+            java.net.URL darkUrl = getClass().getResource(darkPath);
+            java.net.URL lightUrl = getClass().getResource(lightPath);
+            String darkCss = darkUrl == null ? null : darkUrl.toExternalForm();
+            String lightCss = lightUrl == null ? null : lightUrl.toExternalForm();
+
+            // remove both if present
+            if (darkCss != null) scene.getStylesheets().remove(darkCss);
+            if (lightCss != null) scene.getStylesheets().remove(lightCss);
+
+            if (dark) {
+                if (darkCss != null && !scene.getStylesheets().contains(darkCss)) scene.getStylesheets().add(darkCss);
+            } else {
+                if (lightCss != null && !scene.getStylesheets().contains(lightCss)) scene.getStylesheets().add(lightCss);
+            }
         } catch (Exception ex) {
             System.err.println("Could not load app stylesheet: " + ex.getMessage());
         }
@@ -102,81 +117,90 @@ public class MainController {
     }
 
     @FXML
-    private void handleLogout(ActionEvent event) {
+    private void handleLogout() {
         try {
             RoleManager.setLoggedInUser(null);
 
-            Parent loginView = FXMLLoader.load(
-                    getClass().getResource("/com/scms/view/login.fxml")
-            );
+            java.net.URL loginUrl = getClass().getResource("/com/scms/view/login.fxml");
+            if (loginUrl == null) {
+                System.err.println("Login FXML resource missing");
+                return;
+            }
+
+            Parent loginView = FXMLLoader.load(loginUrl);
             javafx.scene.Scene scene =  new javafx.scene.Scene(loginView);
-            String css = getClass().getResource("/com/scms/css/dark-theme.css").toExternalForm();
-            scene.getStylesheets().add(css);
+            // apply user-preferred app stylesheet
+            addAppStylesheet(scene);
             Stage stage = (Stage) contentArea.getScene().getWindow();
             stage.setScene(scene);
             stage.show();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Failed to open login view: " + e.getMessage());
         }
     }
 
     @FXML
-    private void handleDashboard(ActionEvent event) {
+    private void handleDashboard() {
         setActiveButton(btnDashboard);
         loadPage("/com/scms/view/dashboard.fxml");
     }
 
     @FXML
-    private void handleViewItems(ActionEvent event) {
+    private void handleViewItems() {
         setActiveButton(btnWarehouse);
         loadPage("/com/scms/view/materials.fxml");
     }
 
     @FXML
-    private void handleViewRequests(ActionEvent event) {
+    private void handleViewRequests() {
         setActiveButton(btnRequests);
         loadPage("/com/scms/view/requests.fxml");
     }
 
     @FXML
-    private void handleViewRecipes(ActionEvent event) {
+    private void handleViewRecipes() {
         setActiveButton(btnRecipes);
         loadPage("/com/scms/view/recipes.fxml");
     }
 
     @FXML
-    private void handleReports(ActionEvent event) {
+    private void handleReports() {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/scms/view/report_dialog.fxml"));
+            java.net.URL reportUrl = getClass().getResource("/com/scms/view/report_dialog.fxml");
+            if (reportUrl == null) {
+                System.err.println("Report dialog resource missing");
+                return;
+            }
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(reportUrl);
             javafx.scene.Parent root = loader.load();
             javafx.scene.Scene scene = new javafx.scene.Scene(root);
-            String css = getClass().getResource("/com/scms/css/dark-theme.css").toExternalForm();
-            scene.getStylesheets().add(css);
+            // apply theme based on preferences
+            addAppStylesheet(scene);
             javafx.stage.Stage stage = new javafx.stage.Stage();
             stage.setTitle("Izvještaji");
             stage.setScene(scene);
             stage.initOwner(contentArea.getScene().getWindow());
             stage.show();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            System.err.println("Failed to open reports window: " + ex.getMessage());
         }
     }
 
     @FXML
-    private void handleManageUsers(ActionEvent event) {
+    private void handleManageUsers() {
         setActiveButton(btnUsers);
         loadPage("/com/scms/view/users.fxml");
     }
 
     @FXML
-    private void handleStatisticsOverview(ActionEvent event) {
+    private void handleStatisticsOverview() {
         setActiveButton(btnStatistics);
         loadPage("/com/scms/view/statistics.fxml");
     }
 
     @FXML
-    private void handleExit(ActionEvent event) {
+    private void handleExit() {
         System.exit(0);
     }
 
@@ -196,11 +220,16 @@ public class MainController {
     // reusable page loader
     public void loadPage(String fxmlPath) {
         try {
-            Parent view = FXMLLoader.load(getClass().getResource(fxmlPath));
+            java.net.URL pageUrl = getClass().getResource(fxmlPath);
+            if (pageUrl == null) {
+                System.err.println("Missing page resource: " + fxmlPath);
+                return;
+            }
+            Parent view = FXMLLoader.load(pageUrl);
             // clear and set single child
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Failed to load page '" + fxmlPath + "': " + e.getMessage());
         }
     }
 }

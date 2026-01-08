@@ -1,8 +1,84 @@
+/* global font preference */
 .root {
-    -fx-font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    -fx-font-family: "League Spartan", "Segoe UI", Roboto, "Helvetica Neue", Arial;
     -fx-background-color: #121212;
     -fx-text-fill: #e0e0e0;
 }
+
+/* Login page specific styles */
+.login-root {
+    -fx-background-color: #121212; /* default dark background */
+}
+
+.dark-toggle {
+    -fx-background-color: transparent;
+    -fx-min-width: 50px;
+    -fx-min-height: 50px;
+    -fx-max-width: 50px;
+    -fx-max-height: 50px;
+    -fx-shape: "";
+    -fx-cursor: hand;
+    -fx-font-size: 22px;
+}
+
+.login-title {
+    -fx-font-size: 28px;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: 700;
+}
+
+.login-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #bdbdbd;
+}
+
+.login-form {
+    -fx-background-color: transparent;
+}
+
+.form-label {
+    -fx-text-fill: #e0e0e0;
+    -fx-font-size: 14px;
+}
+
+.form-input {
+    -fx-background-color: #1e1e1e;
+    -fx-text-fill: #e0e0e0;
+    -fx-border-radius: 28px;
+    -fx-background-radius: 28px;
+    -fx-padding: 0 18 0 18;
+    -fx-pref-height: 56px;
+    -fx-font-size: 14px;
+}
+
+/* Center the login button container */
+HBox.login-action { -fx-alignment: CENTER; }
+
+.login-button {
+    -fx-background-color: linear-gradient(#5c3d2e, #4a3428);
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: 700;
+    -fx-border-radius: 27px;
+    -fx-background-radius: 27px;
+    -fx-pref-height: 54px;
+    -fx-min-width: 240px; /* increased width */
+    -fx-max-width: 320px;
+    -fx-font-size: 16px;
+    -fx-alignment: CENTER; /* ensure text is centered */
+}
+
+.login-button:hover {
+    -fx-effect: dropshadow(three-pass-box, rgba(92,61,46,0.4), 8, 0, 0, 4);
+    -fx-translate-y: -2px;
+}
+
+/* message label */
+.message-label {
+    -fx-text-fill: #f44336;
+    -fx-font-size: 12px;
+}
+
+/* Keep existing side menu and dashboard styles */
 
 .app-title {
     -fx-font-size: 28px;
