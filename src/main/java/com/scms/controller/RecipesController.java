@@ -4,6 +4,7 @@ import com.scms.dao.RecipeDao;
 import com.scms.model.Recipe;
 import com.scms.model.RecipeItem;
 import com.scms.service.ServiceException;
+import com.scms.util.DialogUtils;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -51,18 +52,20 @@ public class RecipesController {
 
     private VBox createRecipeCard(int recipeId, String name, String desc) {
         Label nameLbl = new Label(name);
-        nameLbl.setStyle("-fx-font-weight:bold; -fx-font-size:14px;");
+        nameLbl.getStyleClass().add("recipe-name");
+
         Label descLbl = new Label(desc != null ? desc : "");
-        descLbl.setStyle("-fx-text-fill:#666666;");
+        descLbl.getStyleClass().add("recipes-subtitle");
 
         Button assignBtn = new Button("Dodijeli radniku");
+        assignBtn.getStyleClass().add("primary-button");
         assignBtn.setOnAction(evt -> openAssignDialog(recipeId));
 
         HBox footer = new HBox(assignBtn);
         footer.setStyle("-fx-alignment: center-right;");
 
         VBox card = new VBox(6, nameLbl, descLbl, footer);
-        card.setStyle("-fx-background-color:#ffffff; -fx-padding:12; -fx-border-radius:6; -fx-background-radius:6;");
+        card.getStyleClass().add("task-card");
         card.setPrefWidth(260);
         return card;
     }
@@ -74,6 +77,8 @@ public class RecipesController {
             dialog.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             dialog.setTitle("Dodijeli zadatak");
             javafx.scene.Scene s = new javafx.scene.Scene(loader.load());
+            // ensure app stylesheet is applied so the dialog matches main app theme
+            try { s.getStylesheets().add(getClass().getResource("/com/scms/css/light-theme.css").toExternalForm()); } catch (Exception ignored) {}
             com.scms.controller.AssignTaskController c = loader.getController();
             c.setRecipeId(recipeId);
             dialog.setScene(s);
@@ -185,11 +190,17 @@ public class RecipesController {
             return null;
         });
 
+        DialogUtils.styleDialog(dialog);
         Optional<List<RecipeItem>> res = dialog.showAndWait();
         if (res.isPresent()) {
             // reload recipes
             loadRecipes();
-            showInfo("Uspjeh", "Recept je dodan.");
+            Alert info = new Alert(Alert.AlertType.INFORMATION);
+            DialogUtils.styleAlert(info);
+            info.setTitle("Uspjeh");
+            info.setHeaderText(null);
+            info.setContentText("Recept je dodan.");
+            info.showAndWait();
         }
     }
 
@@ -221,6 +232,7 @@ public class RecipesController {
 
     private void showWarning(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
+        DialogUtils.styleAlert(alert);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
@@ -229,6 +241,7 @@ public class RecipesController {
 
     private void showInfo(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        DialogUtils.styleAlert(alert);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);

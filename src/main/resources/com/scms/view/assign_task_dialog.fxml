@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.*?>
 
-<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.AssignTaskController" prefWidth="420" prefHeight="240" style="-fx-padding:12;">
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.AssignTaskController" prefWidth="420" prefHeight="240" style="-fx-padding:12;" styleClass="border-pane">
     <children>
         <VBox spacing="8" AnchorPane.topAnchor="8" AnchorPane.leftAnchor="8" AnchorPane.rightAnchor="8">
             <children>
@@ -41,4 +41,3 @@
         </VBox>
     </children>
 </AnchorPane>
-

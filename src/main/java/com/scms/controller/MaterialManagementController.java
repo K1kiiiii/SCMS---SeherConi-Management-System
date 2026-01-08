@@ -5,6 +5,7 @@ import com.scms.service.MaterialService;
 import com.scms.service.ServiceException;
 import com.scms.service.AssignmentService;
 import com.scms.util.RoleManager;
+import com.scms.util.DialogUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -215,6 +216,7 @@ public class MaterialManagementController {
         }
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        DialogUtils.styleAlert(confirm);
         confirm.setTitle("Brisanje sirovina");
         confirm.setHeaderText("Da li ste sigurni da želite obrisati odabranu sirovinu?");
         confirm.setContentText(selected.getName());
@@ -292,9 +294,11 @@ public class MaterialManagementController {
             return false;
         });
 
+        DialogUtils.styleDialog(dialog);
         Optional<Boolean> result = dialog.showAndWait();
         if (result.isPresent() && result.get()) {
             Alert info = new Alert(Alert.AlertType.INFORMATION);
+            DialogUtils.styleAlert(info);
             info.setTitle("Zahtjev poslan");
             info.setHeaderText(null);
             info.setContentText("Zahtjev za sirovinu je poslan. Čekajte odobrenje od strane magacionera.");
@@ -375,12 +379,14 @@ public class MaterialManagementController {
             return null;
         });
 
+        DialogUtils.styleDialog(dialog);
         Optional<Material> result = dialog.showAndWait();
         return result.orElse(null);
     }
 
     private void showWarning(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
+        DialogUtils.styleAlert(alert);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
@@ -389,6 +395,7 @@ public class MaterialManagementController {
 
     private void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
+        DialogUtils.styleAlert(alert);
         alert.setTitle(title);
         alert.setHeaderText(title);
         alert.setContentText(message);

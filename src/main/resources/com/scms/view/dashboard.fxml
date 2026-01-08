@@ -3,19 +3,19 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.DashboardController" spacing="16" alignment="TOP_LEFT" style="-fx-padding:20;">
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.DashboardController" spacing="16" alignment="TOP_LEFT" style="-fx-padding:20;" styleClass="border-pane">
     <children>
         <VBox spacing="4">
             <children>
-                <Label fx:id="titleLabel" text="Dashboard" styleClass="page-title" style="-fx-font-size:20px; -fx-font-weight:bold;" />
-                <Label fx:id="subtitleLabel" text="System overview and key statistics" style="-fx-font-size:12px; -fx-text-fill: #666666;" />
+                <Label fx:id="titleLabel" text="Dashboard" styleClass="page-title" />
+                <Label fx:id="subtitleLabel" text="System overview and key statistics" styleClass="page-subtitle" />
             </children>
         </VBox>
 
         <!-- Tasks area (role-aware): for RADNIK shows "Moji zadaci", for ADMIN shows "Zadaci u toku", hidden for MAGACIONER -->
         <VBox fx:id="tasksBox" spacing="8" visible="false" managed="false">
             <children>
-                <Label fx:id="tasksHeader" text="" style="-fx-font-size:14px; -fx-font-weight:bold;" />
+                <Label fx:id="tasksHeader" text="" styleClass="tasks-header" />
                 <!-- Scrollable area for task rows -->
                 <ScrollPane fx:id="tasksScroll" styleClass="tasks-scroll" fitToWidth="true" prefHeight="180" vbarPolicy="AS_NEEDED" hbarPolicy="NEVER">
                     <content>
@@ -26,16 +26,21 @@
         </VBox>
 
         <!-- Fixed critical materials card (always visible) -->
-        <VBox spacing="8" styleClass="dashboard-card" fx:id="criticalCard" prefWidth="380" prefHeight="220">
+        <VBox spacing="8" styleClass="dashboard-card" fx:id="criticalCard" prefWidth="420" prefHeight="220">
             <children>
                 <Label text="⚠ Kritične sirovine" styleClass="card-title" />
                 <Separator />
-                <VBox fx:id="criticalCardContent" spacing="6" style="-fx-padding:8; -fx-alignment:TOP_LEFT;" />
+                <!-- Scrollable critical materials content (keeps card height fixed) -->
+                <ScrollPane fx:id="criticalScroll" styleClass="critical-scroll" fitToWidth="true" prefViewportHeight="140" vbarPolicy="AS_NEEDED" hbarPolicy="NEVER">
+                    <content>
+                        <VBox fx:id="criticalCardContent" spacing="6" styleClass="critical-content" />
+                    </content>
+                </ScrollPane>
             </children>
         </VBox>
 
         <!-- Dynamic cards grid: controller will populate cards based on role -->
-        <GridPane fx:id="cardsGrid" hgap="12" vgap="12">
+        <GridPane fx:id="cardsGrid" styleClass="grid-pane" hgap="12" vgap="12">
             <columnConstraints>
                 <ColumnConstraints hgrow="ALWAYS" percentWidth="25" />
                 <ColumnConstraints hgrow="ALWAYS" percentWidth="25" />

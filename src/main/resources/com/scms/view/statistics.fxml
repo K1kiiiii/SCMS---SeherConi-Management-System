@@ -3,7 +3,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml/1" spacing="10" alignment="TOP_LEFT" style="-fx-padding:20;">
+<VBox xmlns:fx="http://javafx.com/fxml/1" spacing="10" alignment="TOP_LEFT" style="-fx-padding:20;" styleClass="border-pane">
     <children>
         <Label text="Statistika" styleClass="page-title" style="-fx-font-size:16px; -fx-font-weight:bold;" />
         <Label text="(Privremeno mjesto za prikaz statistike)" />

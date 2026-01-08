@@ -3,6 +3,7 @@ package com.scms.controller;
 import com.scms.model.User;
 import com.scms.service.ServiceException;
 import com.scms.service.UserService;
+import com.scms.util.DialogUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -125,6 +126,7 @@ public class UserManagementController {
         }
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        DialogUtils.styleAlert(confirm);
         confirm.setTitle("Brisanje korisnika");
         confirm.setHeaderText("Da li ste sigurni da želite obrisati odabranog korisnika?");
         confirm.setContentText(selected.getUsername() + " (" + selected.getRole() + ")");
@@ -153,6 +155,7 @@ public class UserManagementController {
     }
     private UserDialogResult showCreateUserDialog() {
         Dialog<UserDialogResult> dialog = new Dialog<>();
+        DialogUtils.styleDialog(dialog);
         dialog.setTitle("Novi korisnik");
         dialog.setHeaderText("Unesite podatke o korisniku");
 
@@ -213,6 +216,7 @@ public class UserManagementController {
 
     private UserDialogResult showEditUserDialog(User user) {
         Dialog<UserDialogResult> dialog = new Dialog<>();
+        DialogUtils.styleDialog(dialog);
         dialog.setTitle("Uredi korisnika");
         dialog.setHeaderText("Uredi postojeći korisnički nalog");
 
@@ -265,6 +269,7 @@ public class UserManagementController {
 
     private void showWarning(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
+        DialogUtils.styleAlert(alert);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
@@ -273,11 +278,10 @@ public class UserManagementController {
 
     private void showError(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
+        DialogUtils.styleAlert(alert);
         alert.setTitle(title);
         alert.setHeaderText(title);
         alert.setContentText(message);
         alert.showAndWait();
     }
 }
-
-

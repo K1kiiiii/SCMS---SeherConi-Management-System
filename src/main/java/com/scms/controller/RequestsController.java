@@ -7,6 +7,7 @@ import com.scms.service.AssignmentService;
 import com.scms.service.MaterialService;
 import com.scms.service.ServiceException;
 import com.scms.service.UserService;
+import com.scms.util.DialogUtils;
 import com.scms.util.RoleManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -198,6 +199,7 @@ public class RequestsController {
             return;
         }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        DialogUtils.styleAlert(confirm);
         confirm.setTitle("Potvrda odobravanja");
         confirm.setHeaderText("Odobriti zahtjev?");
         confirm.setContentText("Zahtjev ID=" + sel.getId() + ", sirovina ID=" + sel.getMaterialId());
@@ -208,6 +210,7 @@ public class RequestsController {
                 assignmentService.approveRequest(sel.getId());
                 loadRequests();
                 Alert info = new Alert(Alert.AlertType.INFORMATION);
+                DialogUtils.styleAlert(info);
                 info.setTitle("Odobreno");
                 info.setHeaderText(null);
                 info.setContentText("Zahtjev je uspješno odobren.");
@@ -226,6 +229,7 @@ public class RequestsController {
             return;
         }
         TextInputDialog input = new TextInputDialog();
+        DialogUtils.styleDialog(input);
         input.setTitle("Razlog odbijanja");
         input.setHeaderText("Unesite razlog za odbijanje (opcionalno):");
         input.setContentText("Razlog:");
@@ -236,6 +240,7 @@ public class RequestsController {
                 assignmentService.rejectRequest(sel.getId(), maybeReason.get());
                 loadRequests();
                 Alert info = new Alert(Alert.AlertType.INFORMATION);
+                DialogUtils.styleAlert(info);
                 info.setTitle("Odbijeno");
                 info.setHeaderText(null);
                 info.setContentText("Zahtjev je odbijen.");
@@ -248,6 +253,7 @@ public class RequestsController {
 
     private void showError(String title, String message) {
         Alert a = new Alert(Alert.AlertType.ERROR);
+        DialogUtils.styleAlert(a);
         a.setTitle(title);
         a.setHeaderText(null);
         a.setContentText(message);

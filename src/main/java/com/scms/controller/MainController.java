@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -20,6 +21,8 @@ public class MainController {
     @FXML private Label welcomeLabel;
     @FXML private Label userInfoLabel;
     @FXML private StackPane contentArea;
+    @FXML private ImageView logoImage;
+    @FXML private Label titleLabel;
 
     // side menu and buttons
     @FXML private VBox sideMenu;
@@ -75,17 +78,42 @@ public class MainController {
             String darkCss = darkUrl == null ? null : darkUrl.toExternalForm();
             String lightCss = lightUrl == null ? null : lightUrl.toExternalForm();
 
-            // remove both if present
-            if (darkCss != null) scene.getStylesheets().remove(darkCss);
-            if (lightCss != null) scene.getStylesheets().remove(lightCss);
+            // debug: print resolved css URLs
+            System.out.println("[DEBUG] addAppStylesheet: darkCss=" + darkCss + " lightCss=" + lightCss + " scene.stylesheets=" + scene.getStylesheets());
+
+            // remove both if present from scene
+            // clear all to avoid inconsistent stacking
+            scene.getStylesheets().clear();
+
+            // also remove from root stylesheets as a fallback
+            try {
+                if (scene.getRoot() != null) {
+                    scene.getRoot().getStylesheets().clear();
+                }
+            } catch (Exception ignore) { }
 
             if (dark) {
-                if (darkCss != null && !scene.getStylesheets().contains(darkCss)) scene.getStylesheets().add(darkCss);
+                if (darkCss != null) {
+                    scene.getStylesheets().add(darkCss);
+                    System.out.println("[DEBUG] added dark stylesheet: " + darkCss);
+                }
+                try { if (scene.getRoot() != null) scene.getRoot().setStyle("-fx-background-color: #1F1F1F;"); } catch (Exception ignore) {}
+                try { scene.setFill(javafx.scene.paint.Color.web("#1F1F1F")); } catch (Exception ignore) {}
             } else {
-                if (lightCss != null && !scene.getStylesheets().contains(lightCss)) scene.getStylesheets().add(lightCss);
+                if (lightCss != null) {
+                    scene.getStylesheets().add(lightCss);
+                    System.out.println("[DEBUG] added light stylesheet: " + lightCss);
+                }
+                try { if (scene.getRoot() != null) scene.getRoot().setStyle("-fx-background-color: #F5F3EF;"); } catch (Exception ignore) {}
+                try { scene.setFill(javafx.scene.paint.Color.web("#F5F3EF")); } catch (Exception ignore) {}
             }
+
+            System.out.println("[DEBUG] final scene.stylesheets=" + scene.getStylesheets());
+            try { System.out.println("[DEBUG] root.stylesheets=" + (scene.getRoot() == null ? "null" : scene.getRoot().getStylesheets())); } catch (Exception ignore) {}
+
         } catch (Exception ex) {
             System.err.println("Could not load app stylesheet: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -226,6 +254,8 @@ public class MainController {
                 return;
             }
             Parent view = FXMLLoader.load(pageUrl);
+            // ensure loaded page background is transparent so the main app background shows through
+            try { if (view != null) view.setStyle("-fx-background-color: transparent;"); } catch (Exception ignore) {}
             // clear and set single child
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {

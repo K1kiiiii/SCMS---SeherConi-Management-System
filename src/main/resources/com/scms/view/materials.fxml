@@ -6,7 +6,7 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.scms.controller.MaterialManagementController"
-            prefWidth="900" prefHeight="600">
+            prefWidth="900" prefHeight="600" styleClass="border-pane">
 
     <top>
         <VBox spacing="5">
@@ -45,7 +45,7 @@
 
     <!-- glavna tabela -->
     <center>
-        <TableView fx:id="materialTable">
+        <TableView fx:id="materialTable" styleClass="standard-table">
             <columns>
                 <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
                 <TableColumn fx:id="colName" text="Naziv" prefWidth="220"/>

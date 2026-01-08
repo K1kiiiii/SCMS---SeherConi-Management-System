@@ -2,6 +2,7 @@ package com.scms.service;
 
 import com.scms.dao.MaterialDao;
 import com.scms.model.Material;
+import com.scms.util.DialogUtils;
 import javafx.application.Platform;
 import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
@@ -65,6 +66,7 @@ public class NotificationService {
                 final String alertMsg = msg;
                 Platform.runLater(() -> {
                     Alert a = new Alert(AlertType.WARNING);
+                    DialogUtils.styleAlert(a);
                     a.setTitle("Upozorenje: Niske zalihe");
                     a.setHeaderText("Sirovine pale ispod minimalne zalihe");
                     a.setContentText(alertMsg);
@@ -88,4 +90,3 @@ public class NotificationService {
     // For test/inspection
     public Set<Integer> getAlertedSet() { return new HashSet<>(alerted); }
 }
-

@@ -6,7 +6,7 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.scms.controller.UserManagementController"
-            prefWidth="900" prefHeight="600">
+            prefWidth="900" prefHeight="600" styleClass="border-pane">
 
     <top>
         <VBox spacing="5">
@@ -31,7 +31,7 @@
     </top>
 
     <center>
-        <TableView fx:id="userTable">
+        <TableView fx:id="userTable" styleClass="standard-table">
             <columns>
                 <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
                 <TableColumn fx:id="colUsername" text="Korisničko ime" prefWidth="220"/>

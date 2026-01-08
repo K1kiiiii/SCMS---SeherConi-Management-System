@@ -3,14 +3,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.RecipesController" spacing="16" alignment="TOP_LEFT" style="-fx-padding:20;">
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.RecipesController" spacing="16" alignment="TOP_LEFT" style="-fx-padding:20;" styleClass="border-pane">
     <children>
         <HBox spacing="12" alignment="CENTER_LEFT">
             <children>
                 <VBox spacing="4">
                     <children>
-                        <Label fx:id="titleLabel" text="Recepti" styleClass="page-title" style="-fx-font-size:20px; -fx-font-weight:bold;" />
-                        <Label fx:id="subtitleLabel" text="Pregled recepata" style="-fx-font-size:12px; -fx-text-fill: #666666;" />
+                        <Label fx:id="titleLabel" text="Recepti" styleClass="page-title recipes-title" />
+                        <Label fx:id="subtitleLabel" text="Pregled recepata" styleClass="recipes-subtitle" />
                     </children>
                 </VBox>
                 <Region HBox.hgrow="ALWAYS" />

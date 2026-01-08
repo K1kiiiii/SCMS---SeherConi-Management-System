@@ -2,24 +2,24 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.HBox?>
-<VBox spacing="8" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.ReportController" style="-fx-padding:12;">
+<VBox spacing="8" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.ReportController" style="-fx-padding:12;" styleClass="border-pane">
     <HBox spacing="8">
-        <Label text="Mjesečni izvještaj:" />
+        <Label text="Mjesečni izvještaj:" styleClass="form-label" />
         <ComboBox fx:id="cbMonth" prefWidth="120" />
         <ComboBox fx:id="cbYear" prefWidth="100" />
         <Button text="Generiraj PDF" onAction="#onGenerateMonthlyPdf" />
     </HBox>
     <HBox spacing="8">
-        <Label text="Godišnji izvještaj:" />
+        <Label text="Godišnji izvještaj:" styleClass="form-label" />
         <ComboBox fx:id="cbYear2" prefWidth="100" />
         <Button text="Generiraj PDF" onAction="#onGenerateYearlyPdf" />
     </HBox>
     <HBox spacing="8">
-        <Label text="CSV export:" />
+        <Label text="CSV export:" styleClass="form-label" />
         <Button text="Export CSV (period)" onAction="#onExportCsvForPeriod" />
     </HBox>
     <HBox spacing="8">
-        <Label text="Labela recepta:" />
+        <Label text="Labela recepta:" styleClass="form-label" />
         <TextField fx:id="tfRecipeId" promptText="Recipe ID" />
         <TextField fx:id="tfLabelQty" promptText="Quantity" />
         <Button text="Preview" onAction="#onPreviewLabel" />
@@ -29,4 +29,3 @@
         <Button text="Zatvori" onAction="#onClose" />
     </HBox>
 </VBox>
-

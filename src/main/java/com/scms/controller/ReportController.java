@@ -2,6 +2,7 @@ package com.scms.controller;
 
 import com.scms.service.ReportService;
 import com.scms.service.generator.LabelGenerator;
+import com.scms.util.DialogUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -39,6 +40,7 @@ public class ReportController {
         LocalDate from = YearMonth.of(year, month).atDay(1);
         if (from.isBefore(MIN_DATE)) {
             Alert a = new Alert(Alert.AlertType.WARNING, "Izabrani datum ne može biti prije 01.01.2026.", ButtonType.OK);
+            DialogUtils.styleAlert(a);
             a.showAndWait();
             return false;
         }
@@ -49,6 +51,7 @@ public class ReportController {
         LocalDate from = LocalDate.of(year, 1, 1);
         if (from.isBefore(MIN_DATE)) {
             Alert a = new Alert(Alert.AlertType.WARNING, "Izabrani datum ne može biti prije 01.01.2026.", ButtonType.OK);
+            DialogUtils.styleAlert(a);
             a.showAndWait();
             return false;
         }
@@ -66,10 +69,13 @@ public class ReportController {
         try {
             reportService.generateMonthlyPdf(year, month, f.toPath());
             Alert ok = new Alert(Alert.AlertType.INFORMATION, "PDF uspješno generiran: " + f.getAbsolutePath(), ButtonType.OK);
+            DialogUtils.styleAlert(ok);
             ok.showAndWait();
         } catch (Exception ex) {
             ex.printStackTrace();
-            new Alert(Alert.AlertType.ERROR, "Greška pri generiranju PDF: " + ex.getMessage(), ButtonType.OK).showAndWait();
+            Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju PDF: " + ex.getMessage(), ButtonType.OK);
+            DialogUtils.styleAlert(err);
+            err.showAndWait();
         }
     }
 
@@ -78,7 +84,17 @@ public class ReportController {
         Integer year = cbYear2.getValue(); if (year == null) return; if (!validateYear(year)) return;
         FileChooser fc = new FileChooser(); fc.setInitialFileName(String.format("report_%d.pdf", year));
         File f = fc.showSaveDialog(getWindow()); if (f == null) return;
-        try { reportService.generateYearlyPdf(year, f.toPath()); new Alert(Alert.AlertType.INFORMATION, "PDF uspješno generiran: " + f.getAbsolutePath(), ButtonType.OK).showAndWait(); } catch (Exception ex) { ex.printStackTrace(); new Alert(Alert.AlertType.ERROR, "Greška pri generiranju PDF: " + ex.getMessage(), ButtonType.OK).showAndWait(); }
+        try {
+            reportService.generateYearlyPdf(year, f.toPath());
+            Alert ok = new Alert(Alert.AlertType.INFORMATION, "PDF uspješno generiran: " + f.getAbsolutePath(), ButtonType.OK);
+            DialogUtils.styleAlert(ok);
+            ok.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju PDF: " + ex.getMessage(), ButtonType.OK);
+            DialogUtils.styleAlert(err);
+            err.showAndWait();
+        }
     }
 
     @FXML
@@ -90,7 +106,17 @@ public class ReportController {
         LocalDate to = ym.atEndOfMonth();
         FileChooser fc = new FileChooser(); fc.setInitialFileName(String.format("report_%02d_%d.csv", month, year));
         File f = fc.showSaveDialog(getWindow()); if (f == null) return;
-        try { reportService.exportCsvForPeriod(from, to, f.toPath()); new Alert(Alert.AlertType.INFORMATION, "CSV uspješno eksportiran: " + f.getAbsolutePath(), ButtonType.OK).showAndWait(); } catch (Exception ex) { ex.printStackTrace(); new Alert(Alert.AlertType.ERROR, "Greška pri exportu CSV: " + ex.getMessage(), ButtonType.OK).showAndWait(); }
+        try {
+            reportService.exportCsvForPeriod(from, to, f.toPath());
+            Alert ok = new Alert(Alert.AlertType.INFORMATION, "CSV uspješno eksportiran: " + f.getAbsolutePath(), ButtonType.OK);
+            DialogUtils.styleAlert(ok);
+            ok.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri exportu CSV: " + ex.getMessage(), ButtonType.OK);
+            DialogUtils.styleAlert(err);
+            err.showAndWait();
+        }
     }
 
     @FXML
@@ -102,6 +128,7 @@ public class ReportController {
             com.scms.model.Recipe r = rd.findById(rid).orElseThrow(() -> new Exception("Recipe not found"));
             String preview = labelGenerator.renderRecipeLabelPreview(r, qty);
             Alert a = new Alert(Alert.AlertType.INFORMATION);
+            DialogUtils.styleAlert(a);
             a.setTitle("Preview labele");
             a.setHeaderText("Preview label za recept: " + r.getName());
             TextArea ta = new TextArea(preview);
@@ -112,8 +139,16 @@ public class ReportController {
             a.getDialogPane().setExpandableContent(ta);
             a.getDialogPane().setExpanded(true);
             a.showAndWait();
-        } catch (NumberFormatException nfe) { new Alert(Alert.AlertType.WARNING, "Neispravan ID recepta ili količina", ButtonType.OK).showAndWait(); }
-        catch (Exception ex) { ex.printStackTrace(); new Alert(Alert.AlertType.ERROR, "Greška pri generiranju preview-a: " + ex.getMessage(), ButtonType.OK).showAndWait(); }
+        } catch (NumberFormatException nfe) {
+            Alert w = new Alert(Alert.AlertType.WARNING, "Neispravan ID recepta ili količina", ButtonType.OK);
+            DialogUtils.styleAlert(w);
+            w.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju preview-a: " + ex.getMessage(), ButtonType.OK);
+            DialogUtils.styleAlert(err);
+            err.showAndWait();
+        }
     }
 
     @FXML
@@ -124,9 +159,19 @@ public class ReportController {
             FileChooser fc = new FileChooser(); fc.setInitialFileName(String.format("label_recipe_%d.pdf", rid));
             File f = fc.showSaveDialog(getWindow()); if (f == null) return;
             reportService.generateRecipeLabel(rid, qty, f.toPath());
-            new Alert(Alert.AlertType.INFORMATION, "Labela generirana: " + f.getAbsolutePath(), ButtonType.OK).showAndWait();
-        } catch (NumberFormatException nfe) { new Alert(Alert.AlertType.WARNING, "Neispravan ID recepta ili količina", ButtonType.OK).showAndWait(); }
-        catch (Exception ex) { ex.printStackTrace(); new Alert(Alert.AlertType.ERROR, "Greška pri generiranju labela: " + ex.getMessage(), ButtonType.OK).showAndWait(); }
+            Alert ok = new Alert(Alert.AlertType.INFORMATION, "Labela generirana: " + f.getAbsolutePath(), ButtonType.OK);
+            DialogUtils.styleAlert(ok);
+            ok.showAndWait();
+        } catch (NumberFormatException nfe) {
+            Alert w = new Alert(Alert.AlertType.WARNING, "Neispravan ID recepta ili količina", ButtonType.OK);
+            DialogUtils.styleAlert(w);
+            w.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju labela: " + ex.getMessage(), ButtonType.OK);
+            DialogUtils.styleAlert(err);
+            err.showAndWait();
+        }
     }
 
     @FXML

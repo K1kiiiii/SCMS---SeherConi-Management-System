@@ -1,11 +1,20 @@
-/* Light theme for SCMS login and app (simple, warm beige) */
+/* Light theme for SCMS (cleaned and focused)
+   - Uses warm beige background and brown/orange accents
+   - Keeps login-related selectors intact and unmodified
+   - Provides clear styles for dashboard components used by controller
+   - Made compatible with JavaFX CSS (no // comments, no remote @import)
+*/
+
+/* ----------------------------------
+   Core / Login styles (kept safe)
+   ---------------------------------- */
 .root {
-    -fx-font-family: "League Spartan";
+    -fx-font-family: "League Spartan", "Segoe UI", Roboto, "Helvetica Neue", Arial;
     -fx-background-color: #F5F3EF; /* warm beige */
     -fx-text-fill: #4A3428; /* dark brown */
 }
 
-/* Login page */
+/* Login page - keep these selectors as-is so login stays the same */
 .login-root {
     -fx-background-color: #F5F3EF;
 }
@@ -39,8 +48,10 @@
     -fx-font-size: 16px;
     -fx-effect: dropshadow(gaussian, rgba(217,133,85,0.25), 12, 0, 0, 4);
 }
-.form-input.prompt-text {
-    -fx-text-fill: ffffff
+
+/* placeholder color for prompt text inside controls is usually done in code; keep safe fallback */
+.form-input .prompt-text {
+    -fx-fill: #ffffff;
 }
 
 .form-input:focused {
@@ -55,13 +66,13 @@
     -fx-border-radius: 27px;
     -fx-background-radius: 27px;
     -fx-pref-height: 54px;
-    -fx-min-width: 240px; /* increased width to match dark theme */
+    -fx-min-width: 240px;
     -fx-max-width: 320px;
     -fx-font-size: 18px;
     -fx-letter-spacing: 2px;
     -fx-text-transform: uppercase;
     -fx-effect: dropshadow(gaussian, rgba(92,61,46,0.25), 12, 0, 0, 6);
-    -fx-alignment: CENTER; /* ensure text is centered */
+    -fx-alignment: CENTER;
 }
 
 .login-button:hover {
@@ -75,11 +86,938 @@
     -fx-text-fill: #4A3428;
 }
 
-/* center login action HBox */
 HBox.login-action { -fx-alignment: CENTER; }
 
 .message-label { -fx-text-fill: #f44336; }
 
-/* Keep defaults for other components in light mode (if needed) */
-.page-title { -fx-text-fill: #4A3428; }
-.dashboard-card { -fx-background-color: #ffffff; -fx-border-color: rgba(0,0,0,0.06); }
+/* ----------------------------------
+   Main app / Dashboard styles
+   ---------------------------------- */
+
+/* Top navbar / border-pane background (kept minimal) */
+.border-pane {
+    -fx-background-color: #F5F3EF; /* warm beige */
+    -fx-padding: 12;
+}
+
+/* Navbar HBox (child of BorderPane) */
+.border-pane > .hbox {
+    /* match the sidebar gradient for visual consistency */
+    -fx-background-color: linear-gradient(#f1e6dc, #FAEBD7);
+    -fx-background-radius: 0 0 12 12;
+    -fx-padding: 8 16 8 16;
+    -fx-alignment: CENTER_LEFT;
+    -fx-spacing: 10;
+    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.06), 8, 0.1, 0, 2);
+    -fx-border-color: transparent transparent rgba(232,229,223,0.9) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.border-pane > StackPane > HBox {
+    -fx-background-color: linear-gradient(#f1e6dc, #FAEBD7);
+    -fx-background-radius: 0 0 12 12;
+    -fx-padding: 8 16 8 16;
+    -fx-alignment: CENTER_LEFT;
+    -fx-spacing: 10;
+    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.06), 8, 0.1, 0, 2);
+    -fx-border-color: transparent transparent rgba(232,229,223,0.9) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.border-pane > .hbox > .label {
+    -fx-text-fill: #4A3428;
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+}
+
+/* Logout button in navbar */
+.border-pane > .hbox > .button {
+    -fx-background-color: transparent;
+    -fx-border-color: #D98555;
+    -fx-text-fill: #D98555;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 8 18 8 18;
+    -fx-font-weight: 600;
+}
+
+.border-pane > .hbox > .button:hover { -fx-background-color: #D98555; -fx-text-fill: white; }
+
+/* Sidebar */
+#sideMenu {
+    -fx-background-color: linear-gradient(#f1e6dc, #FAEBD7);
+    -fx-background-radius: 12;
+    -fx-padding: 12;
+    -fx-spacing: 10;
+    -fx-pref-width: 180px;
+    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.04), 6, 0.08, 0, 2);
+}
+
+#sideMenu .label { -fx-text-fill: #6b4f3f; -fx-font-weight: 600; -fx-font-size: 13px; }
+
+#sideMenu .side-menu-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6b4f3f;
+    -fx-font-weight: 600;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 8 14 8 14;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-pref-height: 40;
+}
+
+#sideMenu .side-menu-button:hover {
+    -fx-background-color: rgba(217,133,85,0.06);
+    -fx-text-fill: #4A3428;
+    -fx-border-color: transparent transparent transparent #E8915D;
+    -fx-border-width: 0 0 0 4;
+}
+
+#sideMenu .side-menu-button.menu-active {
+    -fx-background-color: linear-gradient(to right, rgba(217,133,85,0.12), rgba(217,133,85,0.04));
+    -fx-text-fill: #D98555;
+    -fx-border-color: transparent transparent transparent #D98555;
+    -fx-border-width: 0 0 0 4;
+    -fx-font-weight: 700;
+}
+
+/* Content area */
+#contentArea { -fx-padding: 32; -fx-alignment: TOP_CENTER; -fx-background-color: transparent; }
+
+#welcomeLabel {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12;
+    -fx-padding: 22 28 22 28;
+    -fx-text-fill: #4A3428;
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+}
+
+/* Generic card base */
+.dashboard-card {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 16;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.06), 10, 0.08, 0, 3);
+    -fx-border-radius: 16;
+    -fx-min-height: 96;
+    -fx-cursor: default;
+    -fx-border-width: 0 0 0 3;
+    -fx-border-color: transparent transparent transparent rgba(217,133,85,0.06);
+}
+
+.dashboard-card:hover { -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.10), 18, 0.12, 0, 6); -fx-translate-y: -3; }
+
+.card-title { -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: #4A3428; }
+
+.dashboard-card .meta, .dashboard-card .card-meta { -fx-font-size: 12px; -fx-text-fill: #6b4f3f; }
+
+/* Stronger critical card */
+#criticalCard {
+    -fx-border-width: 0 0 0 5;
+    -fx-border-color: transparent transparent transparent #D98555;
+    -fx-effect: dropshadow(gaussian, rgba(217,133,85,0.08), 14, 0.10, 0, 5);
+}
+
+#criticalCard .separator { -fx-padding: 6 0 8 0; -fx-border-color: rgba(240,237,232,0.9); -fx-border-width: 0 0 1 0; }
+
+/* Critical row and items */
+.critical-item { -fx-text-fill: #D23B3B; -fx-font-weight: 700; }
+.critical-count-badge { -fx-background-color: #D23B3B; -fx-text-fill: white; -fx-font-weight: 700; -fx-background-radius: 10; -fx-padding: 4 8; }
+
+/* Tasks area */
+.tasks-scroll { -fx-background-color: transparent; -fx-border-color: transparent; }
+.tasks-scroll .viewport { -fx-background-color: transparent; -fx-background-radius: 12; -fx-padding: 6; }
+
+.tasks-list .task-pill, .tasks-list > .label, .tasks-list > .hbox {
+    -fx-background-color: rgba(74,52,40,0.03);
+    -fx-background-radius: 12;
+    -fx-padding: 8 12 8 12;
+    -fx-font-size: 13px;
+    -fx-text-fill: #6b4f3f;
+}
+
+.tasks-list .task-pill:hover { -fx-background-color: rgba(217,133,85,0.06); -fx-translate-y: -1; }
+
+.task-row { -fx-background-color: rgba(74,52,40,0.02); -fx-background-radius: 10; -fx-padding: 8 10; -fx-alignment: CENTER_LEFT; }
+
+.task-title { -fx-font-weight: 700; -fx-font-size: 13px; -fx-text-fill: #4A3428; }
+.task-meta { -fx-font-size: 12px; -fx-text-fill: #6b4f3f; }
+
+.task-badge { -fx-background-color: rgba(217,133,85,0.12); -fx-text-fill: #D98555; -fx-font-weight: 700; -fx-padding: 6 8; -fx-background-radius: 10; -fx-font-size: 11px; }
+.task-badge.status-critical { -fx-background-color: rgba(210,60,60,0.12); -fx-text-fill: #D23B3B; -fx-font-weight: 800; }
+
+/* Task-card style */
+.task-card { -fx-background-color: #FFFFFF; -fx-padding: 12; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.04), 8, 0.06, 0, 3); }
+.task-card .button.primary { -fx-background-color: #5C3D2E; -fx-text-fill: white; }
+
+/* Stat / metric cards */
+.stat-card { -fx-background-color: #FFFFFF; -fx-padding: 12; -fx-border-radius: 12; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.04), 8, 0.06, 0, 3); }
+.stat-card .card-title { -fx-font-size: 12px; -fx-text-fill: #6b4f3f; }
+.card-value { -fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: #5C3D2E; }
+
+/* Ensure labels inside dashboard and task rows are readable (dark) */
+.dashboard-card Label, .task-row Label, .tasks-list Label { -fx-text-fill: #4A3428; }
+
+/* Grid helpers */
+.grid-pane { -fx-hgap: 16; -fx-vgap: 16; }
+.grid-pane .dashboard-card { -fx-min-height: 140; -fx-pref-height: 160; }
+
+/* Scrollbar styling */
+.scroll-bar { -fx-background-color: transparent; -fx-padding: 2; }
+.scroll-bar .track { -fx-background-color: rgba(240,237,232,0.9); -fx-background-radius: 6; }
+.scroll-bar .thumb { -fx-background-color: rgba(150,110,95,0.9); -fx-background-radius: 6; -fx-pref-width: 8; -fx-pref-height: 24; }
+.scroll-bar .thumb:hover { -fx-background-color: rgba(150,110,95,1.0); }
+.scroll-bar .increment-button, .scroll-bar .decrement-button { -fx-padding: 0; -fx-pref-height: 0; -fx-pref-width: 0; }
+
+/* Utilities */
+#welcomeLabel { -fx-background-color: #FFFFFF; -fx-background-radius: 14; -fx-padding: 18; -fx-font-size: 18px; -fx-font-weight: 600; -fx-text-fill: #4A3428; -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.04), 10, 0.06, 0, 4); }
+.vbox, .hbox { -fx-spacing: 8; }
+
+/* -------------------------------------------------
+   Final high-specificity overrides (label-level)
+   This block ensures card titles, task titles, badges and
+   critical items are visibly styled (bold, colored)
+   and placed last so they override earlier generic rules.
+   ------------------------------------------------- */
+
+/* Card title labels (stat cards and dashboard cards) */
+Label.card-title, .dashboard-card Label.card-title, .stat-card Label.card-title {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700; /* bold */
+    -fx-text-fill: #4A3428; /* dark brown */
+}
+
+/* Card value labels (big numbers) */
+Label.card-value, .stat-card Label.card-value {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #5C3D2E; /* strong brown */
+}
+
+/* Task title and meta */
+Label.task-title, .task-row Label.task-title {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 13px;
+    -fx-text-fill: #4A3428;
+}
+Label.task-meta, .task-row Label.task-meta {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 500;
+    -fx-font-size: 12px;
+    -fx-text-fill: #6b4f3f;
+}
+
+/* Critical item label (warning) - higher specificity */
+Label.critical-item, .critical-item {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 800;
+    -fx-font-size: 13px;
+    -fx-text-fill: #D23B3B; /* clear red */
+}
+
+/* Task badge (status) */
+Label.task-badge, .task-badge {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 800;
+    -fx-font-size: 11px;
+    -fx-padding: 4 8 4 8;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-text-fill: white;
+    -fx-background-color: #D98555; /* coral badge default */
+}
+Label.task-badge.status-critical, .task-badge.status-critical {
+    -fx-background-color: #D23B3B;
+    -fx-text-fill: white;
+}
+
+/* Ensure labels inside dashboard-card that shouldn't be white are forced dark */
+.dashboard-card Label, .task-card Label, .tasks-list Label {
+    -fx-text-fill: #4A3428;
+}
+
+/* Ensure recipe/name labels inside stat/task cards use accent color where appropriate */
+Label.recipe-name, .recipe-name { -fx-text-fill: #D98555; -fx-font-weight: 700; }
+
+/* Make sure critical count badge text remains centered and bold */
+.critical-count-badge { -fx-font-weight: 800; -fx-alignment: CENTER; }
+
+/* --------------------------------------------------
+   Primary button styling for main application views
+   - Targets buttons in the main app but excludes login and sidebar/menu buttons
+   - Uses JavaFX-compatible properties only
+   -------------------------------------------------- */
+
+/* Replace previous primary button selector (removed :not) with container-scoped selectors */
+.border-pane .button,
+.dashboard-root .button,
+#contentArea .button,
+.stat-card .button,
+.task-card .button {
+    -fx-background-color: #5C3D2E; /* dark brown */
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 600; /* semibold */
+    -fx-background-radius: 24;
+    -fx-border-radius: 24;
+    -fx-padding: 8 18; /* comfortable padding */
+}
+
+.border-pane .button:hover,
+.dashboard-root .button:hover,
+#contentArea .button:hover,
+.stat-card .button:hover,
+.task-card .button:hover {
+    -fx-background-color: #6A4A36; /* lighter brown */
+}
+
+.border-pane .button:pressed,
+.dashboard-root .button:pressed,
+#contentArea .button:pressed,
+.stat-card .button:pressed,
+.task-card .button:pressed {
+    -fx-background-color: #4E2F26; /* darker brown */
+    -fx-translate-y: 1; /* subtle pressed movement */
+}
+
+/* Explicit overrides: keep login and sidebar/menu buttons unchanged
+   These rules come AFTER the general button rules to re-apply original visuals */
+.login-button {
+    -fx-background-color: #5C3D2E; /* retain login look defined earlier */
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: 700;
+    -fx-border-radius: 27px;
+    -fx-background-radius: 27px;
+}
+
+#sideMenu .side-menu-button,
+.side-menu-button {
+    /* restore transparent sidebar look */
+    -fx-background-color: transparent;
+    -fx-text-fill: #6b4f3f;
+    -fx-font-weight: 600;
+}
+
+/* end of replacements for primary button styling */
+
+/* Critical card scroll area styling */
+#criticalCard .critical-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+#criticalCard .critical-scroll .viewport {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-padding: 4;
+    -fx-pref-height: 140; /* fixed visible height for content area */
+}
+
+/* Ensure vertical scrollbar only and minimal appearance (track + thumb) */
+#criticalCard .critical-scroll .scroll-bar:vertical {
+    -fx-pref-width: 10px;
+}
+
+#criticalCard .critical-scroll .scroll-bar .track {
+    -fx-background-color: rgba(240,237,232,0.9);
+    -fx-background-radius: 6;
+}
+
+#criticalCard .critical-scroll .scroll-bar .thumb {
+    -fx-background-color: rgba(217,133,85,0.9); /* coral/orange accent */
+    -fx-background-radius: 6;
+    -fx-pref-height: 24px;
+}
+
+#criticalCard .critical-scroll .scroll-bar .thumb:hover {
+    -fx-background-color: rgba(217,133,85,1.0);
+}
+
+#criticalCard .critical-scroll .scroll-bar .increment-button,
+#criticalCard .critical-scroll .scroll-bar .decrement-button {
+    -fx-pref-height: 0; -fx-pref-width: 0; -fx-padding: 0;
+}
+
+/* Disable horizontal scrolling behavior (handled on FXML) */
+#criticalCard .critical-scroll {
+    -fx-hbar-policy: never;
+}
+
+/* Keep card content labels readable and spaced */
+#criticalCard .task-row { -fx-padding: 6 8; }
+#criticalCard .task-row Label { -fx-text-fill: #4A3428; }
+
+/* End critical card scroll styling */
+
+/* --------------------------------------------------
+   TableView: modern premium styling (light theme)
+   - Scoped to .table-view to avoid touching login/sidebar
+   - Header: orange with white semibold text, rounded top corners
+   - Rows: alternating very-light-beige, hover, selection styles
+   - Scrollbars inside table: orange thumb/track, rounded
+   - Table container: white background, rounded corners, subtle shadow
+   -------------------------------------------------- */
+
+/* Table container base */
+.table-view {
+    -fx-background-color: white; /* card-like surface */
+    -fx-background-radius: 12; /* rounded corners for whole table */
+    -fx-border-radius: 12;
+    -fx-padding: 6 6 6 6;
+    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.06), 8, 0.08, 0, 3);
+    -fx-border-color: #E8915D; /* thin orange border */
+    -fx-border-width: 1;
+}
+
+/* Column header background (top area) */
+.table-view .column-header-background {
+    -fx-background-color: #D98555; /* solid orange header */
+    -fx-background-radius: 12 12 0 0; /* rounded top corners */
+    -fx-padding: 6 8 6 8;
+    -fx-border-color: transparent; /* ensure no grey overlay */
+}
+
+/* Individual column header */
+.table-view .column-header {
+    -fx-padding: 8 12 8 12;
+    -fx-border-color: transparent; /* remove default separators if any */
+    -fx-background-color: transparent; /* let parent orange show through */
+}
+
+/* Ensure header separators don't add a grey overlay */
+.table-view .column-header .separator {
+    -fx-background-color: transparent;
+}
+
+/* Header label styling */
+.table-view .column-header .label {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 600; /* semibold */
+    -fx-font-size: 13px;
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+}
+
+/* Table cells (rows) */
+.table-view .cell {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 400; /* normal for rows */
+    -fx-font-size: 13px;
+    -fx-text-fill: #4A3428; /* dark brown */
+    -fx-padding: 10 12 10 12;
+    -fx-background-color: transparent; /* base - row rules below handle shading */
+}
+
+/* Alternating row shading: even rows get light beige */
+.table-row-cell:even {
+    -fx-background-color: transparent; /* ensure base transparent for odd */
+}
+.table-row-cell:odd {
+    -fx-background-color: #F5F3EF; /* very light beige for even/odd depending on index start */
+}
+
+/* Row hover: very light orange */
+.table-row-cell:hover {
+    -fx-background-color: #FFF3EA; /* very light orange hover */
+}
+
+/* Selected row */
+.table-row-cell:selected {
+    -fx-background-color: #E57B3C; /* darker orange for selection */
+}
+
+/* Ensure selected text is white for readability */
+.table-row-cell:selected .cell, .table-row-cell:selected .label {
+    -fx-text-fill: white;
+}
+
+/* Selection variables for TableView to ensure consistent selection color */
+.table-view {
+    -fx-selection-bar: #E57B3C; /* selected row background */
+    -fx-selection-bar-text: white; /* selected row text */
+    -fx-selection-bar-non-focused: #E57B3C; /* same when table not focused */
+}
+
+/* Stronger selected-row rules (high specificity) to override other rules that may set white bg */
+.table-view .table-row-cell:selected,
+.table-view .table-row-cell:selected .table-cell,
+.table-view .table-row-cell:selected .cell {
+    -fx-background-color: #E57B3C; /* orange */
+    -fx-background-insets: 0; /* ensure full coverage */
+    -fx-background-radius: 8; /* match row rounding */
+}
+
+/* Ensure selected text is white and has priority */
+.table-view .table-row-cell:selected .label,
+.table-view .table-row-cell:selected .cell,
+.table-view .table-row-cell:selected {
+    -fx-text-fill: white !important;
+}
+
+/* Also ensure focused selection uses same color */
+.table-view:focused .table-row-cell:selected,
+.table-view:focused .table-row-cell:selected .table-cell {
+    -fx-background-color: #E57B3C;
+}
+
+/* Scrollbars inside TableView (scoped) */
+.table-view .scroll-bar:vertical, .table-view .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+    -fx-padding: 2;
+}
+
+.table-view .scroll-bar .track {
+    -fx-background-color: rgba(245,243,239,0.9); /* light track */
+    -fx-background-radius: 6;
+}
+
+.table-view .scroll-bar .thumb {
+    -fx-background-color: #D98555; /* orange thumb */
+    -fx-background-radius: 8;
+    -fx-pref-width: 8;
+    -fx-pref-height: 24;
+}
+
+.table-view .scroll-bar .thumb:hover {
+    -fx-background-color: #E8915D; /* slightly lighter on hover */
+}
+
+.table-view .scroll-bar .increment-button, .table-view .scroll-bar .decrement-button {
+    -fx-pref-width: 0; -fx-pref-height: 0; -fx-padding: 0; /* hide arrows */
+}
+
+/* Make sure the horizontal scrollbar looks consistent */
+.table-view .scroll-bar:horizontal .thumb { -fx-pref-height: 8; -fx-pref-width: 24; }
+
+/* Small helper: ensure placeholder text (when table is empty) is muted */
+.table-view .placeholder {
+    -fx-text-fill: #6b4f3f;
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 400;
+}
+
+/* End TableView styling block */
+
+/* --------------------------------------------------
+   Minimal dropdown & form hint tweaks (safe, scoped)
+   - Only improves ComboBox/ChoiceBox list hover/selection and prompt text
+   - Scoped to .border-pane so login styles unchanged
+   -------------------------------------------------- */
+
+.border-pane .combo-box {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+}
+
+/* Popup list row hover and selection */
+.border-pane .combo-box .list-cell:hover {
+    -fx-background-color: #FFF3EA; /* very light orange */
+}
+.border-pane .combo-box .list-cell:filled:selected, .border-pane .combo-box .list-cell:selected {
+    -fx-background-color: #E57B3C; /* selected orange */
+    -fx-text-fill: white;
+}
+
+/* ChoiceBox popup cells */
+.border-pane .choice-box .list-cell:hover {
+    -fx-background-color: #FFF3EA;
+}
+.border-pane .choice-box .list-cell:selected {
+    -fx-background-color: #E57B3C;
+    -fx-text-fill: white;
+}
+
+/* Arrow button: keep transparent but tint the arrow glyph if present */
+.border-pane .combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+.border-pane .combo-box .arrow-button .arrow {
+    -fx-shape: ""; /* do not force shape; color the region if skin exposes it */
+    -fx-background-color: #D98555; /* coral - may color glyph in some skins */
+}
+
+/* Ensure prompt/prompt-text in TextField inside app is muted, but do not override login.form-input */
+.border-pane .text-field .prompt-text, .border-pane .text-field .text .prompt-text {
+    -fx-fill: #6b4f3f;
+}
+
+/* End minimal dropdown tweaks */
+
+/* Dashboard header and tasks sizing overrides */
+.page-title {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 24px; /* larger page title */
+    -fx-font-weight: 700;
+    -fx-text-fill: #4A3428;
+}
+
+.page-subtitle {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px; /* slightly larger subtitle */
+    -fx-font-weight: 400;
+    -fx-text-fill: #6b4f3f;
+}
+
+.tasks-header {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 16px; /* make tasks header more prominent */
+    -fx-font-weight: 700;
+    -fx-text-fill: #4A3428;
+}
+
+/* Welcome and user info in top bar */
+#welcomeLabel {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 14;
+    -fx-padding: 22 28 22 28;
+    -fx-text-fill: #4A3428;
+    -fx-font-size: 22px; /* increase welcome label size */
+    -fx-font-weight: 700;
+    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.04), 10, 0.06, 0, 4);
+}
+
+#userInfoLabel {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px; /* slightly larger role text */
+    -fx-font-weight: 600;
+    -fx-text-fill: #6b4f3f;
+}
+
+/* Ensure the page-title selector (Label) also matches Label.page-title usage */
+Label.page-title {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 24px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #4A3428;
+}
+
+/* Ensure tasks header label gets priority */
+Label.tasks-header {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #4A3428;
+}
+
+/* Stronger, border-pane scoped header sizes to guarantee dashboard sizing */
+.border-pane Label.page-title,
+.border-pane .page-title {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 28px; /* restore larger title */
+    -fx-font-weight: 800;
+    -fx-text-fill: #4A3428;
+}
+
+.border-pane Label.page-subtitle,
+.border-pane .page-subtitle {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 15px; /* restore subtitle size */
+    -fx-font-weight: 400;
+    -fx-text-fill: #6b4f3f;
+}
+
+.border-pane Label.tasks-header,
+.border-pane .tasks-header {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 18px; /* restore tasks header prominence */
+    -fx-font-weight: 700;
+    -fx-text-fill: #4A3428;
+}
+
+.border-pane #welcomeLabel {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 22px; /* prominent welcome */
+    -fx-font-weight: 700;
+    -fx-text-fill: #4A3428;
+}
+
+.border-pane #userInfoLabel {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #6b4f3f;
+}
+
+/* End of light theme */
+
+/* --------------------------------------------------
+   Form controls: text fields, textareas, combo/choice, search
+   Scoped to .border-pane to avoid touching the login UI
+   Design: rounded, soft beige background, coral focus glow, brown text
+   JavaFX-only properties used
+   -------------------------------------------------- */
+
+.border-pane .form-label {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #4A3428;
+    -fx-padding: 4 0 6 0;
+}
+
+/* Text fields and text areas */
+.border-pane .text-field, .border-pane .text-area {
+    -fx-background-color: #F5F3EF; /* soft beige */
+    -fx-background-radius: 24;
+    -fx-border-radius: 24;
+    -fx-border-color: #E8E5DF;
+    -fx-border-width: 1;
+    -fx-padding: 8 14 8 14;
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #4A3428;
+    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.03), 6, 0.06, 0, 2);
+    -fx-prompt-text-fill: derive(#6b4f3f, -10%);
+}
+
+/* Larger textareas get comfortable padding */
+.border-pane .text-area {
+    -fx-padding: 10 14 10 14;
+    -fx-pref-row-count: 4;
+}
+
+/* Focus state: subtle coral glow */
+.border-pane .text-field:focused, .border-pane .text-area:focused {
+    -fx-border-color: #D98555;
+    -fx-effect: dropshadow(gaussian, rgba(217,133,85,0.18), 14, 0.08, 0, 4);
+}
+
+/* Disabled / read-only */
+.border-pane .text-field:disabled, .border-pane .text-area:disabled,
+.border-pane .text-field:readonly, .border-pane .text-area:readonly {
+    -fx-opacity: 0.85;
+    -fx-background-color: #F0EDE8;
+    -fx-text-fill: #9B8B7E;
+}
+
+/* ComboBox / ChoiceBox */
+.border-pane .combo-box, .border-pane .choice-box {
+    -fx-background-color: #FFFFFF; /* popup control surface white */
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: #E8E5DF;
+    -fx-border-width: 1;
+    -fx-padding: 6 10 6 10;
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #4A3428;
+}
+
+/* Focus on combobox */
+.border-pane .combo-box:focused, .border-pane .choice-box:focused {
+    -fx-border-color: #D98555;
+    -fx-effect: dropshadow(gaussian, rgba(217,133,85,0.14), 12, 0.08, 0, 3);
+}
+
+/* ComboBox arrow button - keep transparent and subtle */
+.border-pane .combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 6 8 6 8;
+}
+
+/* Popup list cells (refined: softer premium look, reduced height) */
+.border-pane .combo-box .list-cell,
+.border-pane .choice-box .list-cell {
+    -fx-padding: 6 10 6 10; /* slightly slimmer */
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #4A3428; /* dark brown text */
+    -fx-min-height: 28px; /* shorter rows */
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* Hover: subtle warm wash */
+.border-pane .combo-box .list-cell:hover,
+.border-pane .choice-box .list-cell:hover {
+    -fx-background-color: linear-gradient(to bottom, rgba(249,236,227,0.9), rgba(245,228,215,0.9));
+}
+
+/* Selection: soft, flowy coral with dark text for readability */
+.border-pane .combo-box .list-cell:filled:selected,
+.border-pane .combo-box .list-cell:selected,
+.border-pane .choice-box .list-cell:selected {
+    -fx-background-color: linear-gradient(to bottom, #FFF3EA, #FCE8DB); /* soft coral/beige */
+    -fx-text-fill: #4A3428; /* dark brown */
+    -fx-font-weight: 600;
+    -fx-background-radius: 8px;
+}
+
+/* Search bar - often a text-field with search icon: style similarly */
+.border-pane .search-field, .border-pane .search-box {
+    -fx-background-color: #F5F3EF;
+    -fx-background-radius: 24;
+    -fx-border-radius: 24;
+    -fx-border-color: #E8E5DF;
+    -fx-border-width: 1;
+    -fx-padding: 6 38 6 14; /* leave space for an icon on right */
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #4A3428;
+}
+
+.border-pane .search-field:focused, .border-pane .search-box:focused {
+    -fx-border-color: #D98555;
+    -fx-effect: dropshadow(gaussian, rgba(217,133,85,0.14), 12, 0.08, 0, 3);
+}
+
+/* Prompt / placeholder color (scoped) */
+.border-pane .text-field .prompt-text, .border-pane .text-area .prompt-text,
+.border-pane .combo-box .prompt-text {
+    -fx-fill: #6b4f3f;
+}
+
+/* Small helper: ensure labels near controls are semibold and match theme
+   Prefer using styleClass="form-label" on labels in FXML; this rule covers that case */
+.border-pane .form-label { /* already defined earlier but reinforce */
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #4A3428;
+}
+
+/* Disabled controls look muted */
+.border-pane .combo-box:disabled, .border-pane .choice-box:disabled {
+    -fx-opacity: 0.85;
+}
+
+/* DialogPane and dialog button styles (applied to Alerts / Dialogs via DialogUtils) */
+.dialog-pane {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 12;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.06), 12, 0.08, 0, 4);
+    -fx-border-color: #E8E5DF;
+    -fx-border-width: 1;
+}
+
+.dialog-pane .content {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-text-fill: #4A3428;
+    -fx-font-size: 14px;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 700;
+    -fx-font-size: 16px;
+    -fx-text-fill: #4A3428;
+}
+
+/* Dialog buttons: primary and secondary. DialogUtils will add these classes on creation. */
+.dialog-pane .button.dialog-button {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 600;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 8 14;
+}
+
+.dialog-pane .button.dialog-button.primary {
+    -fx-background-color: #5C3D2E; /* dark brown */
+    -fx-text-fill: white;
+}
+
+.dialog-pane .button.dialog-button.primary:hover {
+    -fx-background-color: #6A4A36;
+}
+
+.dialog-pane .button.dialog-button.secondary {
+    -fx-background-color: transparent;
+    -fx-border-color: #D98555;
+    -fx-border-width: 1.5;
+    -fx-text-fill: #D98555;
+}
+
+.dialog-pane .button.dialog-button.secondary:hover {
+    -fx-background-color: rgba(217,133,85,0.08);
+    -fx-text-fill: #4A3428;
+}
+
+/* Ensure Alert expandable content (TextArea) looks consistent */
+.dialog-pane .text-area {
+    -fx-background-color: #F5F3EF;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 8;
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-text-fill: #4A3428;
+}
+
+/* Make dialog headers and graphic area balanced */
+.dialog-pane .graphic {
+    -fx-padding: 0 8 0 0;
+}
+
+/* Ensure button bar alignment looks modern */
+.dialog-pane .button-bar {
+    -fx-padding: 10 0 0 0;
+    -fx-spacing: 8;
+}
+
+/* Utility button classes referenced from FXML */
+.primary-button {
+    -fx-background-color: #5C3D2E;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 24;
+    -fx-border-radius: 24;
+    -fx-padding: 8 18;
+}
+.primary-button:hover { -fx-background-color: #6A4A36; }
+.primary-button:pressed { -fx-background-color: #4E2F26; }
+
+.secondary-button {
+    -fx-background-color: transparent;
+    -fx-border-color: #5C3D2E;
+    -fx-border-width: 1.5;
+    -fx-text-fill: #5C3D2E;
+    -fx-font-weight: 600;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-padding: 8 14;
+}
+.secondary-button:hover { -fx-background-color: rgba(92,61,46,0.06); -fx-text-fill: white; }
+
+.danger-button {
+    -fx-background-color: #DC3545;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-padding: 8 14;
+}
+.danger-button:hover { -fx-background-color: #C82333; }
+
+/* Critical card inner content helper */
+.critical-content {
+    -fx-padding: 8;
+    -fx-alignment: TOP_LEFT;
+}
+
+/* Standard table pattern (used by Zahtjevi and applied to other tables) */
+.standard-table {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-padding: 6;
+    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.04), 8, 0.08, 0, 3);
+    -fx-border-color: #E8E5DF;
+    -fx-border-width: 1;
+}
+.standard-table .column-header-background { -fx-background-color: #D98555; -fx-background-radius: 8 8 0 0; }
+.standard-table .column-header .label { -fx-text-fill: white; -fx-font-weight: 600; }
+.standard-table .cell { -fx-text-fill: #4A3428; }
+.standard-table .table-row-cell:hover { -fx-background-color: #FFF3EA; }
+.standard-table .table-row-cell:selected { -fx-background-color: #E57B3C; -fx-text-fill: white; }
+
+/* Recipes labels darker for readability */
+.recipes-title { -fx-text-fill: #4A3428; -fx-font-weight: 700; }
+.recipes-subtitle { -fx-text-fill: #6b4f3f; }

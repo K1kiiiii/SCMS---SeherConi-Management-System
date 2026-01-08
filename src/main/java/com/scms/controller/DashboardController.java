@@ -22,6 +22,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.Priority;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import com.scms.service.NotificationService;
+import com.scms.util.DialogUtils;
 
 public class DashboardController {
 
@@ -47,6 +49,7 @@ public class DashboardController {
     @FXML private Label tasksHeader;
     @FXML private VBox criticalCardContent;
     @FXML private VBox criticalCard;
+    @FXML private ScrollPane criticalScroll;
 
     private final MaterialDao materialDao = new MaterialDao();
     private final AssignmentDao assignmentDao = new AssignmentDao();
@@ -94,6 +97,17 @@ public class DashboardController {
         if (tasksHeader != null) {
             if (currentRole.equals("ADMIN")) tasksHeader.setText("Zadaci u toku");
             else tasksHeader.setText("Moji zadaci");
+        }
+
+        // Hide critical materials card for RADNIK/WORKER roles
+        if (criticalCard != null) {
+            if (currentRole.equals("RADNIK") || currentRole.equals("WORKER")) {
+                criticalCard.setManaged(false);
+                criticalCard.setVisible(false);
+            } else {
+                criticalCard.setManaged(true);
+                criticalCard.setVisible(true);
+            }
         }
 
         // Use a JavaFX Task to run DB work off the FX thread and update UI on success
@@ -195,8 +209,16 @@ public class DashboardController {
                 row.getStyleClass().add("task-row");
                 Label title = new Label(recipeName);
                 title.getStyleClass().add("task-title");
+                title.setWrapText(true);
+                title.setMaxWidth(Double.MAX_VALUE);
+                title.setStyle("-fx-font-weight:700; -fx-text-fill:#4A3428; -fx-font-size:13px;");
+
                 Label meta = new Label(String.format("%s — %s — započeto u %s", workerName, target, started));
                 meta.getStyleClass().add("task-meta");
+                meta.setWrapText(true);
+                meta.setMaxWidth(Double.MAX_VALUE);
+                meta.setStyle("-fx-text-fill:#6b4f3f; -fx-font-size:12px;");
+
                 Region spacer = new Region();
                 HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
                 Label badge = new Label("U TOKU");
@@ -265,18 +287,35 @@ public class DashboardController {
     private void populateGrid(List<VBox> cards) {
         cardsGrid.getChildren().clear();
         cardsGrid.getColumnConstraints().clear();
-        // keep 4 columns as layout base
-        for (int i = 0; i < 4; i++) {
-            ColumnConstraints cc = new ColumnConstraints();
-            cc.setPercentWidth(25);
-            cardsGrid.getColumnConstraints().add(cc);
+        cardsGrid.getRowConstraints().clear();
+         // keep 4 columns as layout base
+         for (int i = 0; i < 4; i++) {
+             ColumnConstraints cc = new ColumnConstraints();
+             cc.setPercentWidth(25);
+             cc.setHgrow(Priority.ALWAYS);
+             cardsGrid.getColumnConstraints().add(cc);
+         }
+        // ensure rows have consistent height so card contents (titles) are visible
+        int rows = (cards.size() + 3) / 4; // ceil division
+        for (int r = 0; r < rows; r++) {
+            javafx.scene.layout.RowConstraints rc = new javafx.scene.layout.RowConstraints();
+            rc.setMinHeight(140);
+            rc.setPrefHeight(160);
+            rc.setVgrow(Priority.ALWAYS);
+            cardsGrid.getRowConstraints().add(rc);
         }
 
-        for (int i = 0; i < cards.size(); i++) {
-            int col = i % 4;
-            int row = i / 4;
-            cardsGrid.add(cards.get(i), col, row);
-        }
+         for (int i = 0; i < cards.size(); i++) {
+             int col = i % 4;
+             int row = i / 4;
+             VBox card = cards.get(i);
+             // make cards grow to fill column width to avoid label truncation
+             card.setMaxWidth(Double.MAX_VALUE);
+             card.setPrefWidth(Double.MAX_VALUE);
+             GridPane.setHgrow(card, Priority.ALWAYS);
+             GridPane.setFillWidth(card, true);
+             cardsGrid.add(card, col, row);
+         }
     }
 
     // Load tasks for logged-in worker and populate tasksList — placed early to avoid forward-reference warnings
@@ -303,12 +342,28 @@ public class DashboardController {
     private VBox createCardUI(String title, String value) {
         Label titleLbl = new Label(title);
         titleLbl.getStyleClass().add("card-title");
+        // allow wrapping and full width so long titles don't truncate with ellipsis
+        titleLbl.setWrapText(true);
+        // fallback inline styling to guarantee readability if stylesheet isn't loaded/applied
+        titleLbl.setStyle("-fx-font-size:14px; -fx-font-weight:700; -fx-text-fill:#4A3428;");
+
         Label valueLbl = new Label(value != null ? value : "0");
         valueLbl.getStyleClass().add("card-value");
+        valueLbl.setStyle("-fx-font-size:18px; -fx-font-weight:800; -fx-text-fill:#5C3D2E;");
 
         VBox card = new VBox(6, titleLbl, valueLbl);
-        card.getStyleClass().add("stat-card");
-        return card;
+        card.getStyleClass().addAll("stat-card", "dashboard-card");
+        // give programmatic cards a minimum/preferred height so labels have room (matches grid CSS)
+        card.setMinHeight(140);
+        card.setPrefHeight(160);
+        card.setMaxWidth(Double.MAX_VALUE);
+        card.setPrefWidth(Double.MAX_VALUE);
+
+         // Bind label max widths to the card width so they wrap within available space
+         titleLbl.maxWidthProperty().bind(card.widthProperty().subtract(12));
+         valueLbl.maxWidthProperty().bind(card.widthProperty().subtract(12));
+
+         return card;
     }
 
     private VBox createTaskCard(Task t) {
@@ -322,6 +377,10 @@ public class DashboardController {
 
         Label title = new Label(recipeName);
         title.getStyleClass().add("task-title");
+        title.setWrapText(true);
+        title.setMaxWidth(Double.MAX_VALUE);
+        title.setStyle("-fx-font-weight:700; -fx-text-fill:#4A3428; -fx-font-size:13px;");
+
         Label target = new Label(String.format("Cilj: %.2f %s", t.getQuantityTarget(), t.getUnit() != null ? t.getUnit() : ""));
         target.getStyleClass().add("task-meta");
         Label status = new Label("Status: " + (t.getStatus()!=null? t.getStatus():"PENDING"));
@@ -331,6 +390,7 @@ public class DashboardController {
 
         Button requestBtn = new Button("Zatraži");
         requestBtn.setOnAction(evt -> onRequestIngredients(t));
+        // rely on CSS classes for button visuals
 
         Button startBtn = new Button("Započni");
         startBtn.setOnAction(evt -> {
@@ -400,6 +460,8 @@ public class DashboardController {
         d.setTitle("Završi zadatak");
         d.setHeaderText(null);
         d.setContentText("Unesite proizvedenu količinu:");
+        // apply app styling to the dialog
+        com.scms.util.DialogUtils.styleDialog(d);
         java.util.Optional<String> res = d.showAndWait();
         if (res.isPresent()) {
             try {
@@ -414,6 +476,7 @@ public class DashboardController {
     // small helper to show alerts on FX thread
     private void showAlert(Alert.AlertType type, String title, String msg) {
         Alert a = new Alert(type);
+        DialogUtils.styleAlert(a);
         a.setTitle(title);
         a.setHeaderText(null);
         a.setContentText(msg);
@@ -525,7 +588,7 @@ public class DashboardController {
                 Label ok = new Label("✔ Trenutno nema kritičnih sirovina");
                 ok.getStyleClass().add("ok-message");
                 ok.setMaxWidth(Double.MAX_VALUE);
-                ok.setStyle("-fx-alignment:center; -fx-padding:20;");
+                // rely on CSS for ok-message styling
                 criticalCardContent.getChildren().add(ok);
                 return;
             }
@@ -536,9 +599,13 @@ public class DashboardController {
                 warn.getStyleClass().add("critical-item");
                 Label name = new Label(m.getName());
                 name.getStyleClass().add("task-title");
+                name.setWrapText(true);
+                // bind name width to container so long names wrap nicely inside the scroll area
+                name.maxWidthProperty().bind(criticalCardContent.widthProperty().subtract(48));
                 String unit = m.getUnit() != null ? m.getUnit() : "";
                 Label qty = new Label(String.format("%.2f %s / min %.2f %s", m.getQuantity(), unit, m.getMinimumQuantity(), unit));
                 qty.getStyleClass().add("critical-item");
+                qty.setStyle("-fx-text-fill:#D23B3B; -fx-font-weight:700;");
                 Region spacer = new Region();
                 HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
                 row.getChildren().addAll(warn, name, spacer, qty);

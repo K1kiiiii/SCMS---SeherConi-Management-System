@@ -4,6 +4,7 @@ import com.scms.dao.TaskDao;
 import com.scms.dao.UserDao;
 import com.scms.model.Task;
 import com.scms.model.User;
+import com.scms.util.DialogUtils;
 import com.scms.util.RoleManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -99,6 +100,7 @@ public class AssignTaskController {
 
     private void showAlert(Alert.AlertType type, String title, String msg) {
         Alert a = new Alert(type);
+        DialogUtils.styleAlert(a);
         a.setTitle(title);
         a.setHeaderText(null);
         a.setContentText(msg);
