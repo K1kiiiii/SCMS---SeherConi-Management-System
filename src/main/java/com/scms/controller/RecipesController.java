@@ -67,6 +67,14 @@ public class RecipesController {
         VBox card = new VBox(6, nameLbl, descLbl, footer);
         card.getStyleClass().add("task-card");
         card.setPrefWidth(260);
+
+        // Make the card clickable to open recipe detail dialog. Keep assign button clickable separately.
+        card.setOnMouseClicked(ev -> RecipeDetailDialog.show(recipeId));
+        // Improve affordance
+        card.setStyle(card.getStyle() + " -fx-cursor: hand;");
+        // Prevent clicking the assign button from also triggering the card click
+        assignBtn.setOnMouseClicked(evt -> { evt.consume(); openAssignDialog(recipeId); });
+
         return card;
     }
 

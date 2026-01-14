@@ -270,9 +270,10 @@ public class DashboardController {
                 break;
             case "RADNIK": // worker role mapping
             case "WORKER":
+                // For workers, show only user-specific metrics
                 cards.add(new CardInfo("Moji zahtjevi na čekanju", String.valueOf(countMyPendingRequests(u))));
-                cards.add(new CardInfo("Izdane sirovine (ovaj mjesec)", String.valueOf(countIssuedThisMonth())));
-                cards.add(new CardInfo("Najčešće korištena sirovina", mostFrequentlyUsedMaterial()));
+                cards.add(new CardInfo("Izdane sirovine (ovaj mjesec)", String.valueOf(countIssuedThisMonthForUser(u))));
+                cards.add(new CardInfo("Najčešće korištena sirovina", mostFrequentlyUsedMaterialForUser(u)));
                 break;
             default:
                 // default: show admin-like overview but safe
@@ -281,6 +282,43 @@ public class DashboardController {
                 break;
         }
         return cards;
+    }
+
+    // Count issued this month for a specific user (assignments assigned_at)
+    private int countIssuedThisMonthForUser(User u) {
+        if (u == null) return 0;
+        try {
+            List<Assignment> assignments = assignmentDao.findByUserId(u.getId());
+            LocalDate now = LocalDate.now();
+            int y = now.getYear();
+            int m = now.getMonthValue();
+            return (int) assignments.stream().filter(a -> {
+                LocalDateTime dt = a.getAssignedAt();
+                if (dt == null) return false;
+                return dt.getYear() == y && dt.getMonthValue() == m;
+            }).count();
+        } catch (SQLException ex) { return 0; }
+    }
+
+    // Most frequently used material for a specific user (by assignments quantity)
+    private String mostFrequentlyUsedMaterialForUser(User u) {
+        if (u == null) return "-";
+        try {
+            List<Assignment> assignments = assignmentDao.findByUserId(u.getId());
+            if (assignments.isEmpty()) return "-";
+            return assignments.stream()
+                    .collect(Collectors.groupingBy(Assignment::getMaterialId, Collectors.summingDouble(Assignment::getQuantity)))
+                    .entrySet().stream()
+                    .max(Comparator.comparingDouble(Map.Entry::getValue))
+                    .map(e -> {
+                        try {
+                            Material m = materialDao.findById(e.getKey()).orElse(null);
+                            return m != null ? m.getName() : ("id:" + e.getKey());
+                        } catch (SQLException ex) { return "id:" + e.getKey(); }
+                    }).orElse("-");
+        } catch (SQLException ex) {
+            return "-";
+        }
     }
 
     // Populate GridPane in row-major order — must be called on FX thread
@@ -518,6 +556,16 @@ public class DashboardController {
         } else if (st.equals("IN_PROGRESS")) {
             actions.getChildren().add(finishBtn);
         }
+
+        // Make recipe title clickable to show details (admin and worker task views)
+        final int recipeIdForCard = t.getRecipeId();
+        title.setOnMouseClicked(ev -> RecipeDetailDialog.show(recipeIdForCard));
+        // Change cursor affordance
+        title.setStyle(title.getStyle() + " -fx-cursor: hand;");
+        // prevent button clicks from propagating to title
+        requestBtn.setOnMouseClicked(evt -> { evt.consume(); onRequestIngredients(t); });
+        startBtn.setOnMouseClicked(evt -> { evt.consume(); /* action handled in setOnAction */ });
+        finishBtn.setOnMouseClicked(evt -> { evt.consume(); onCompleteTask(t); });
 
         VBox card = new VBox(6, titleRow, target, status, actions);
         card.getStyleClass().add("task-card");
