@@ -192,6 +192,52 @@ public class AssignmentDao {
         }
     }
 
+    // New helper: checks if all assignment requests linked to a task are confirmed.
+    // Link between assignment and task is by notes text that contains 'Za zadatak id={taskId}'.
+    public boolean areTaskAssignmentsConfirmed(int taskId) throws SQLException {
+        String sql = "SELECT COUNT(*) AS total, SUM(CASE WHEN status = 'CONFIRMED' THEN 1 ELSE 0 END) AS confirmed FROM assignments WHERE notes LIKE ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%Za zadatak id=" + taskId + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int total = rs.getInt("total");
+                    int confirmed = rs.getInt("confirmed");
+                    // require at least one assignment AND all must be confirmed
+                    return total > 0 && confirmed == total;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Count how many assignment requests are linked to the given task (via notes text)
+    public int countTaskAssignments(int taskId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM assignments WHERE notes LIKE ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%Za zadatak id=" + taskId + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    // Count how many assignment requests are linked to the given task and (optionally) a specific user
+    public int countTaskAssignmentsForUser(int taskId, Integer userId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM assignments WHERE notes LIKE ?" + (userId != null ? " AND user_id = ?" : "");
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "%Za zadatak id=" + taskId + "%");
+            if (userId != null) ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
     public boolean delete(int id) throws SQLException {
         String sql = "DELETE FROM assignments WHERE id = ?";
         try (Connection conn = DatabaseConfig.getConnection();

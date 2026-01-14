@@ -322,12 +322,36 @@ public class DashboardController {
     private void loadWorkerTasks() {
         User u = RoleManager.getLoggedInUser();
         if (tasksList != null) tasksList.getChildren().clear();
-        if (u == null) return;
-        String role = u.getRole() != null ? u.getRole().toUpperCase() : "";
-        if (!role.equals("RADNIK") && !role.equals("WORKER")) return;
+        if (u == null) {
+            System.out.println("loadWorkerTasks: no logged-in user");
+            return;
+        }
+
+        System.out.println("loadWorkerTasks: userId=" + u.getId() + " role='" + (u.getRole() != null ? u.getRole() : "") + "'");
 
         try {
             List<Task> tasks = taskDao.findByAssignedUser(u.getId());
+            System.out.println("loadWorkerTasks: found " + (tasks != null ? tasks.size() : 0) + " tasks for user " + u.getId());
+
+            // If no tasks, show a friendly empty message inside the tasksList instead of hiding the box
+            if (tasks == null || tasks.isEmpty()) {
+                if (tasksBox != null) {
+                    tasksBox.setManaged(true);
+                    tasksBox.setVisible(true);
+                }
+                Label empty = new Label("Trenutno nema dodijeljenih zadataka");
+                empty.getStyleClass().add("ok-message");
+                empty.setMaxWidth(Double.MAX_VALUE);
+                tasksList.getChildren().add(empty);
+                if (tasksScroll != null) tasksScroll.setVvalue(0);
+                return;
+            } else {
+                if (tasksBox != null) {
+                    tasksBox.setManaged(true);
+                    tasksBox.setVisible(true);
+                }
+            }
+
             for (Task t : tasks) {
                 VBox card = createTaskCard(t);
                 tasksList.getChildren().add(card);
@@ -381,6 +405,16 @@ public class DashboardController {
         title.setMaxWidth(Double.MAX_VALUE);
         title.setStyle("-fx-font-weight:700; -fx-text-fill:#4A3428; -fx-font-size:13px;");
 
+        // Pending badge: shown when there are requests and they are not yet confirmed
+        Label pendingBadge = new Label("ČEKA POTVRDU SIROVINA");
+        pendingBadge.getStyleClass().addAll("task-badge", "pending-badge");
+        pendingBadge.setVisible(false);
+        pendingBadge.setManaged(false);
+
+        HBox titleRow = new HBox(8);
+        titleRow.getChildren().addAll(title, pendingBadge);
+        HBox.setHgrow(title, Priority.ALWAYS);
+
         Label target = new Label(String.format("Cilj: %.2f %s", t.getQuantityTarget(), t.getUnit() != null ? t.getUnit() : ""));
         target.getStyleClass().add("task-meta");
         Label status = new Label("Status: " + (t.getStatus()!=null? t.getStatus():"PENDING"));
@@ -393,8 +427,83 @@ public class DashboardController {
         // rely on CSS classes for button visuals
 
         Button startBtn = new Button("Započni");
+        Label startHint = new Label();
+        startHint.getStyleClass().add("task-hint");
+        startHint.setWrapText(true);
+        startHint.setMaxWidth(220);
+        // default disable until we check DAO
+        startBtn.setDisable(true);
+
+        // Async check: count assignments for THIS user and whether they're confirmed
+        User currentUser = RoleManager.getLoggedInUser();
+        final Integer currentUserId = currentUser != null ? currentUser.getId() : null;
+        javafx.concurrent.Task<Void> checkTask = new javafx.concurrent.Task<>() {
+            int total = 0;
+            boolean confirmed = false;
+            @Override protected Void call() throws Exception {
+                try {
+                    total = assignmentDao.countTaskAssignmentsForUser(t.getId(), currentUserId);
+                    confirmed = assignmentDao.areTaskAssignmentsConfirmed(t.getId());
+                } catch (SQLException ex) {
+                    // bubble up
+                    throw ex;
+                }
+                return null;
+            }
+            @Override protected void succeeded() {
+                // Update UI based on DAO results
+                if (total == 0) {
+                    startBtn.setDisable(true);
+                    startHint.setText("Morate prvo poslati zahtjev za sirovine prije započinjanja zadatka.");
+                    pendingBadge.setVisible(false);
+                    pendingBadge.setManaged(false);
+                } else if (!confirmed) {
+                    startBtn.setDisable(true);
+                    startHint.setText("Čekanje potvrde magacionera za zahtjeve.");
+                    pendingBadge.setVisible(true);
+                    pendingBadge.setManaged(true);
+                } else {
+                    startBtn.setDisable(false);
+                    startHint.setText("");
+                    pendingBadge.setVisible(false);
+                    pendingBadge.setManaged(false);
+                }
+            }
+            @Override protected void failed() {
+                startBtn.setDisable(true);
+                startHint.setText("Greška pri provjeri zahtjeva. Pokušajte ponovo.");
+                pendingBadge.setVisible(false);
+                pendingBadge.setManaged(false);
+                logError(getException(), "checkTaskAssignments");
+            }
+        };
+        Thread checkThread = new Thread(checkTask, "check-assignments-" + t.getId());
+        checkThread.setDaemon(true);
+        checkThread.start();
+
         startBtn.setOnAction(evt -> {
-            try { boolean ok = taskDao.updateStatus(t.getId(), "IN_PROGRESS"); if (ok) { t.setStatus("IN_PROGRESS"); loadWorkerTasks(); } } catch (SQLException ex) { logError(ex, "updateStatus"); }
+            try {
+                // final runtime guard: ensure the current user created at least one request and all are confirmed
+                int total = assignmentDao.countTaskAssignmentsForUser(t.getId(), currentUserId);
+                if (total == 0) {
+                    showAlert(Alert.AlertType.WARNING, "Nije moguće započeti", "Vi niste poslali zahtjeve za sirovine vezane uz ovaj zadatak.");
+                    return;
+                }
+                boolean confirmed = assignmentDao.areTaskAssignmentsConfirmed(t.getId());
+                if (!confirmed) {
+                    showAlert(Alert.AlertType.WARNING, "Nije moguće započeti", "Magacioner mora prvo potvrditi zahtjeve za sirovine vezane uz ovaj zadatak.");
+                    return;
+                }
+
+                boolean ok = taskDao.updateStatus(t.getId(), "IN_PROGRESS");
+                if (ok) {
+                    t.setStatus("IN_PROGRESS");
+                    loadWorkerTasks();
+                }
+            } catch (SQLException ex) {
+                logError(ex, "updateStatus");
+                showAlert(Alert.AlertType.ERROR, "Greška", "Greška pri provjeri zahtjeva ili ažuriranju statusa: " + ex.getMessage());
+            }
         });
 
         Button finishBtn = new Button("Završi");
@@ -404,11 +513,13 @@ public class DashboardController {
         String st = t.getStatus() != null ? t.getStatus().toUpperCase() : "PENDING";
         if (st.equals("PENDING")) {
             actions.getChildren().addAll(startBtn, requestBtn);
+            // also show the hint label next to buttons
+            actions.getChildren().add(startHint);
         } else if (st.equals("IN_PROGRESS")) {
             actions.getChildren().add(finishBtn);
         }
 
-        VBox card = new VBox(6, title, target, status, actions);
+        VBox card = new VBox(6, titleRow, target, status, actions);
         card.getStyleClass().add("task-card");
         card.setPrefWidth(320);
         return card;
