@@ -274,7 +274,7 @@ public class DashboardController {
         };
         task.setOnSucceeded(ev -> {
             List<Task> inProgress = task.getValue();
-            DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
+            DateTimeFormatter dateTimeFmt = DateTimeFormatter.ofPattern("dd.MM.yyyy 'u' HH:mm");
             for (Task t : inProgress) {
                 String recipeName = "Recept: " + t.getRecipeId();
                 try { Optional<Recipe> r = recipeDao.findById(t.getRecipeId()); if (r.isPresent()) recipeName = r.get().getName(); } catch (SQLException ex) { logError(ex, "fetchRecipeName"); }
@@ -285,7 +285,7 @@ public class DashboardController {
                 }
 
                 String target = String.format("%.2f %s", t.getQuantityTarget(), t.getUnit() != null ? t.getUnit() : "");
-                String started = t.getStartedAt() != null ? t.getStartedAt().format(timeFmt) : "-";
+                String started = t.getStartedAt() != null ? t.getStartedAt().format(dateTimeFmt) : "-";
 
                 HBox row = new HBox(8);
                 row.getStyleClass().add("task-row");
@@ -295,7 +295,7 @@ public class DashboardController {
                 title.setMaxWidth(Double.MAX_VALUE);
                 title.setStyle("-fx-font-weight:700; -fx-text-fill:#4A3428; -fx-font-size:13px;");
 
-                Label meta = new Label(String.format("%s — %s — započeto u %s", workerName, target, started));
+                Label meta = new Label(String.format("%s — %s — Započeto: %s", workerName, target, started));
                 meta.getStyleClass().add("task-meta");
                 meta.setWrapText(true);
                 meta.setMaxWidth(Double.MAX_VALUE);
@@ -555,6 +555,8 @@ public class DashboardController {
         Button requestBtn = new Button("Zatraži");
         requestBtn.setOnAction(evt -> onRequestIngredients(t));
         // rely on CSS classes for button visuals
+        // Disable until we check whether the user already has requests for this task
+        requestBtn.setDisable(true);
 
         Button startBtn = new Button("Započni");
         Label startHint = new Label();
@@ -587,16 +589,22 @@ public class DashboardController {
                     startHint.setText("Morate prvo poslati zahtjev za sirovine prije započinjanja zadatka.");
                     pendingBadge.setVisible(false);
                     pendingBadge.setManaged(false);
+                    // No existing requests by this user -> allow sending requests
+                    requestBtn.setDisable(false);
                 } else if (!confirmed) {
                     startBtn.setDisable(true);
                     startHint.setText("Čekanje potvrde magacionera za zahtjeve.");
                     pendingBadge.setVisible(true);
                     pendingBadge.setManaged(true);
+                    // user already sent requests -> disable request button
+                    requestBtn.setDisable(true);
                 } else {
                     startBtn.setDisable(false);
                     startHint.setText("");
                     pendingBadge.setVisible(false);
                     pendingBadge.setManaged(false);
+                    // requests were confirmed; user shouldn't be able to re-request
+                    requestBtn.setDisable(true);
                 }
             }
             @Override protected void failed() {
@@ -604,6 +612,8 @@ public class DashboardController {
                 startHint.setText("Greška pri provjeri zahtjeva. Pokušajte ponovo.");
                 pendingBadge.setVisible(false);
                 pendingBadge.setManaged(false);
+                // On error keep request button disabled to avoid duplicate attempts
+                requestBtn.setDisable(true);
                 logError(getException(), "checkTaskAssignments");
             }
         };
@@ -685,6 +695,19 @@ public class DashboardController {
             User current = RoleManager.getLoggedInUser();
             if (current == null) { showAlert(Alert.AlertType.ERROR, "Greška", "Niste prijavljeni."); return; }
 
+            // Validation: user should not create multiple requests for the same task
+            try {
+                int existing = assignmentDao.countTaskAssignmentsForUser(t.getId(), current.getId());
+                if (existing > 0) {
+                    showAlert(Alert.AlertType.WARNING, "Zahtjev već poslan", "Već ste poslali zahtjeve za ovaj zadatak. Nemoguće je poslati dupli zahtjev.");
+                    return;
+                }
+            } catch (SQLException ex) {
+                logError(ex, "checkExistingRequests");
+                showAlert(Alert.AlertType.ERROR, "Greška", "Greška pri provjeri postojećih zahtjeva: " + ex.getMessage());
+                return;
+            }
+
             int created = 0;
             for (RecipeItem ri : items) {
                 Assignment a = new Assignment();
@@ -694,8 +717,13 @@ public class DashboardController {
                 a.setQuantity(qty);
                 a.setStatus("PENDING");
                 a.setNotes("Za zadatak id=" + t.getId() + ", recept=" + recipe.getName());
-                assignmentDao.createRequest(a);
-                created++;
+                try {
+                    assignmentDao.createRequest(a);
+                    created++;
+                } catch (SQLException ex) {
+                    logError(ex, "createRequest");
+                    // continue creating other requests if possible, but inform user
+                }
             }
 
             showAlert(Alert.AlertType.INFORMATION, "Uspjeh", "Poslano " + created + " zahtjeva za sirovine.");

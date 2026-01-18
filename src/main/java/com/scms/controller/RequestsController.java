@@ -59,14 +59,29 @@ public class RequestsController {
         setupColumns();
         statusFilter.getSelectionModel().selectedItemProperty()
                 .addListener((obs, oldVal, newVal) -> handleFilterChanged());
+
+        // update action buttons based on table selection and role
+        requestsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> updateActionButtons());
         loadRequests();
         applyRolePermissions();
     }
 
     private void applyRolePermissions() {
         boolean canManage = RoleManager.isAdmin() || RoleManager.isMagacioner();
+        // initially disable/enable based on role; selection will refine this
         approveButton.setDisable(!canManage);
         rejectButton.setDisable(!canManage);
+        updateActionButtons();
+    }
+
+    // Enable approve/reject only when a PENDING request is selected and user has permission
+    private void updateActionButtons() {
+        Assignment sel = requestsTable.getSelectionModel().getSelectedItem();
+        boolean canManage = RoleManager.isAdmin() || RoleManager.isMagacioner();
+        boolean enabled = false;
+        if (sel != null && sel.getStatus() != null && sel.getStatus().equalsIgnoreCase("PENDING") && canManage) enabled = true;
+        approveButton.setDisable(!enabled);
+        rejectButton.setDisable(!enabled);
     }
 
     private void setupColumns() {
@@ -204,6 +219,11 @@ public class RequestsController {
             showError("Nije odabran zahtjev", "Molimo odaberite zahtjev za odobravanje.");
             return;
         }
+        // runtime guard: only approve pending
+        if (sel.getStatus() == null || !sel.getStatus().equalsIgnoreCase("PENDING")) {
+            showError("Nevažeći zahtjev", "Samo zahtjevi u statusu PENDING mogu se odobriti.");
+            return;
+        }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         DialogUtils.styleAlert(confirm);
         confirm.setTitle("Potvrda odobravanja");
@@ -232,6 +252,11 @@ public class RequestsController {
         Assignment sel = requestsTable.getSelectionModel().getSelectedItem();
         if (sel == null) {
             showError("Nije odabran zahtjev", "Molimo odaberite zahtjev za odbijanje.");
+            return;
+        }
+        // runtime guard: only reject pending
+        if (sel.getStatus() == null || !sel.getStatus().equalsIgnoreCase("PENDING")) {
+            showError("Nevažeći zahtjev", "Samo zahtjevi u statusu PENDING mogu se odbiti.");
             return;
         }
         TextInputDialog input = new TextInputDialog();

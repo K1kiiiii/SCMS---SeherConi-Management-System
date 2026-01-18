@@ -52,7 +52,10 @@ public class Main extends Application {
 
         primaryStage.setTitle("SCMS - Login");
         primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
+        // Start the application maximized so the app uses the full available screen space
+        // (we keep the window decorations; fullscreen mode can be toggled later if desired)
+        primaryStage.setResizable(true);
+        primaryStage.setMaximized(true);
         primaryStage.show();
     }
 
