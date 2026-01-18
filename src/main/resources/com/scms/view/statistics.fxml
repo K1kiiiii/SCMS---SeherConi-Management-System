@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.StatisticsController" spacing="12" alignment="TOP_LEFT" style="-fx-padding:20;" styleClass="border-pane">
+    <children>
+        <Label text="Statistika" styleClass="page-title" style="-fx-font-size:16px; -fx-font-weight:bold;" />
+
+        <!-- Admin controls: choose user to filter personal stats -->
+        <HBox spacing="8" alignment="CENTER_LEFT" fx:id="adminControls" visible="false" managed="false">
+            <Label text="Filter po zaposleniku:" />
+            <ComboBox fx:id="cbUsers" promptText="Odaberite zaposlenika" />
+            <Button text="Prikaži" onAction="#onShowForSelectedUser" />
+        </HBox>
+
+        <HBox spacing="18">
+            <!-- Global stats area (visible for admin) -->
+            <VBox spacing="6" fx:id="globalStatsBox" visible="false" managed="false">
+                <Label text="Globalne statistike" style="-fx-font-weight:bold;" />
+                <GridPane hgap="10" vgap="6">
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                    </columnConstraints>
+                    <children>
+                        <Label text="Ukupno korisnika:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                        <Label fx:id="lblTotalUsers" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+                        <Label text="Ukupno materijala:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                        <Label fx:id="lblTotalMaterials" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                        <Label text="Zahtjevi (PENDING):" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                        <Label fx:id="lblPendingAssignments" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+                        <Label text="Zahtjevi (CONFIRMED):" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                        <Label fx:id="lblConfirmedAssignments" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+                        <Label text="Završeni zadaci:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                        <Label fx:id="lblCompletedTasks" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+                    </children>
+                </GridPane>
+
+                <Label text="Raspodjela zahtjeva" style="-fx-font-weight:bold; -fx-padding:6 0 0 0;" />
+                <PieChart fx:id="globalAssignmentsChart" prefWidth="300" prefHeight="200" />
+
+                <Label text="Stanje zadataka" style="-fx-font-weight:bold; -fx-padding:6 0 0 0;" />
+                <PieChart fx:id="globalTasksChart" prefWidth="300" prefHeight="200" />
+            </VBox>
+
+            <!-- Personal stats area (for selected user or logged in user) -->
+            <VBox spacing="6" fx:id="personalStatsBox">
+                <Label text="Personalne statistike" style="-fx-font-weight:bold;" />
+                <GridPane hgap="10" vgap="6">
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                    </columnConstraints>
+                    <children>
+                        <Label text="Korisnik:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                        <Label fx:id="lblUserName" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+
+                        <Label text="Zahtjevi (PENDING):" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                        <Label fx:id="lblUserPendingAssignments" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                        <Label text="Zahtjevi (CONFIRMED):" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                        <Label fx:id="lblUserConfirmedAssignments" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+                        <Label text="Završeni zadaci:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                        <Label fx:id="lblUserCompletedTasks" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                    </children>
+                </GridPane>
+
+                <Label text="Raspodjela zahtjeva (korisnik)" style="-fx-font-weight:bold; -fx-padding:6 0 0 0;" />
+                <PieChart fx:id="personalAssignmentsChart" prefWidth="300" prefHeight="200" />
+
+                <Label text="Zadaci (korisnik)" style="-fx-font-weight:bold; -fx-padding:6 0 0 0;" />
+                <PieChart fx:id="personalTasksChart" prefWidth="300" prefHeight="200" />
+            </VBox>
+        </HBox>
+
+    </children>
+</VBox>
