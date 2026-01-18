@@ -5,6 +5,7 @@ import com.scms.model.Recipe;
 import com.scms.model.RecipeItem;
 import com.scms.service.ServiceException;
 import com.scms.util.DialogUtils;
+import com.scms.util.LoadingOverlay;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -39,6 +40,8 @@ public class RecipesController {
 
     private void loadRecipes() {
         recipesPane.getChildren().clear();
+        // show overlay while loading recipes
+        LoadingOverlay.show(recipesPane);
         try {
             List<Recipe> recipes = recipeDao.findAll();
             for (Recipe r : recipes) {
@@ -47,6 +50,8 @@ public class RecipesController {
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
+        } finally {
+            LoadingOverlay.hide(recipesPane);
         }
     }
 

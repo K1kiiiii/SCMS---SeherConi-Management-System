@@ -36,6 +36,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import com.scms.service.NotificationService;
 import com.scms.util.DialogUtils;
+import com.scms.util.LoadingOverlay;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DashboardController {
 
@@ -111,6 +113,10 @@ public class DashboardController {
         }
 
         // Use a JavaFX Task to run DB work off the FX thread and update UI on success
+        // show overlay while dashboard bootstraps
+        LoadingOverlay.show(titleLabel);
+        // pending load counter: cardsGrid load + critical card + tasks (one of admin/worker) — start at 1 for initial card load
+        AtomicInteger pendingLoads = new AtomicInteger(1);
         javafx.concurrent.Task<List<CardInfo>> loadTask = new javafx.concurrent.Task<>() {
             @Override
             protected List<CardInfo> call() throws Exception {
@@ -124,15 +130,31 @@ public class DashboardController {
             for (CardInfo ci : cardData) uiCards.add(createCardUI(ci.title, ci.value));
             populateGrid(uiCards);
 
+            // start loading critical card and tasks; increment pendingLoads for each async op
+            // we already have 1 pending for initial bootstrap; add 2 more if both will run
+            boolean willLoadCritical = !(currentRole.equals("RADNIK") || currentRole.equals("WORKER"));
+            boolean willLoadTasks = !(currentRole.equals("MAGACIONER") || currentRole.equals("WAREHOUSE_STAFF"));
+            int additional = 0;
+            if (willLoadCritical) additional++;
+            if (willLoadTasks) additional++;
+            pendingLoads.addAndGet(additional);
+
+            // initial bootstrap completed: decrement the initial pending count
+            if (pendingLoads.decrementAndGet() == 0) {
+                LoadingOverlay.hide(titleLabel);
+            }
+
             // populate fixed critical materials card (UI-only)
-            try {
-                populateCriticalCard();
-            } catch (Exception ex) { logError(ex, "populateCriticalCard"); }
+            try { if (willLoadCritical) populateCriticalCard(() -> { if (pendingLoads.decrementAndGet() == 0) LoadingOverlay.hide(titleLabel); });
+            } catch (Exception ex) { logError(ex, "populateCriticalCard"); if (pendingLoads.decrementAndGet() == 0) LoadingOverlay.hide(titleLabel); }
 
             // role-driven tasks handling
             try {
-                handleTasksForRole();
-            } catch (Exception ex) { logError(ex, "handleTasksForRole"); }
+                if (willLoadTasks) handleTasksForRole(() -> { if (pendingLoads.decrementAndGet() == 0) LoadingOverlay.hide(titleLabel); });
+                else {
+                    if (pendingLoads.decrementAndGet() == 0) LoadingOverlay.hide(titleLabel);
+                }
+            } catch (Exception ex) { logError(ex, "handleTasksForRole"); if (pendingLoads.decrementAndGet() == 0) LoadingOverlay.hide(titleLabel); }
 
             // start notification service for warehouse staff / magacioner
             try {
@@ -146,6 +168,8 @@ public class DashboardController {
         });
 
         loadTask.setOnFailed(evt -> {
+            // ensure overlay hidden on failure
+            LoadingOverlay.hide(titleLabel);
             Throwable ex = loadTask.getException();
             System.err.println("Failed to load dashboard data: " + (ex != null ? ex.getMessage() : "unknown"));
             if (ex != null) ex.printStackTrace(System.err);
@@ -155,8 +179,8 @@ public class DashboardController {
             fallback.add(createCardUI("Zahtjevi (ovaj mjesec)", "0"));
             populateGrid(fallback);
 
-            try { handleTasksForRole(); } catch (Exception ex2) { logError(ex2, "handleTasksForRole"); }
-            try { populateCriticalCard(); } catch (Exception ex2) { logError(ex2, "populateCriticalCard"); }
+            try { handleTasksForRole(null); } catch (Exception ex2) { logError(ex2, "handleTasksForRole"); }
+            try { populateCriticalCard(null); } catch (Exception ex2) { logError(ex2, "populateCriticalCard"); }
          });
 
         Thread t = new Thread(loadTask, "dashboard-loader");
@@ -164,34 +188,92 @@ public class DashboardController {
         t.start();
     }
 
-    // Decide what to do with the tasks card based on role
-    private void handleTasksForRole() {
+    // Modified populateCriticalCard that accepts a Runnable callback executed on completion (on FX thread)
+    private void populateCriticalCard(Runnable onComplete) {
+        // run DB work off FX thread to avoid UI blocking
+        javafx.concurrent.Task<List<Material>> task = new javafx.concurrent.Task<>() {
+            @Override
+            protected List<Material> call() throws Exception {
+                return materialDao.findMaterialsBelowMinimum();
+            }
+        };
+        task.setOnSucceeded(ev -> {
+            List<Material> below = task.getValue();
+            criticalCardContent.getChildren().clear();
+            if (below == null || below.isEmpty()) {
+                Label ok = new Label("✔ Trenutno nema kritičnih sirovina");
+                ok.getStyleClass().add("ok-message");
+                ok.setMaxWidth(Double.MAX_VALUE);
+                criticalCardContent.getChildren().add(ok);
+            } else {
+                for (Material m : below) {
+                    HBox row = new HBox(8);
+                    Label warn = new Label("⚠");
+                    warn.getStyleClass().add("critical-item");
+                    Label name = new Label(m.getName());
+                    name.getStyleClass().add("task-title");
+                    name.setWrapText(true);
+                    name.maxWidthProperty().bind(criticalCardContent.widthProperty().subtract(48));
+                    String unit = m.getUnit() != null ? m.getUnit() : "";
+                    Label qty = new Label(String.format("%.2f %s / min %.2f %s", m.getQuantity(), unit, m.getMinimumQuantity(), unit));
+                    qty.getStyleClass().add("critical-item");
+                    qty.setStyle("-fx-text-fill:#D23B3B; -fx-font-weight:700;");
+                    Region spacer = new Region();
+                    HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+                    row.getChildren().addAll(warn, name, spacer, qty);
+                    row.getStyleClass().add("task-row");
+                    criticalCardContent.getChildren().add(row);
+                }
+            }
+            if (onComplete != null) onComplete.run();
+        });
+        task.setOnFailed(ev -> {
+            Throwable ex = task.getException();
+            logError(ex, "populateCriticalCard");
+            criticalCardContent.getChildren().clear();
+            Label err = new Label("Greška pri učitavanju sirovina");
+            criticalCardContent.getChildren().add(err);
+            if (onComplete != null) onComplete.run();
+        });
+        Thread th = new Thread(task, "critical-card-loader");
+        th.setDaemon(true);
+        th.start();
+    }
+
+    // Modified handleTasksForRole that accepts a completion callback
+    private void handleTasksForRole(Runnable onComplete) {
         if (currentRole.equals("MAGACIONER") || currentRole.equals("WAREHOUSE_STAFF")) {
-            // remove tasksBox entirely for magacioner
             if (tasksBox != null) tasksBox.setManaged(false);
             if (tasksBox != null) tasksBox.setVisible(false);
+            if (onComplete != null) onComplete.run();
             return;
         }
 
         if (currentRole.equals("ADMIN")) {
-            // admin: show all IN_PROGRESS tasks
             if (tasksHeader != null) tasksHeader.setText("Zadaci u toku");
-            loadInProgressTasks();
+            // load in progress tasks async
+            loadInProgressTasks(onComplete);
             return;
         }
 
         // default / RADNIK: load assigned tasks
-        loadWorkerTasks();
+        loadWorkerTasks(onComplete);
     }
 
     // Load tasks with status = IN_PROGRESS for ADMIN
-    private void loadInProgressTasks() {
-        if (tasksList == null) return;
+    private void loadInProgressTasks(Runnable onComplete) {
+        if (tasksList == null) { if (onComplete != null) onComplete.run(); return; }
         tasksList.getChildren().clear();
-        try {
-            List<Task> all = taskDao.findAll();
-            List<Task> inProgress = new ArrayList<>();
-            for (Task t : all) if (t.getStatus() != null && t.getStatus().equalsIgnoreCase("IN_PROGRESS")) inProgress.add(t);
+        javafx.concurrent.Task<List<Task>> task = new javafx.concurrent.Task<>() {
+            @Override protected List<Task> call() throws Exception {
+                List<Task> all = taskDao.findAll();
+                List<Task> inProgress = new ArrayList<>();
+                for (Task t : all) if (t.getStatus() != null && t.getStatus().equalsIgnoreCase("IN_PROGRESS")) inProgress.add(t);
+                return inProgress;
+            }
+        };
+        task.setOnSucceeded(ev -> {
+            List<Task> inProgress = task.getValue();
             DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("HH:mm");
             for (Task t : inProgress) {
                 String recipeName = "Recept: " + t.getRecipeId();
@@ -226,11 +308,16 @@ public class DashboardController {
                 row.getChildren().addAll(title, spacer, meta, badge);
                 tasksList.getChildren().add(row);
             }
-            // ensure scroll shows top
             if (tasksScroll != null) tasksScroll.setVvalue(0);
-        } catch (SQLException ex) {
-            logError(ex, "loadInProgressTasks");
-        }
+            if (onComplete != null) onComplete.run();
+        });
+        task.setOnFailed(ev -> {
+            logError(task.getException(), "loadInProgressTasks");
+            if (onComplete != null) onComplete.run();
+        });
+        Thread th = new Thread(task, "inprogress-tasks-loader");
+        th.setDaemon(true);
+        th.start();
     }
 
     // Build card data (title + computed value) depending on role — runs on background thread
@@ -241,36 +328,33 @@ public class DashboardController {
 
         switch (role) {
             case "ADMIN":
-                cards.add(new CardInfo("Ukupno sirovina", String.valueOf(materialDao.findAll().size())));
-                cards.add(new CardInfo("Zahtjevi za sirovine (ovaj mjesec)", String.valueOf(countRequestsThisMonth())));
-                cards.add(new CardInfo("Aktivni korisnici", String.valueOf(userDao.findAll().size())));
-                // add a card per material that is below its minimum
+                // fetch lists once and reuse sizes to avoid multiple DB calls
+                List<Material> allMaterials = materialDao.findAll();
+                List<User> allUsers = userDao.findAll();
                 List<Material> below = materialDao.findMaterialsBelowMinimum();
+
+                cards.add(new CardInfo("Ukupno sirovina", String.valueOf(allMaterials.size())));
+                cards.add(new CardInfo("Zahtjevi za sirovine (ovaj mjesec)", String.valueOf(countRequestsThisMonth())));
+                cards.add(new CardInfo("Aktivni korisnici", String.valueOf(allUsers.size())));
                 if (below.isEmpty()) {
                     cards.add(new CardInfo("Sirovine ispod minimalne zalihe", "0"));
                 } else {
-                    // single summary card for low-stock materials (details shown in fixed critical card)
-                    int lowCount = materialDao.findMaterialsBelowMinimum().size();
-                    cards.add(new CardInfo("Sirovine ispod minimalne zalihe", String.valueOf(lowCount)));
+                    cards.add(new CardInfo("Sirovine ispod minimalne zalihe", String.valueOf(below.size())));
                 }
                 break;
             case "MAGACIONER": // local DB role is 'magacioner' — treat as WAREHOUSE_STAFF
             case "WAREHOUSE_STAFF":
-                cards.add(new CardInfo("Na čekanju - zahtjevi za sirovine", String.valueOf(countPendingRequests())));
-                // for warehouse staff, show pending list of low-stock materials as individual cards
                 List<Material> below2 = materialDao.findMaterialsBelowMinimum();
+                cards.add(new CardInfo("Na čekanju - zahtjevi za sirovine", String.valueOf(countPendingRequests())));
                 if (below2.isEmpty()) {
                     cards.add(new CardInfo("Sirovine ispod minimalne zalihe", "0"));
                 } else {
-                    // single summary card for low-stock materials (details shown in fixed critical card)
-                    int lowCount2 = materialDao.findMaterialsBelowMinimum().size();
-                    cards.add(new CardInfo("Sirovine ispod minimalne zalihe", String.valueOf(lowCount2)));
+                    cards.add(new CardInfo("Sirovine ispod minimalne zalihe", String.valueOf(below2.size())));
                 }
                 cards.add(new CardInfo("Izdane sirovine danas", String.valueOf(countIssuedToday())));
                 break;
             case "RADNIK": // worker role mapping
             case "WORKER":
-                // For workers, show only user-specific metrics
                 cards.add(new CardInfo("Moji zahtjevi na čekanju", String.valueOf(countMyPendingRequests(u))));
                 cards.add(new CardInfo("Izdane sirovine (ovaj mjesec)", String.valueOf(countIssuedThisMonthForUser(u))));
                 cards.add(new CardInfo("Najčešće korištena sirovina", mostFrequentlyUsedMaterialForUser(u)));
@@ -357,21 +441,22 @@ public class DashboardController {
     }
 
     // Load tasks for logged-in worker and populate tasksList — placed early to avoid forward-reference warnings
-    private void loadWorkerTasks() {
+    private void loadWorkerTasks(Runnable onComplete) {
         User u = RoleManager.getLoggedInUser();
         if (tasksList != null) tasksList.getChildren().clear();
         if (u == null) {
             System.out.println("loadWorkerTasks: no logged-in user");
+            if (onComplete != null) onComplete.run();
             return;
         }
 
-        System.out.println("loadWorkerTasks: userId=" + u.getId() + " role='" + (u.getRole() != null ? u.getRole() : "") + "'");
-
-        try {
-            List<Task> tasks = taskDao.findByAssignedUser(u.getId());
-            System.out.println("loadWorkerTasks: found " + (tasks != null ? tasks.size() : 0) + " tasks for user " + u.getId());
-
-            // If no tasks, show a friendly empty message inside the tasksList instead of hiding the box
+        javafx.concurrent.Task<List<Task>> task = new javafx.concurrent.Task<>() {
+            @Override protected List<Task> call() throws Exception {
+                return taskDao.findByAssignedUser(u.getId());
+            }
+        };
+        task.setOnSucceeded(ev -> {
+            List<Task> tasks = task.getValue();
             if (tasks == null || tasks.isEmpty()) {
                 if (tasksBox != null) {
                     tasksBox.setManaged(true);
@@ -382,6 +467,7 @@ public class DashboardController {
                 empty.setMaxWidth(Double.MAX_VALUE);
                 tasksList.getChildren().add(empty);
                 if (tasksScroll != null) tasksScroll.setVvalue(0);
+                if (onComplete != null) onComplete.run();
                 return;
             } else {
                 if (tasksBox != null) {
@@ -395,9 +481,15 @@ public class DashboardController {
                 tasksList.getChildren().add(card);
             }
             if (tasksScroll != null) tasksScroll.setVvalue(0);
-        } catch (SQLException ex) {
-            logError(ex, "loadWorkerTasks");
-        }
+            if (onComplete != null) onComplete.run();
+        });
+        task.setOnFailed(ev -> {
+            logError(task.getException(), "loadWorkerTasks");
+            if (onComplete != null) onComplete.run();
+        });
+        Thread th = new Thread(task, "worker-tasks-loader");
+        th.setDaemon(true);
+        th.start();
     }
 
     // Create card UI nodes on the FX thread
@@ -737,45 +829,9 @@ public class DashboardController {
         if (notificationService != null) notificationService.stop();
     }
 
-    // Populate the single fixed critical materials card
-    private void populateCriticalCard() {
-        // clear previous content
-        criticalCardContent.getChildren().clear();
-        try {
-            List<Material> below = materialDao.findMaterialsBelowMinimum();
-            if (below == null || below.isEmpty()) {
-                Label ok = new Label("✔ Trenutno nema kritičnih sirovina");
-                ok.getStyleClass().add("ok-message");
-                ok.setMaxWidth(Double.MAX_VALUE);
-                // rely on CSS for ok-message styling
-                criticalCardContent.getChildren().add(ok);
-                return;
-            }
-
-            for (Material m : below) {
-                HBox row = new HBox(8);
-                Label warn = new Label("⚠");
-                warn.getStyleClass().add("critical-item");
-                Label name = new Label(m.getName());
-                name.getStyleClass().add("task-title");
-                name.setWrapText(true);
-                // bind name width to container so long names wrap nicely inside the scroll area
-                name.maxWidthProperty().bind(criticalCardContent.widthProperty().subtract(48));
-                String unit = m.getUnit() != null ? m.getUnit() : "";
-                Label qty = new Label(String.format("%.2f %s / min %.2f %s", m.getQuantity(), unit, m.getMinimumQuantity(), unit));
-                qty.getStyleClass().add("critical-item");
-                qty.setStyle("-fx-text-fill:#D23B3B; -fx-font-weight:700;");
-                Region spacer = new Region();
-                HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
-                row.getChildren().addAll(warn, name, spacer, qty);
-                row.getStyleClass().add("task-row");
-                criticalCardContent.getChildren().add(row);
-            }
-        } catch (SQLException ex) {
-            logError(ex, "populateCriticalCard");
-            Label err = new Label("Greška pri učitavanju sirovina");
-            criticalCardContent.getChildren().add(err);
-        }
-    }
-
-}
+    // Backwards-compatible no-arg wrappers for places that call the original methods
+    private void populateCriticalCard() { populateCriticalCard(null); }
+    private void handleTasksForRole() { handleTasksForRole(null); }
+    private void loadInProgressTasks() { loadInProgressTasks(null); }
+    private void loadWorkerTasks() { loadWorkerTasks(null); }
+ }

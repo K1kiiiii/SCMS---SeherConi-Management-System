@@ -6,6 +6,7 @@ import com.scms.service.ServiceException;
 import com.scms.service.AssignmentService;
 import com.scms.util.RoleManager;
 import com.scms.util.DialogUtils;
+import com.scms.util.LoadingOverlay;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -51,6 +52,8 @@ public class MaterialManagementController {
     @FXML
     public void initialize() {
         setupTableColumns();
+        // show general overlay while loading
+        LoadingOverlay.show(materialTable);
         loadMaterials();
         setupFilters();
         applyRolePermissions();
@@ -83,7 +86,9 @@ public class MaterialManagementController {
             allMaterials = FXCollections.observableArrayList(fromDb);
             filteredMaterials = new FilteredList<>(allMaterials, m -> true);
             materialTable.setItems(filteredMaterials);
+            LoadingOverlay.hide(materialTable);
         } catch (ServiceException ex) {
+            LoadingOverlay.hide(materialTable);
             showError("Greška pri učitavanju liste sirovina", ex.getMessage());
         }
     }

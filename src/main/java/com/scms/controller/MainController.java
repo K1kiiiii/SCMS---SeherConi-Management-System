@@ -2,6 +2,7 @@ package com.scms.controller;
 
 import com.scms.model.User;
 import com.scms.util.RoleManager;
+import com.scms.util.LoadingOverlay;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -202,6 +203,8 @@ public class MainController {
                 System.err.println("Report dialog resource missing");
                 return;
             }
+            // show overlay while creating report window
+            LoadingOverlay.show(contentArea);
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(reportUrl);
             javafx.scene.Parent root = loader.load();
             javafx.scene.Scene scene = new javafx.scene.Scene(root);
@@ -212,8 +215,10 @@ public class MainController {
             stage.setScene(scene);
             stage.initOwner(contentArea.getScene().getWindow());
             stage.show();
+            LoadingOverlay.hide(contentArea);
         } catch (Exception ex) {
             System.err.println("Failed to open reports window: " + ex.getMessage());
+            LoadingOverlay.hide(contentArea);
         }
     }
 
@@ -255,13 +260,34 @@ public class MainController {
                 System.err.println("Missing page resource: " + fxmlPath);
                 return;
             }
-            Parent view = FXMLLoader.load(pageUrl);
-            // ensure loaded page background is transparent so the main app background shows through
-            try { if (view != null) view.setStyle("-fx-background-color: transparent;"); } catch (Exception ignore) {}
-            // clear and set single child
-            contentArea.getChildren().setAll(view);
-        } catch (IOException e) {
+
+            // show loading overlay while loading FXML off the FX thread
+            LoadingOverlay.show(contentArea);
+
+            // load page in background to avoid blocking UI thread when parsing large FXML
+            javafx.concurrent.Task<Parent> loaderTask = new javafx.concurrent.Task<>() {
+                @Override protected Parent call() throws Exception {
+                    return FXMLLoader.load(pageUrl);
+                }
+            };
+            loaderTask.setOnSucceeded(ev -> {
+                Parent view = loaderTask.getValue();
+                try { if (view != null) view.setStyle("-fx-background-color: transparent;"); } catch (Exception ignore) {}
+                contentArea.getChildren().setAll(view);
+                LoadingOverlay.hide(contentArea);
+            });
+            loaderTask.setOnFailed(ev -> {
+                Throwable ex = loaderTask.getException();
+                System.err.println("Failed to load page '" + fxmlPath + "': " + (ex == null ? "unknown" : ex.getMessage()));
+                LoadingOverlay.hide(contentArea);
+            });
+            Thread t = new Thread(loaderTask, "page-loader");
+            t.setDaemon(true);
+            t.start();
+
+        } catch (Exception e) {
             System.err.println("Failed to load page '" + fxmlPath + "': " + e.getMessage());
+            LoadingOverlay.hide(contentArea);
         }
     }
 }

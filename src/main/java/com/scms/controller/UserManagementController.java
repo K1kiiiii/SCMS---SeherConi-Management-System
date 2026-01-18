@@ -4,6 +4,7 @@ import com.scms.model.User;
 import com.scms.service.ServiceException;
 import com.scms.service.UserService;
 import com.scms.util.DialogUtils;
+import com.scms.util.LoadingOverlay;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -35,6 +36,8 @@ public class UserManagementController {
     @FXML
     public void initialize() {
         setupColumns();
+        // show general overlay while loading
+        LoadingOverlay.show(userTable);
         loadUsers();
         setupSearch();
 
@@ -50,7 +53,9 @@ public class UserManagementController {
             allUsers = FXCollections.observableArrayList(fromDb);
             filteredUsers = new FilteredList<>(allUsers, u -> true);
             userTable.setItems(filteredUsers);
+            LoadingOverlay.hide(userTable);
         } catch (ServiceException ex) {
+            LoadingOverlay.hide(userTable);
             showError("Greška pri učitavanju korisnika", ex.getMessage());
         }
     }

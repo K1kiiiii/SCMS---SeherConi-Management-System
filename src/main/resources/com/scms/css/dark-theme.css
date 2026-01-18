@@ -1072,3 +1072,31 @@ Label.tasks-header {
     -fx-border-radius: 12;
 }
 
+/* Loading overlay adjustments for dark theme */
+.loading-indicator {
+    -fx-progress-color: #E8915D; /* lighter coral accent for dark mode */
+}
+.loading-label {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 13px;
+    -fx-text-fill: #E8DFD8;
+    -fx-font-weight: 600;
+}
+#loading-overlay {
+    -fx-background-color: rgba(20,20,20,0.7);
+}
+
+/* Loading overlay (dark) */
+.loading-overlay {
+    -fx-background-color: rgba(26,22,18,0.8);
+}
+.loading-overlay .loading-indicator {
+    -fx-progress-color: #F4A76D; /* warm accent */
+}
+.loading-overlay .loading-label {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #E8DFD8;
+    -fx-font-weight: 700;
+}
+#loading-overlay { -fx-background-color: rgba(26,22,18,0.85); }

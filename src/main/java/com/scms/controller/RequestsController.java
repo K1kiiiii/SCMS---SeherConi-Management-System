@@ -8,6 +8,7 @@ import com.scms.service.MaterialService;
 import com.scms.service.ServiceException;
 import com.scms.service.UserService;
 import com.scms.util.DialogUtils;
+import com.scms.util.LoadingOverlay;
 import com.scms.util.RoleManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -117,6 +118,8 @@ public class RequestsController {
     }
 
     private void loadRequests() {
+        // show general overlay while loading (reverted to previous behavior)
+        LoadingOverlay.show(requestsTable);
         // Run DB/service work off the FX thread
         Task<List<Assignment>> task = new Task<>() {
             @Override
@@ -163,11 +166,14 @@ public class RequestsController {
             statusFilter.getItems().add("Svi");
             statuses.stream().sorted(String.CASE_INSENSITIVE_ORDER).forEach(statusFilter.getItems()::add);
             statusFilter.getSelectionModel().selectFirst();
+            // hide overlay
+            LoadingOverlay.hide(requestsTable);
         });
 
         task.setOnFailed(e -> {
             Throwable ex = task.getException();
             showError("Greška pri učitavanju zahtjeva", ex == null ? "Unknown error" : ex.getMessage());
+            LoadingOverlay.hide(requestsTable);
         });
 
         Thread th = new Thread(task, "requests-loader");

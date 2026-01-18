@@ -4,6 +4,7 @@ import com.scms.model.User;
 import com.scms.service.AuthService;
 import com.scms.service.ServiceException;
 import com.scms.util.RoleManager;
+import com.scms.util.LoadingOverlay;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -153,12 +154,19 @@ public class LoginController {
                     }
                     Parent root = FXMLLoader.load(mainUrl);
                     Stage stage = (Stage) loginButton.getScene().getWindow();
+
+                    // show loading overlay while we prepare main scene
+                    LoadingOverlay.show(loginButton);
+
                     // create scene and apply user preferred theme immediately
                     Scene mainScene = new Scene(root);
                     boolean darkPref = prefs.getBoolean(PREF_DARK, false);
                     setDarkMode(mainScene, darkPref);
                     stage.setScene(mainScene);
                     stage.setTitle("SCMS - Dashboard (" + auth.getUsername() + ")");
+
+                    // hide overlay after short delay to ensure scene fully rendered
+                    javafx.application.Platform.runLater(() -> LoadingOverlay.hide(loginButton));
                  } catch (Exception e) {
                     System.err.println("Failed to open dashboard: " + e.getMessage());
                     if (messageLabel != null) messageLabel.setText("Failed to open dashboard: " + e.getMessage());
