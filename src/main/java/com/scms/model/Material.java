@@ -12,6 +12,8 @@ public class Material {
     private String unit;
     private String supplier;
     private LocalDateTime updatedAt;
+    // last known purchase price per unit (nullable)
+    private Double lastPurchasePrice;
 
     public Material() {}
 
@@ -44,4 +46,7 @@ public class Material {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public Double getLastPurchasePrice() { return lastPurchasePrice; }
+    public void setLastPurchasePrice(Double lastPurchasePrice) { this.lastPurchasePrice = lastPurchasePrice; }
 }

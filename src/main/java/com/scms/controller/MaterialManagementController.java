@@ -333,12 +333,15 @@ public class MaterialManagementController {
         TextField quantityField = new TextField();
         TextField unitField     = new TextField();
         TextField supplierField = new TextField();
+        // price field for magacioner when adding material
+        TextField purchasePriceField = new TextField();
 
         if (editMode) {
             nameField.setText(material.getName());
             quantityField.setText(String.valueOf(material.getQuantity()));
             unitField.setText(material.getUnit());
             supplierField.setText(material.getSupplier());
+            if (material.getLastPurchasePrice() != null) purchasePriceField.setText(String.valueOf(material.getLastPurchasePrice()));
         }
 
         grid.add(new Label("Naziv:"), 0, 0);
@@ -353,6 +356,13 @@ public class MaterialManagementController {
         grid.add(new Label("Dobavljač:"), 0, 3);
         grid.add(supplierField, 1, 3);
 
+        // only show purchase price input to magacioner or admin
+        if (RoleManager.isMagacioner() || RoleManager.isAdmin()) {
+            grid.add(new Label("Cijena nabave (po jedinici):"), 0, 4);
+            purchasePriceField.setPromptText("0.00");
+            grid.add(purchasePriceField, 1, 4);
+        }
+
         dialog.getDialogPane().setContent(grid);
 
         dialog.setResultConverter(dialogButton -> {
@@ -365,6 +375,9 @@ public class MaterialManagementController {
                         material.setQuantity(quantity);
                         material.setUnit(unitField.getText());
                         material.setSupplier(supplierField.getText());
+                        if (!purchasePriceField.getText().isBlank()) {
+                            try { material.setLastPurchasePrice(Double.parseDouble(purchasePriceField.getText())); } catch (NumberFormatException ignored) {}
+                        }
                         return material;
                     } else {
                         Material m = new Material();
@@ -372,6 +385,9 @@ public class MaterialManagementController {
                         m.setQuantity(quantity);
                         m.setUnit(unitField.getText());
                         m.setSupplier(supplierField.getText());
+                        if (!purchasePriceField.getText().isBlank()) {
+                            try { m.setLastPurchasePrice(Double.parseDouble(purchasePriceField.getText())); } catch (NumberFormatException ignored) {}
+                        }
                         // id + updatedAt će riješiti DB / service
                         return m;
                     }

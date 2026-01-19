@@ -59,7 +59,8 @@ public class PdfReportGenerator {
             doc.add(period);
 
             // Table with columns: Šifra / Artikl | Naziv | Jedinica mjere | Ulaz | Izlaz | Stanje
-            PdfPTable table = new PdfPTable(new float[]{1.6f, 3.6f, 1.6f, 1.4f, 1.4f, 1.4f});
+            // add two monetary columns for inflow/outflow values
+            PdfPTable table = new PdfPTable(new float[]{1.4f, 3.0f, 1.2f, 1.2f, 1.2f, 1.6f, 1.6f, 1.6f});
             table.setWidthPercentage(100);
             addTableHeader(table);
 
@@ -70,6 +71,8 @@ public class PdfReportGenerator {
                 table.addCell(makeCell(r.getUnit(), cellFont));
                 table.addCell(makeCell(formatDouble(r.getInflow()), cellFont, Element.ALIGN_RIGHT));
                 table.addCell(makeCell(formatDouble(r.getOutflow()), cellFont, Element.ALIGN_RIGHT));
+                table.addCell(makeCell(formatDouble(r.getInflowValue()), cellFont, Element.ALIGN_RIGHT));
+                table.addCell(makeCell(formatDouble(r.getOutflowValue()), cellFont, Element.ALIGN_RIGHT));
                 table.addCell(makeCell(formatDouble(r.getBalance()), cellFont, Element.ALIGN_RIGHT));
             }
 
@@ -82,10 +85,14 @@ public class PdfReportGenerator {
 
             double tIn = rows.stream().mapToDouble(InventoryRow::getInflow).sum();
             double tOut = rows.stream().mapToDouble(InventoryRow::getOutflow).sum();
+            double tInVal = rows.stream().mapToDouble(InventoryRow::getInflowValue).sum();
+            double tOutVal = rows.stream().mapToDouble(InventoryRow::getOutflowValue).sum();
             double tBal = rows.stream().mapToDouble(InventoryRow::getBalance).sum();
 
             table.addCell(makeCell(formatDouble(tIn), cellFont, Element.ALIGN_RIGHT));
             table.addCell(makeCell(formatDouble(tOut), cellFont, Element.ALIGN_RIGHT));
+            table.addCell(makeCell(formatDouble(tInVal), cellFont, Element.ALIGN_RIGHT));
+            table.addCell(makeCell(formatDouble(tOutVal), cellFont, Element.ALIGN_RIGHT));
             table.addCell(makeCell(formatDouble(tBal), cellFont, Element.ALIGN_RIGHT));
 
             doc.add(table);
@@ -114,6 +121,8 @@ public class PdfReportGenerator {
         table.addCell(new PdfPCell(new Phrase("Jedinica mjere", bold)));
         table.addCell(new PdfPCell(new Phrase("Ulaz (količina)", bold)));
         table.addCell(new PdfPCell(new Phrase("Izlaz (količina)", bold)));
+        table.addCell(new PdfPCell(new Phrase("Ulaz (vrijednost)", bold)));
+        table.addCell(new PdfPCell(new Phrase("Izlaz (vrijednost)", bold)));
         table.addCell(new PdfPCell(new Phrase("Stanje", bold)));
     }
 

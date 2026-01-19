@@ -20,6 +20,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import com.scms.service.MaterialService;
+import com.scms.model.Material;
 
 /**
  * Controller for recipes view. Populates recipe cards and provides "Dodijeli radniku" button per recipe.
@@ -164,27 +166,33 @@ public class RecipesController {
                 for (javafx.scene.Node n : itemsBox.getChildren()) {
                     if (n instanceof GridPane) {
                         GridPane gp = (GridPane) n;
-                        TextField materialIdField = (TextField) gp.getUserData();
-                        TextField qtyField = (TextField) gp.getChildren().get(1);
+                        ComboBox<Material> materialCombo = (ComboBox<Material>) gp.getUserData();
+                        // children order: 0=Label,1=materialCombo,2=qtyField,3=unitField,4=remove
+                        TextField qtyField = (TextField) gp.getChildren().get(2);
                         TextField unitField = (TextField) gp.getChildren().get(3);
 
-                        String mid = materialIdField.getText();
-                        String qtxt = qtyField.getText();
+                        Material material = materialCombo.getValue();
                         String unit = unitField.getText();
+                        double qty = 0;
+                        if (qtyField.getText() != null && !qtyField.getText().isBlank()) {
+                            try {
+                                qty = Double.parseDouble(qtyField.getText().trim());
+                            } catch (NumberFormatException ex) {
+                                showWarning("Neispravan unos", "Količina mora biti broj.");
+                                return null;
+                            }
+                        }
 
-                        if (mid == null || mid.isBlank()) continue; // skip empty
-                        try {
-                            int materialId = Integer.parseInt(mid.trim());
-                            double qty = Double.parseDouble(qtxt.trim());
-                            RecipeItem ri = new RecipeItem();
-                            ri.setMaterialId(materialId);
-                            ri.setQuantity(qty);
-                            ri.setUnit(unit);
-                            items.add(ri);
-                        } catch (NumberFormatException ex) {
-                            showWarning("Neispravan unos", "ID sirovine i količina moraju biti brojevi.");
+                        if (material == null) {
+                            showWarning("Neispravan unos", "Sirovina je obavezna.");
                             return null;
                         }
+
+                        RecipeItem ri = new RecipeItem();
+                        ri.setMaterialId(material.getId());
+                        ri.setQuantity(qty);
+                        ri.setUnit(unit);
+                        items.add(ri);
                     }
                 }
 
@@ -222,8 +230,20 @@ public class RecipesController {
         row.setHgap(8);
         row.setVgap(4);
 
-        TextField materialIdField = new TextField();
-        materialIdField.setPromptText("materialId");
+        // choose material by name instead of entering ID
+        MaterialService materialService = new MaterialService();
+        ComboBox<Material> materialCombo = new ComboBox<>();
+        try {
+            List<Material> mats = materialService.listMaterials();
+            materialCombo.setItems(javafx.collections.FXCollections.observableArrayList(mats));
+        } catch (ServiceException ex) {
+            // ignore; leave combo empty
+        }
+        materialCombo.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
+            @Override protected void updateItem(Material item, boolean empty) { super.updateItem(item, empty); setText(empty || item == null ? null : item.getName()); }
+        });
+        materialCombo.setButtonCell(new javafx.scene.control.ListCell<>() { @Override protected void updateItem(Material item, boolean empty) { super.updateItem(item, empty); setText(empty || item == null ? null : item.getName()); } });
+        materialCombo.setPromptText("Sirovina");
         TextField qtyField = new TextField();
         qtyField.setPromptText("količina");
         TextField unitField = new TextField();
@@ -232,14 +252,14 @@ public class RecipesController {
         Button remove = new Button("Ukloni");
         remove.setOnAction(evt -> ((VBox)row.getParent()).getChildren().remove(row));
 
-        row.add(new Label("ID:"), 0, 0);
-        row.add(materialIdField, 1, 0);
+        row.add(new Label("Sirovina:"), 0, 0);
+        row.add(materialCombo, 1, 0);
         row.add(qtyField, 2, 0);
         row.add(unitField, 3, 0);
         row.add(remove, 4, 0);
 
-        // store ref to first field for easy extraction
-        row.setUserData(materialIdField);
+        // store ref to combo so we can extract selected material id later
+        row.setUserData(materialCombo);
         return row;
     }
 

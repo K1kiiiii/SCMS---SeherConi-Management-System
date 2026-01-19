@@ -30,11 +30,15 @@ public class StatisticsController {
     @FXML private Label lblConfirmedAssignments;
     @FXML private Label lblCompletedTasks;
 
+    @FXML private Label lblTotalImportValue;
+    @FXML private Label lblTotalExportValue;
+
     @FXML private PieChart globalAssignmentsChart;
     @FXML private PieChart globalTasksChart;
 
     @FXML private VBox personalStatsBox;
     @FXML private Label lblUserName;
+    @FXML private Label lblUserRole;
     @FXML private Label lblUserPendingAssignments;
     @FXML private Label lblUserConfirmedAssignments;
     @FXML private Label lblUserCompletedTasks;
@@ -142,6 +146,24 @@ public class StatisticsController {
                 globalTasksChart.setLegendVisible(true);
             }
 
+            // compute total import/export values from inventory_movements
+            double totalImportValue = 0.0, totalExportValue = 0.0;
+            try (PreparedStatement ps = conn.prepareStatement("SELECT type, SUM(total_price) AS val FROM inventory_movements GROUP BY type")) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String type = rs.getString("type");
+                        double val = rs.getDouble("val");
+                        if (type == null) continue;
+                        if (type.equalsIgnoreCase("IN")) totalImportValue = val;
+                        else if (type.equalsIgnoreCase("OUT")) totalExportValue = val;
+                    }
+                }
+            } catch (Exception ex) {
+                // ignore if table doesn't exist
+            }
+            if (lblTotalImportValue != null) lblTotalImportValue.setText(String.format("%,.2f", totalImportValue));
+            if (lblTotalExportValue != null) lblTotalExportValue.setText(String.format("%,.2f", totalExportValue));
+
         } catch (Exception ex) {
             System.err.println("Failed loading global stats: " + ex.getMessage());
             ex.printStackTrace();
@@ -196,22 +218,28 @@ public class StatisticsController {
         try (Connection conn = DatabaseConfig.getConnection()) {
             boolean admin = RoleManager.isAdmin();
             String username = "-";
+            String userRole = "-";
 
             if (userId != null && userId >= 0) {
                 User u = userDao.findById(userId).orElse(null);
                 if (u != null) username = u.getUsername();
+                if (u != null) userRole = u.getRole() == null ? "-" : u.getRole();
             } else if (userId == null) {
                 // admin requested ALL users
                 username = "Svi korisnici";
+                userRole = "-";
             } else {
                 // userId == -1 or other negative: use logged in user
                 User cur = RoleManager.getLoggedInUser();
-                if (cur != null) { userId = cur.getId(); username = cur.getUsername(); }
+                if (cur != null) { userId = cur.getId(); username = cur.getUsername();
+                    userRole = cur.getRole() == null ? "-" : cur.getRole();
+                }
             }
 
             lblUserName.setText(username == null ? "-" : username);
+            if (lblUserRole != null) lblUserRole.setText(userRole == null ? "-" : userRole);
 
-            // assignments for this user by status (or all users if admin and userId==null)
+            // If admin asked for ALL users, keep aggregated behavior
             if (userId == null && admin) {
                 int pending = 0, confirmed = 0, rejected = 0;
                 try (PreparedStatement ps = conn.prepareStatement("SELECT status, COUNT(*) AS cnt FROM assignments GROUP BY status")) {
@@ -257,38 +285,123 @@ public class StatisticsController {
 
             } else {
                 int uid = userId == null ? -1 : userId;
-                int pending = 0, confirmed = 0;
-                try (PreparedStatement ps = conn.prepareStatement("SELECT status, COUNT(*) AS cnt FROM assignments WHERE user_id = ? GROUP BY status")) {
-                    ps.setInt(1, uid);
-                    try (ResultSet rs = ps.executeQuery()) {
-                        while (rs.next()) {
-                            String status = rs.getString("status");
-                            int cnt = rs.getInt("cnt");
-                            if (status == null) continue;
-                            if (status.equalsIgnoreCase("PENDING")) pending = cnt;
-                            else if (status.equalsIgnoreCase("CONFIRMED")) confirmed = cnt;
+
+                // Special layout for magacioner role: show APPROVED (confirmed) and REJECTED counts
+                boolean isMagacioner = userRole != null && userRole.equalsIgnoreCase("magacioner");
+                if (isMagacioner) {
+                    int approved = 0, rejected = 0;
+                    // Try to count by 'processed_by' (if DB has been migrated). Fallback to assignments where user_id = uid.
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT status, COUNT(*) AS cnt FROM assignments WHERE processed_by = ? GROUP BY status")) {
+                        ps.setInt(1, uid);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            while (rs.next()) {
+                                String status = rs.getString("status");
+                                int cnt = rs.getInt("cnt");
+                                if (status == null) continue;
+                                if (status.equalsIgnoreCase("CONFIRMED") || status.equalsIgnoreCase("APPROVED")) approved = cnt;
+                                else if (status.equalsIgnoreCase("REJECTED")) rejected = cnt;
+                            }
+                        }
+                    } catch (Exception ex) {
+                        // Fallback: count by assignments requested by this user (legacy behavior)
+                        try (PreparedStatement ps = conn.prepareStatement("SELECT status, COUNT(*) AS cnt FROM assignments WHERE user_id = ? GROUP BY status")) {
+                            ps.setInt(1, uid);
+                            try (ResultSet rs = ps.executeQuery()) {
+                                while (rs.next()) {
+                                    String status = rs.getString("status");
+                                    int cnt = rs.getInt("cnt");
+                                    if (status == null) continue;
+                                    if (status.equalsIgnoreCase("CONFIRMED") || status.equalsIgnoreCase("APPROVED")) approved = cnt;
+                                    else if (status.equalsIgnoreCase("REJECTED")) rejected = cnt;
+                                }
+                            }
+                        } catch (Exception ex2) {
+                            System.err.println("Failed counting assignments for magacioner: " + ex2.getMessage());
                         }
                     }
+
+                    // Set labels: reuse existing lblUserConfirmedAssignments as 'Approved' and lblUserPendingAssignments as 'Rejected'
+                    lblUserConfirmedAssignments.setText(String.valueOf(approved));
+                    lblUserPendingAssignments.setText(String.valueOf(rejected));
+
+                    // Personal assignments pie chart: only show APPROVED & REJECTED
+                    ObservableList<PieChart.Data> paData = FXCollections.observableArrayList();
+                    paData.add(new PieChart.Data("APPROVED", approved));
+                    paData.add(new PieChart.Data("REJECTED", rejected));
+                    if (personalAssignmentsChart != null) personalAssignmentsChart.setData(paData);
+
+                    // Top approved request of resource: try to query materials joined; fallback to recipe
+                    String topResource = "-";
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "SELECT m.name AS name, SUM(a.quantity) AS total_qty FROM assignments a JOIN materials m ON a.material_id = m.id WHERE a.processed_by = ? AND (a.status = 'CONFIRMED' OR a.status = 'APPROVED') GROUP BY m.name ORDER BY total_qty DESC LIMIT 1")) {
+                        ps.setInt(1, uid);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) {
+                                topResource = rs.getString("name");
+                            }
+                        }
+                    } catch (Exception ex) {
+                        // fallback: try recipe join
+                        try (PreparedStatement ps = conn.prepareStatement(
+                                "SELECT r.name AS name, SUM(a.quantity) AS total_qty FROM assignments a JOIN recipes r ON a.recipe_id = r.id WHERE a.processed_by = ? AND (a.status = 'CONFIRMED' OR a.status = 'APPROVED') GROUP BY r.name ORDER BY total_qty DESC LIMIT 1")) {
+                            ps.setInt(1, uid);
+                            try (ResultSet rs = ps.executeQuery()) {
+                                if (rs.next()) topResource = rs.getString("name");
+                            }
+                        } catch (Exception ex2) {
+                            // give up, leave topResource = "-"
+                        }
+                    }
+
+                    // Display top resource in the 'completed tasks' label (repurposed)
+                    lblUserCompletedTasks.setText(topResource == null ? "-" : topResource);
+
+                    // Tasks pie: show completed tasks as before for this user
+                    int completedTasks = 0;
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM tasks WHERE assigned_to = ? AND status = 'COMPLETED'")) {
+                        ps.setInt(1, uid);
+                        try (ResultSet rs = ps.executeQuery()) { if (rs.next()) completedTasks = rs.getInt(1); }
+                    }
+                    ObservableList<PieChart.Data> ptData = FXCollections.observableArrayList();
+                    ptData.add(new PieChart.Data("COMPLETED", completedTasks));
+                    ptData.add(new PieChart.Data("OTHER", Math.max(0, 1)));
+                    if (personalTasksChart != null) personalTasksChart.setData(ptData);
+
+                } else {
+                    // Default behavior for non-magacioner users (existing behavior)
+                    int pending = 0, confirmed = 0;
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT status, COUNT(*) AS cnt FROM assignments WHERE user_id = ? GROUP BY status")) {
+                        ps.setInt(1, uid);
+                        try (ResultSet rs = ps.executeQuery()) {
+                            while (rs.next()) {
+                                String status = rs.getString("status");
+                                int cnt = rs.getInt("cnt");
+                                if (status == null) continue;
+                                if (status.equalsIgnoreCase("PENDING")) pending = cnt;
+                                else if (status.equalsIgnoreCase("CONFIRMED")) confirmed = cnt;
+                            }
+                        }
+                    }
+                    lblUserPendingAssignments.setText(String.valueOf(pending));
+                    lblUserConfirmedAssignments.setText(String.valueOf(confirmed));
+
+                    ObservableList<PieChart.Data> paData = FXCollections.observableArrayList();
+                    paData.add(new PieChart.Data("PENDING", pending));
+                    paData.add(new PieChart.Data("CONFIRMED", confirmed));
+                    if (personalAssignmentsChart != null) personalAssignmentsChart.setData(paData);
+
+                    int completedTasks = 0;
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM tasks WHERE assigned_to = ? AND status = 'COMPLETED'")) {
+                        ps.setInt(1, uid);
+                        try (ResultSet rs = ps.executeQuery()) { if (rs.next()) completedTasks = rs.getInt(1); }
+                    }
+                    lblUserCompletedTasks.setText(String.valueOf(completedTasks));
+
+                    ObservableList<PieChart.Data> ptData = FXCollections.observableArrayList();
+                    ptData.add(new PieChart.Data("COMPLETED", completedTasks));
+                    ptData.add(new PieChart.Data("OTHER", Math.max(0, 1))); // placeholder to show pie if single slice
+                    if (personalTasksChart != null) personalTasksChart.setData(ptData);
                 }
-                lblUserPendingAssignments.setText(String.valueOf(pending));
-                lblUserConfirmedAssignments.setText(String.valueOf(confirmed));
-
-                ObservableList<PieChart.Data> paData = FXCollections.observableArrayList();
-                paData.add(new PieChart.Data("PENDING", pending));
-                paData.add(new PieChart.Data("CONFIRMED", confirmed));
-                if (personalAssignmentsChart != null) personalAssignmentsChart.setData(paData);
-
-                int completedTasks = 0;
-                try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM tasks WHERE assigned_to = ? AND status = 'COMPLETED'")) {
-                    ps.setInt(1, uid);
-                    try (ResultSet rs = ps.executeQuery()) { if (rs.next()) completedTasks = rs.getInt(1); }
-                }
-                lblUserCompletedTasks.setText(String.valueOf(completedTasks));
-
-                ObservableList<PieChart.Data> ptData = FXCollections.observableArrayList();
-                ptData.add(new PieChart.Data("COMPLETED", completedTasks));
-                ptData.add(new PieChart.Data("OTHER", Math.max(0, 1))); // placeholder to show pie if single slice
-                if (personalTasksChart != null) personalTasksChart.setData(ptData);
             }
 
         } catch (Exception ex) {
@@ -298,6 +411,7 @@ public class StatisticsController {
             lblUserPendingAssignments.setText("0");
             lblUserConfirmedAssignments.setText("0");
             lblUserCompletedTasks.setText("0");
+            if (lblUserRole != null) lblUserRole.setText("-");
             if (personalAssignmentsChart != null) personalAssignmentsChart.setData(FXCollections.emptyObservableList());
             if (personalTasksChart != null) personalTasksChart.setData(FXCollections.emptyObservableList());
         }

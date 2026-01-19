@@ -12,8 +12,8 @@ import java.util.Optional;
 public class MaterialDao {
 
     public Material create(Material m) throws SQLException {
-        // include minimum_quantity when creating new material
-        String sql = "INSERT INTO materials (name, quantity, unit, supplier, minimum_quantity) VALUES (?, ?, ?, ?, ?)";
+        // include minimum_quantity and last_purchase_price when creating new material
+        String sql = "INSERT INTO materials (name, quantity, unit, supplier, minimum_quantity, last_purchase_price) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, m.getName());
@@ -21,6 +21,7 @@ public class MaterialDao {
             ps.setString(3, m.getUnit());
             ps.setString(4, m.getSupplier());
             ps.setDouble(5, m.getMinimumQuantity());
+            if (m.getLastPurchasePrice() == null) ps.setNull(6, java.sql.Types.DECIMAL); else ps.setDouble(6, m.getLastPurchasePrice());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) { if (keys.next()) m.setId(keys.getInt(1)); }
         }
@@ -60,7 +61,7 @@ public class MaterialDao {
     }
 
     public Optional<Material> update(Material m) throws SQLException {
-        String sql = "UPDATE materials SET name = ?, quantity = ?, unit = ?, supplier = ?, minimum_quantity = ? WHERE id = ?";
+        String sql = "UPDATE materials SET name = ?, quantity = ?, unit = ?, supplier = ?, minimum_quantity = ?, last_purchase_price = ? WHERE id = ?";
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, m.getName());
@@ -68,7 +69,8 @@ public class MaterialDao {
             ps.setString(3, m.getUnit());
             ps.setString(4, m.getSupplier());
             ps.setDouble(5, m.getMinimumQuantity());
-            ps.setInt(6, m.getId());
+            if (m.getLastPurchasePrice() == null) ps.setNull(6, java.sql.Types.DECIMAL); else ps.setDouble(6, m.getLastPurchasePrice());
+            ps.setInt(7, m.getId());
             int updated = ps.executeUpdate();
             if (updated > 0) return findById(m.getId());
         }

@@ -34,6 +34,8 @@ public class MainController {
     @FXML private Button btnUsers;
     @FXML private Button btnStatistics;
     @FXML private Button btnReports;
+    @FXML private Button btnDeliveries;
+    @FXML private Button btnProducts; // Added button for Products
 
     @FXML
     public void initialize() {
@@ -131,6 +133,10 @@ public class MainController {
             // magacioner should not see recipes or reports
             if (btnRecipes != null) { btnRecipes.setVisible(false); btnRecipes.setManaged(false); }
             if (btnReports != null) { btnReports.setVisible(false); btnReports.setManaged(false); }
+            // magacioner should see Deliveries
+            if (btnDeliveries != null) { btnDeliveries.setVisible(true); btnDeliveries.setManaged(true); }
+            // magacioner should see Products (Proizvodi)
+            if (btnProducts != null) { btnProducts.setVisible(true); btnProducts.setManaged(true); }
             // magacioner should still be able to view statistics (personal stats only)
             return;
         }
@@ -142,6 +148,8 @@ public class MainController {
             // radnik nema pristup izvještajima i receptima
             if (btnReports != null) { btnReports.setVisible(false); btnReports.setManaged(false); }
             if (btnRecipes != null) { btnRecipes.setVisible(false); btnRecipes.setManaged(false); }
+            // radnik should not see products
+            if (btnProducts != null) { btnProducts.setVisible(false); btnProducts.setManaged(false); }
             // radnik should still be able to view statistics (personal stats only)
             return;
         }
@@ -239,9 +247,21 @@ public class MainController {
         System.exit(0);
     }
 
+    @FXML
+    private void handleViewDeliveries() {
+        setActiveButton(btnDeliveries);
+        loadPage("/com/scms/view/dostave.fxml");
+    }
+
+    @FXML
+    private void handleViewProducts() {
+        setActiveButton(btnProducts);
+        loadPage("/com/scms/view/products.fxml");
+    }
+
     // helper to mark active menu button using CSS class
     private void setActiveButton(Button active) {
-        Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnRequests, btnRecipes, btnReports, btnUsers, btnStatistics};
+        Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnRequests, btnRecipes, btnReports, btnDeliveries, btnProducts, btnUsers, btnStatistics};
         for (Button b : buttons) {
             if (b == null) continue;
             if (b.equals(active)) {
@@ -264,29 +284,26 @@ public class MainController {
             // show loading overlay while loading FXML off the FX thread
             LoadingOverlay.show(contentArea);
 
-            // load page in background to avoid blocking UI thread when parsing large FXML
-            javafx.concurrent.Task<Parent> loaderTask = new javafx.concurrent.Task<>() {
-                @Override protected Parent call() throws Exception {
-                    return FXMLLoader.load(pageUrl);
+            // load page on FX thread to avoid tricky background FXMLLoader issues
+            Platform.runLater(() -> {
+                try {
+                    Parent view = FXMLLoader.load(pageUrl);
+                    if (view != null) {
+                        try { view.setStyle("-fx-background-color: transparent;"); } catch (Exception ignore) {}
+                        contentArea.getChildren().setAll(view);
+                    } else {
+                        contentArea.getChildren().clear();
+                    }
+                } catch (Throwable ex) {
+                    System.err.println("Failed to load page '" + fxmlPath + "' on FX thread: " + (ex == null ? "unknown" : ex.toString()));
+                    if (ex != null) ex.printStackTrace();
+                } finally {
+                    LoadingOverlay.hide(contentArea);
                 }
-            };
-            loaderTask.setOnSucceeded(ev -> {
-                Parent view = loaderTask.getValue();
-                try { if (view != null) view.setStyle("-fx-background-color: transparent;"); } catch (Exception ignore) {}
-                contentArea.getChildren().setAll(view);
-                LoadingOverlay.hide(contentArea);
             });
-            loaderTask.setOnFailed(ev -> {
-                Throwable ex = loaderTask.getException();
-                System.err.println("Failed to load page '" + fxmlPath + "': " + (ex == null ? "unknown" : ex.getMessage()));
-                LoadingOverlay.hide(contentArea);
-            });
-            Thread t = new Thread(loaderTask, "page-loader");
-            t.setDaemon(true);
-            t.start();
 
         } catch (Exception e) {
-            System.err.println("Failed to load page '" + fxmlPath + "': " + e.getMessage());
+            System.err.println("Error loading page: " + e.getMessage());
             LoadingOverlay.hide(contentArea);
         }
     }

@@ -40,6 +40,12 @@
 
                         <Label text="Završeni zadaci:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
                         <Label fx:id="lblCompletedTasks" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+
+                        <Label text="Ukupna vrijednost uvoza:" GridPane.rowIndex="5" GridPane.columnIndex="0" />
+                        <Label fx:id="lblTotalImportValue" text="-" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+
+                        <Label text="Ukupna vrijednost izvoza:" GridPane.rowIndex="6" GridPane.columnIndex="0" />
+                        <Label fx:id="lblTotalExportValue" text="-" GridPane.rowIndex="6" GridPane.columnIndex="1" />
                     </children>
                 </GridPane>
 
@@ -62,14 +68,17 @@
                         <Label text="Korisnik:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
                         <Label fx:id="lblUserName" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" />
 
-                        <Label text="Zahtjevi (PENDING):" GridPane.rowIndex="1" GridPane.columnIndex="0" />
-                        <Label fx:id="lblUserPendingAssignments" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                        <Label text="Uloga:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                        <Label fx:id="lblUserRole" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1" />
 
-                        <Label text="Zahtjevi (CONFIRMED):" GridPane.rowIndex="2" GridPane.columnIndex="0" />
-                        <Label fx:id="lblUserConfirmedAssignments" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                        <Label text="Zahtjevi (PENDING):" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                        <Label fx:id="lblUserPendingAssignments" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1" />
 
-                        <Label text="Završeni zadaci:" GridPane.rowIndex="3" GridPane.columnIndex="0" />
-                        <Label fx:id="lblUserCompletedTasks" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                        <Label text="Zahtjevi (CONFIRMED):" GridPane.rowIndex="3" GridPane.columnIndex="0" />
+                        <Label fx:id="lblUserConfirmedAssignments" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+                        <Label text="Završeni zadaci:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
+                        <Label fx:id="lblUserCompletedTasks" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1" />
                     </children>
                 </GridPane>
 

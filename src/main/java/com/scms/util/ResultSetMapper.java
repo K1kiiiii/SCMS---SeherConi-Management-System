@@ -36,6 +36,8 @@ public class ResultSetMapper {
         m.setSupplier(rs.getString("supplier"));
         Timestamp t = rs.getTimestamp("updated_at");
         if (t != null) m.setUpdatedAt(t.toLocalDateTime());
+        // map last_purchase_price if present
+        try { double lp = rs.getDouble("last_purchase_price"); if (!rs.wasNull()) m.setLastPurchasePrice(lp); } catch (SQLException ignored) {}
         return m;
     }
 

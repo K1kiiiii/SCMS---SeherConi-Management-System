@@ -10,6 +10,9 @@ public class InventoryRow {
     private double inflow; // Ulaz (količina)
     private double outflow; // Izlaz (količina)
     private double balance; // Stanje
+    // monetary values for inflow/outflow
+    private double inflowValue; // value of imports (currency)
+    private double outflowValue; // value of exports (currency)
 
     public InventoryRow() {}
 
@@ -33,5 +36,10 @@ public class InventoryRow {
 
     public double getBalance() { return balance; }
     public void setBalance(double balance) { this.balance = balance; }
-}
 
+    public double getInflowValue() { return inflowValue; }
+    public void setInflowValue(double inflowValue) { this.inflowValue = inflowValue; }
+
+    public double getOutflowValue() { return outflowValue; }
+    public void setOutflowValue(double outflowValue) { this.outflowValue = outflowValue; }
+}

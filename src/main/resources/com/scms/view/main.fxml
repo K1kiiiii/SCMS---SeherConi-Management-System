@@ -58,6 +58,8 @@
                 <Button fx:id="btnRequests" text="Zahtjevi" maxWidth="Infinity" onAction="#handleViewRequests" styleClass="side-menu-button" />
                 <Button fx:id="btnRecipes" text="Recepti" maxWidth="Infinity" onAction="#handleViewRecipes" styleClass="side-menu-button" />
                 <Button fx:id="btnReports" text="Izvještaji" maxWidth="Infinity" onAction="#handleReports" styleClass="side-menu-button" />
+                <Button fx:id="btnDeliveries" text="Dostave" maxWidth="Infinity" onAction="#handleViewDeliveries" styleClass="side-menu-button" />
+                <Button fx:id="btnProducts" text="Proizvodi" maxWidth="Infinity" onAction="#handleViewProducts" styleClass="side-menu-button" />
                 <Button fx:id="btnUsers" text="Korisnici" maxWidth="Infinity" onAction="#handleManageUsers" styleClass="side-menu-button" />
                 <Button fx:id="btnStatistics" text="Statistika" maxWidth="Infinity" onAction="#handleStatisticsOverview" styleClass="side-menu-button" />
             </children>
@@ -65,7 +67,7 @@
     </left>
 
     <center>
-        <StackPane fx:id="contentArea" style="-fx-background-color: transparent;">
+        <StackPane fx:id="contentArea" id="contentArea" style="-fx-background-color: transparent;">
             <children>
                 <Label fx:id="welcomeLabel" text="Dobrodošli u SCMS"/>
             </children>

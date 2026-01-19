@@ -3,6 +3,8 @@ package com.scms.dao;
 import com.scms.config.DatabaseConfig;
 import com.scms.model.Assignment;
 import com.scms.util.ResultSetMapper;
+import com.scms.util.RoleManager;
+import com.scms.model.InventoryMovement;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -123,7 +125,8 @@ public class AssignmentDao {
         String selectAssignmentSql = "SELECT material_id, quantity, status FROM assignments WHERE id = ? FOR UPDATE";
         String selectQtySql = "SELECT quantity FROM materials WHERE id = ? FOR UPDATE";
         String updateQtySql = "UPDATE materials SET quantity = quantity - ? WHERE id = ?";
-        String updateAssignmentSql = "UPDATE assignments SET status = 'CONFIRMED', assigned_at = CURRENT_TIMESTAMP WHERE id = ?";
+        // set processed_by and processed_at so we can report who processed
+        String updateAssignmentSql = "UPDATE assignments SET status = 'CONFIRMED', assigned_at = CURRENT_TIMESTAMP, processed_by = ?, processed_at = CURRENT_TIMESTAMP WHERE id = ?";
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
@@ -162,10 +165,31 @@ public class AssignmentDao {
                     if (updated <= 0) throw new SQLException("Neuspješno ažuriranje količine sirovine sa id=" + materialId);
                 }
 
+                // update assignment with processed_by
+                int processorId = -1;
+                try { processorId = RoleManager.getLoggedInUser().getId(); } catch (Exception ignored) {}
                 try (PreparedStatement ps = conn.prepareStatement(updateAssignmentSql)) {
-                    ps.setInt(1, assignmentId);
+                    if (processorId <= 0) ps.setNull(1, java.sql.Types.INTEGER); else ps.setInt(1, processorId);
+                    ps.setInt(2, assignmentId);
                     int updated = ps.executeUpdate();
                     if (updated <= 0) throw new SQLException("Failed to update assignment status for id=" + assignmentId);
+                }
+
+                // insert OUT inventory movement linked to this assignment
+                try {
+                    InventoryMovement mv = new InventoryMovement();
+                    mv.setMaterialId(materialId);
+                    mv.setType("OUT");
+                    mv.setQuantity(qty);
+                    mv.setUserId(processorId <= 0 ? null : processorId);
+                    mv.setRelatedAssignmentId(assignmentId);
+                    // total/unit price unknown here; left null
+                    // use separate Deliveries tab for export price
+                    InventoryMovementDao imDao = new InventoryMovementDao();
+                    imDao.insert(mv);
+                } catch (Exception e) {
+                    // movement logging should not prevent approval; log and continue
+                    System.err.println("Failed to log OUT movement for assignment " + assignmentId + ": " + e.getMessage());
                 }
 
                 conn.commit();
@@ -180,12 +204,15 @@ public class AssignmentDao {
     }
 
     public Optional<Assignment> rejectRequest(int assignmentId, String reason) throws SQLException {
-        String updateSql = "UPDATE assignments SET status = 'REJECTED', notes = CONCAT(IFNULL(notes, ''), ?) WHERE id = ?";
+        String updateSql = "UPDATE assignments SET status = 'REJECTED', notes = CONCAT(IFNULL(notes, ''), ?), processed_by = ?, processed_at = CURRENT_TIMESTAMP WHERE id = ?";
+        int processorId = -1;
+        try { processorId = RoleManager.getLoggedInUser().getId(); } catch (Exception ignored) {}
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(updateSql)) {
             String appended = "\n[REJECTED] " + (reason != null ? reason : "");
             ps.setString(1, appended);
-            ps.setInt(2, assignmentId);
+            if (processorId <= 0) ps.setNull(2, java.sql.Types.INTEGER); else ps.setInt(2, processorId);
+            ps.setInt(3, assignmentId);
             int updated = ps.executeUpdate();
             if (updated > 0) return findById(assignmentId);
             return Optional.empty();
