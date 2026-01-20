@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.AdminTasksController" spacing="12" style="-fx-padding:16;">
+    <children>
+        <HBox spacing="8">
+            <children>
+                <Label text="Zadaci" styleClass="page-title" HBox.hgrow="ALWAYS" />
+                <Button text="Osvježi" onAction="#onRefresh" fx:id="refreshBtn" />
+            </children>
+        </HBox>
+        <TableView fx:id="tasksTable" prefHeight="400">
+            <columns>
+                <TableColumn fx:id="colId" text="#" prefWidth="60" />
+                <TableColumn fx:id="colRecipe" text="Recept" prefWidth="200" />
+                <TableColumn fx:id="colAssigned" text="Radnik" prefWidth="160" />
+                <TableColumn fx:id="colTarget" text="Cilj" prefWidth="120" />
+                <TableColumn fx:id="colStatus" text="Status" prefWidth="120" />
+                <TableColumn fx:id="colStarted" text="Započeto" prefWidth="180" />
+            </columns>
+        </TableView>
+    </children>
+</VBox>
