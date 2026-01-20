@@ -36,6 +36,7 @@ public class MainController {
     @FXML private Button btnReports;
     @FXML private Button btnDeliveries;
     @FXML private Button btnProducts; // Added button for Products
+    @FXML private Button btnAdminTasks; // admin-only tasks view
 
     @FXML
     public void initialize() {
@@ -138,6 +139,8 @@ public class MainController {
             // magacioner should see Products (Proizvodi)
             if (btnProducts != null) { btnProducts.setVisible(true); btnProducts.setManaged(true); }
             // magacioner should still be able to view statistics (personal stats only)
+            // hide AdminTasks for non-admin roles
+            if (btnAdminTasks != null) { btnAdminTasks.setVisible(false); btnAdminTasks.setManaged(false); }
             return;
         }
 
@@ -150,6 +153,7 @@ public class MainController {
             if (btnRecipes != null) { btnRecipes.setVisible(false); btnRecipes.setManaged(false); }
             // radnik should not see products
             if (btnProducts != null) { btnProducts.setVisible(false); btnProducts.setManaged(false); }
+            if (btnAdminTasks != null) { btnAdminTasks.setVisible(false); btnAdminTasks.setManaged(false); }
             // radnik should still be able to view statistics (personal stats only)
             return;
         }
@@ -259,9 +263,15 @@ public class MainController {
         loadPage("/com/scms/view/products.fxml");
     }
 
+    @FXML
+    private void handleAdminTasks() {
+        setActiveButton(btnAdminTasks);
+        loadPage("/com/scms/view/admin_tasks.fxml");
+    }
+
     // helper to mark active menu button using CSS class
     private void setActiveButton(Button active) {
-        Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnRequests, btnRecipes, btnReports, btnDeliveries, btnProducts, btnUsers, btnStatistics};
+        Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnAdminTasks, btnRequests, btnRecipes, btnReports, btnDeliveries, btnProducts, btnUsers, btnStatistics};
         for (Button b : buttons) {
             if (b == null) continue;
             if (b.equals(active)) {

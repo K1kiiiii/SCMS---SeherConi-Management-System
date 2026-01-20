@@ -52,6 +52,7 @@ public class DashboardController {
     @FXML private ScrollPane tasksScroll;
     @FXML private VBox tasksBox;
     @FXML private Label tasksHeader;
+    @FXML private Button tasksRefreshBtn;
     @FXML private VBox criticalCardContent;
     @FXML private VBox criticalCard;
     @FXML private ScrollPane criticalScroll;
@@ -190,6 +191,19 @@ public class DashboardController {
         Thread t = new Thread(loadTask, "dashboard-loader");
         t.setDaemon(true);
         t.start();
+
+        // safe UI wiring: attach refresh button action (if present) and ensure scroll panes don't show horizontal scroll
+        if (tasksRefreshBtn != null) {
+            tasksRefreshBtn.setOnAction(evt -> onTasksRefresh());
+        }
+        if (tasksScroll != null) {
+            tasksScroll.setFitToWidth(true);
+            tasksScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        }
+        if (criticalScroll != null) {
+            criticalScroll.setFitToWidth(true);
+            criticalScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        }
     }
 
     // Modified populateCriticalCard that accepts a Runnable callback executed on completion (on FX thread)
@@ -268,6 +282,8 @@ public class DashboardController {
     private void loadInProgressTasks(Runnable onComplete) {
         if (tasksList == null) { if (onComplete != null) onComplete.run(); return; }
         tasksList.getChildren().clear();
+        // show overlay while loading
+        LoadingOverlay.show(titleLabel);
         javafx.concurrent.Task<List<Task>> task = new javafx.concurrent.Task<>() {
             @Override protected List<Task> call() throws Exception {
                 List<Task> all = taskDao.findAll();
@@ -313,16 +329,74 @@ public class DashboardController {
                 tasksList.getChildren().add(row);
             }
             if (tasksScroll != null) tasksScroll.setVvalue(0);
+            LoadingOverlay.hide(titleLabel);
             if (onComplete != null) onComplete.run();
         });
         task.setOnFailed(ev -> {
             logError(task.getException(), "loadInProgressTasks");
+            LoadingOverlay.hide(titleLabel);
             if (onComplete != null) onComplete.run();
         });
         Thread th = new Thread(task, "inprogress-tasks-loader");
         th.setDaemon(true);
         th.start();
     }
+
+    // Load tasks for logged-in worker and populate tasksList — placed early to avoid forward-reference warnings
+    private void loadWorkerTasks(Runnable onComplete) {
+        User u = RoleManager.getLoggedInUser();
+        if (tasksList != null) tasksList.getChildren().clear();
+        if (u == null) {
+            System.out.println("loadWorkerTasks: no logged-in user");
+            if (onComplete != null) onComplete.run();
+            return;
+        }
+
+        LoadingOverlay.show(titleLabel);
+         javafx.concurrent.Task<List<Task>> task = new javafx.concurrent.Task<>() {
+             @Override protected List<Task> call() throws Exception {
+                 return taskDao.findByAssignedUser(u.getId());
+             }
+         };
+         task.setOnSucceeded(ev -> {
+             List<Task> tasks = task.getValue();
+             if (tasks == null || tasks.isEmpty()) {
+                 if (tasksBox != null) {
+                     tasksBox.setManaged(true);
+                     tasksBox.setVisible(true);
+                 }
+                 Label empty = new Label("Trenutno nema dodijeljenih zadataka");
+                 empty.getStyleClass().add("ok-message");
+                 empty.setMaxWidth(Double.MAX_VALUE);
+                 tasksList.getChildren().add(empty);
+                 if (tasksScroll != null) tasksScroll.setVvalue(0);
+                 LoadingOverlay.hide(titleLabel);
+                 if (onComplete != null) onComplete.run();
+                 return;
+             } else {
+                 if (tasksBox != null) {
+                     tasksBox.setManaged(true);
+                     tasksBox.setVisible(true);
+                 }
+             }
+
+            for (Task t : tasks) {
+                VBox card = createTaskCard(t);
+                tasksList.getChildren().add(card);
+            }
+            if (tasksScroll != null) tasksScroll.setVvalue(0);
+            LoadingOverlay.hide(titleLabel);
+             if (onComplete != null) onComplete.run();
+         });
+         task.setOnFailed(ev -> {
+             logError(task.getException(), "loadWorkerTasks");
+             LoadingOverlay.hide(titleLabel);
+             if (onComplete != null) onComplete.run();
+         });
+         Thread th = new Thread(task, "worker-tasks-loader");
+         th.setDaemon(true);
+         th.start();
+     }
 
     // Build card data (title + computed value) depending on role — runs on background thread
     private List<CardInfo> buildCardDataForRole() throws SQLException {
@@ -444,56 +518,19 @@ public class DashboardController {
          }
     }
 
-    // Load tasks for logged-in worker and populate tasksList — placed early to avoid forward-reference warnings
-    private void loadWorkerTasks(Runnable onComplete) {
-        User u = RoleManager.getLoggedInUser();
-        if (tasksList != null) tasksList.getChildren().clear();
-        if (u == null) {
-            System.out.println("loadWorkerTasks: no logged-in user");
-            if (onComplete != null) onComplete.run();
-            return;
+    @FXML
+    private void onTasksRefresh() {
+        // show overlay on the dashboard content while refreshing tasks
+        LoadingOverlay.show(titleLabel);
+        // perform a refresh depending on role; use existing async methods with onComplete to hide overlay
+        Runnable onComplete = () -> LoadingOverlay.hide(titleLabel);
+        try {
+            if (currentRole.equals("ADMIN")) loadInProgressTasks(onComplete);
+            else loadWorkerTasks(onComplete);
+        } catch (Exception ex) {
+            logError(ex, "onTasksRefresh");
+            LoadingOverlay.hide(titleLabel);
         }
-
-        javafx.concurrent.Task<List<Task>> task = new javafx.concurrent.Task<>() {
-            @Override protected List<Task> call() throws Exception {
-                return taskDao.findByAssignedUser(u.getId());
-            }
-        };
-        task.setOnSucceeded(ev -> {
-            List<Task> tasks = task.getValue();
-            if (tasks == null || tasks.isEmpty()) {
-                if (tasksBox != null) {
-                    tasksBox.setManaged(true);
-                    tasksBox.setVisible(true);
-                }
-                Label empty = new Label("Trenutno nema dodijeljenih zadataka");
-                empty.getStyleClass().add("ok-message");
-                empty.setMaxWidth(Double.MAX_VALUE);
-                tasksList.getChildren().add(empty);
-                if (tasksScroll != null) tasksScroll.setVvalue(0);
-                if (onComplete != null) onComplete.run();
-                return;
-            } else {
-                if (tasksBox != null) {
-                    tasksBox.setManaged(true);
-                    tasksBox.setVisible(true);
-                }
-            }
-
-            for (Task t : tasks) {
-                VBox card = createTaskCard(t);
-                tasksList.getChildren().add(card);
-            }
-            if (tasksScroll != null) tasksScroll.setVvalue(0);
-            if (onComplete != null) onComplete.run();
-        });
-        task.setOnFailed(ev -> {
-            logError(task.getException(), "loadWorkerTasks");
-            if (onComplete != null) onComplete.run();
-        });
-        Thread th = new Thread(task, "worker-tasks-loader");
-        th.setDaemon(true);
-        th.start();
     }
 
     // Create card UI nodes on the FX thread
@@ -502,8 +539,6 @@ public class DashboardController {
         titleLbl.getStyleClass().add("card-title");
         // allow wrapping and full width so long titles don't truncate with ellipsis
         titleLbl.setWrapText(true);
-        // fallback inline styling to guarantee readability if stylesheet isn't loaded/applied
-        titleLbl.setStyle("-fx-font-size:14px; -fx-font-weight:700; -fx-text-fill:#4A3428;");
 
         Label valueLbl = new Label(value != null ? value : "0");
         valueLbl.getStyleClass().add("card-value");

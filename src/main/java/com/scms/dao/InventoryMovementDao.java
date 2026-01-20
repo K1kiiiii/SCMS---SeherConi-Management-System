@@ -55,6 +55,15 @@ public class InventoryMovementDao {
         return list;
     }
 
+    public List<InventoryMovement> findAll() throws Exception {
+        String sql = "SELECT * FROM inventory_movements ORDER BY created_at DESC";
+        List<InventoryMovement> list = new ArrayList<>();
+        try (Connection conn = DatabaseConfig.getConnection(); PreparedStatement ps = conn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) list.add(map(rs));
+        }
+        return list;
+    }
+
     private InventoryMovement map(ResultSet rs) throws Exception {
         InventoryMovement mv = new InventoryMovement();
         mv.setId(rs.getInt("id"));
@@ -72,4 +81,3 @@ public class InventoryMovementDao {
         return mv;
     }
 }
-

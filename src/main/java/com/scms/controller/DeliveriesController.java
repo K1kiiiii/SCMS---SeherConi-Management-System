@@ -5,6 +5,7 @@ import com.scms.dao.ProductDao;
 import com.scms.model.InventoryMovement;
 import com.scms.model.Product;
 import com.scms.util.DialogUtils;
+import com.scms.util.LoadingOverlay;
 import com.scms.util.RoleManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -35,19 +36,36 @@ public class DeliveriesController {
 
     @FXML
     public void initialize() {
-        loadDeliveries();
+        loadDeliveriesAsync();
     }
 
-    private void loadDeliveries() {
-        try {
+    private void loadDeliveriesAsync() {
+        // show overlay while loading deliveries
+        LoadingOverlay.show(deliveriesTable);
+        javafx.concurrent.Task<List<InventoryMovement>> task = new javafx.concurrent.Task<>() {
+            @Override
+            protected List<InventoryMovement> call() throws Exception {
+                // fetch movements (here items list may be loaded later)
+                return imDao.findAll();
+            }
+        };
+        task.setOnSucceeded(ev -> {
+            List<InventoryMovement> list = task.getValue();
+            items.setAll(list);
             deliveriesTable.setItems(items);
-        } catch (Exception ex) {
-            System.err.println("Failed loading deliveries: " + ex.getMessage());
-        }
+            LoadingOverlay.hide(deliveriesTable);
+        });
+        task.setOnFailed(ev -> {
+            Throwable ex = task.getException();
+            System.err.println("Failed loading deliveries async: " + (ex == null ? "unknown" : ex.toString()));
+            if (ex != null) ex.printStackTrace();
+            LoadingOverlay.hide(deliveriesTable);
+        });
+        Thread th = new Thread(task, "deliveries-loader"); th.setDaemon(true); th.start();
     }
 
     @FXML
-    private void handleRefresh() { loadDeliveries(); }
+    private void handleRefresh() { loadDeliveriesAsync(); }
 
     @FXML
     private void handleNewDelivery() {
@@ -122,7 +140,7 @@ public class DeliveriesController {
         if (res.isPresent() && res.get()) {
             Alert info = new Alert(Alert.AlertType.INFORMATION); DialogUtils.styleAlert(info);
             info.setTitle("Izvoz zabilježen"); info.setHeaderText(null); info.setContentText("Izvoz uspješno zabilježen."); info.showAndWait();
-            loadDeliveries();
+            loadDeliveriesAsync();
         }
     }
 }

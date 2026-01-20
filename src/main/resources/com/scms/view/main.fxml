@@ -55,6 +55,7 @@
             <children>
                 <Button fx:id="btnDashboard" text="Nadzorna ploča" maxWidth="Infinity" onAction="#handleDashboard" styleClass="side-menu-button" />
                 <Button fx:id="btnWarehouse" text="Skladište" maxWidth="Infinity" onAction="#handleViewItems" styleClass="side-menu-button" />
+                <Button fx:id="btnAdminTasks" text="Svi zadaci" maxWidth="Infinity" onAction="#handleAdminTasks" styleClass="side-menu-button" />
                 <Button fx:id="btnRequests" text="Zahtjevi" maxWidth="Infinity" onAction="#handleViewRequests" styleClass="side-menu-button" />
                 <Button fx:id="btnRecipes" text="Recepti" maxWidth="Infinity" onAction="#handleViewRecipes" styleClass="side-menu-button" />
                 <Button fx:id="btnReports" text="Izvještaji" maxWidth="Infinity" onAction="#handleReports" styleClass="side-menu-button" />

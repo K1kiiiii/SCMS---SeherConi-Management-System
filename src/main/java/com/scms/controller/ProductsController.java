@@ -7,6 +7,7 @@ import com.scms.model.Product;
 import com.scms.model.Recipe;
 import com.scms.model.Task;
 import com.scms.util.DialogUtils;
+import com.scms.util.LoadingOverlay;
 import com.scms.util.RoleManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -120,6 +121,8 @@ public class ProductsController {
     }
 
     private void loadProductsAsync() {
+        // show overlay on the products table (will attach to contentArea when available)
+        LoadingOverlay.show(productsTable);
         javafx.concurrent.Task<List<Product>> task = new javafx.concurrent.Task<>() {
             @Override
             protected List<Product> call() throws Exception {
@@ -132,11 +135,13 @@ public class ProductsController {
             List<Product> list = task.getValue();
             items.setAll(list);
             productsTable.setItems(items);
+            LoadingOverlay.hide(productsTable);
         });
         task.setOnFailed(ev -> {
             Throwable ex = task.getException();
             System.err.println("Failed loading products async: " + (ex == null ? "unknown" : ex.toString()));
             if (ex != null) ex.printStackTrace();
+            LoadingOverlay.hide(productsTable);
         });
         Thread t = new Thread(task, "products-loader");
         t.setDaemon(true);

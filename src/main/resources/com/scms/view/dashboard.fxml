@@ -15,7 +15,13 @@
         <!-- Tasks area (role-aware): for RADNIK shows "Moji zadaci", for ADMIN shows "Zadaci u toku", hidden for MAGACIONER -->
         <VBox fx:id="tasksBox" spacing="8" visible="false" managed="false">
             <children>
-                <Label fx:id="tasksHeader" text="" styleClass="tasks-header" />
+                <!-- Header with refresh button -->
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <children>
+                        <Label fx:id="tasksHeader" text="" styleClass="tasks-header" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="tasksRefreshBtn" text="Osvježi" onAction="#onTasksRefresh" mnemonicParsing="false" />
+                    </children>
+                </HBox>
                 <!-- Scrollable area for task rows -->
                 <ScrollPane fx:id="tasksScroll" styleClass="tasks-scroll" fitToWidth="true" prefHeight="180" vbarPolicy="AS_NEEDED" hbarPolicy="NEVER">
                     <content>
