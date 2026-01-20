@@ -3,10 +3,19 @@
 <?import javafx.scene.layout.*?>
 <BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.DeliveriesController">
     <top>
-        <ToolBar>
-            <Button text="Novi izvoz" onAction="#handleNewDelivery" />
-            <Button text="Osvježi" onAction="#handleRefresh" />
-        </ToolBar>
+        <VBox>
+            <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding:8 0 8 0;">
+                <VBox spacing="4">
+                    <Label text="Dostave" styleClass="page-title" />
+                    <Label text="Pregled dostava" styleClass="page-subtitle" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+            </HBox>
+            <ToolBar>
+                <Button text="Novi izvoz" onAction="#handleNewDelivery" />
+                <Button text="Osvježi" onAction="#handleRefresh" />
+            </ToolBar>
+        </VBox>
     </top>
     <center>
         <TableView fx:id="deliveriesTable">

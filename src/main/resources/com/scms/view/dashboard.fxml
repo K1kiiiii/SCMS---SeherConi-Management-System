@@ -18,7 +18,7 @@
                 <!-- Header with refresh button -->
                 <HBox spacing="8" alignment="CENTER_LEFT">
                     <children>
-                        <Label fx:id="tasksHeader" text="" styleClass="tasks-header" HBox.hgrow="ALWAYS" />
+                        <Label fx:id="tasksHeader" id="tasksHeaderLabel" text="" styleClass="tasks-header tasks-header-large" style="-fx-font-size:24px; -fx-font-weight:800;" HBox.hgrow="ALWAYS" />
                         <Button fx:id="tasksRefreshBtn" text="Osvježi" onAction="#onTasksRefresh" mnemonicParsing="false" />
                     </children>
                 </HBox>

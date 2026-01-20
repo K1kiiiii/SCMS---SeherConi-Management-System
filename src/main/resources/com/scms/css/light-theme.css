@@ -90,6 +90,140 @@ HBox.login-action { -fx-alignment: CENTER; }
 
 .message-label { -fx-text-fill: #f44336; }
 
+/* --------------------
+   SHARED: semantic typography & component layout
+   (Safe to paste into both theme files; does NOT touch login selectors)
+   -------------------- */
+
+/* Typography scale (semantic classes) */
+.page-title {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+    -fx-padding: 0 0 8 0;
+}
+
+.section-title, .card-title {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-padding: 0 0 6 0;
+}
+
+.table-header {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 6 8 6 8;
+}
+
+.body-text {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+    -fx-font-weight: 400;
+}
+
+.meta-text {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 12px;
+    -fx-font-weight: 400;
+    -fx-opacity: 0.92;
+}
+
+.card-body {
+    -fx-padding: 12;
+    -fx-background-radius: 12;
+}
+
+/* TableView visual cleanup & UX improvements (shared) */
+.table-view {
+    -fx-table-cell-border-color: transparent;
+    -fx-table-header-border-color: transparent;
+    -fx-background-color: transparent;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.table-view .column-header .label {
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-weight: 600;
+    -fx-font-size: 13px;
+    -fx-padding: 8 12;
+    -fx-background-radius: 6;
+    -fx-background-insets: 0;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-view .column-header .separator,
+.table-view .column-header .column-header-background .separator {
+    -fx-background-color: transparent;
+}
+
+.table-view .cell {
+    -fx-padding: 10 12;
+    -fx-alignment: CENTER_LEFT;
+    -fx-background-color: transparent;
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 13px;
+}
+
+.table-row-cell:even { -fx-background-color: transparent; }
+.table-row-cell:odd { -fx-background-color: transparent; }
+
+.table-row-cell:hover { -fx-background-color: rgba(0,0,0,0.03); }
+
+.table-row-cell:selected {
+    -fx-background-color: -fx-selection-bar;
+    -fx-background-insets: 0;
+    -fx-background-radius: 6;
+}
+.table-row-cell:selected .cell, .table-row-cell:selected .label {
+    -fx-text-fill: -fx-selection-bar-text;
+}
+
+.table-view .scroll-bar { -fx-pref-width: 10; }
+.table-view .column-header .label { -fx-wrap-text: false; -fx-text-overrun: CLIP; }
+
+/* ComboBox / ChoiceBox improvements (shared) */
+.combo-box, .choice-box {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 6 36 6 10;
+    -fx-font-family: "League Spartan", sans-serif;
+    -fx-font-size: 14px;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 6 10 6 10;
+}
+
+.combo-box .arrow-button .arrow {
+    -fx-shape: "M0 0 L6 0 L3 4 Z";
+    -fx-background-color: -fx-text-fill;
+    -fx-padding: 0;
+    -fx-scale-x: 1;
+    -fx-scale-y: 1;
+}
+
+.combo-box .list-cell,
+.choice-box .list-cell {
+    -fx-min-height: 28px;
+    -fx-padding: 6 10;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.combo-box:focused, .choice-box:focused { -fx-border-color: -fx-focus-color; -fx-effect: none; }
+.combo-box .list-view, .choice-box .list-view { -fx-background-color: transparent; }
+
+.body-text, .meta-text, .card-title, .section-title, .page-title, .table-header { -fx-font-family: "League Spartan", sans-serif; }
+.meta-text { -fx-wrap-text: true; -fx-text-overrun: CLIP; }
+
 /* ----------------------------------
    Main app / Dashboard styles
    ---------------------------------- */
@@ -601,150 +735,55 @@ Label.recipe-name, .recipe-name { -fx-text-fill: #D98555; -fx-font-weight: 700; 
     -fx-font-weight: 400;
 }
 
-/* End TableView styling block */
+/* --------------------
+   LIGHT THEME: color & contrast rules (scoped to .border-pane so login unaffected)
+   -------------------- */
 
-/* --------------------------------------------------
-   Minimal dropdown & form hint tweaks (safe, scoped)
-   - Only improves ComboBox/ChoiceBox list hover/selection and prompt text
-   - Scoped to .border-pane so login styles unchanged
-   -------------------------------------------------- */
-
-.border-pane .combo-box {
-    -fx-background-color: white;
-    -fx-background-radius: 12;
-    -fx-border-radius: 12;
+.border-pane {
+    -app-text: #4A3428;
+    -app-muted: #6b4f3f;
+    -app-accent: #D98555;
+    -app-strong: #5C3D2E;
+    -fx-focus-color: #D98555;
+    -fx-selection-bar: #D98555;
+    -fx-selection-bar-text: #FFFFFF;
 }
 
-/* Popup list row hover and selection */
-.border-pane .combo-box .list-cell:hover {
-    -fx-background-color: #FFF3EA; /* very light orange */
-}
-.border-pane .combo-box .list-cell:filled:selected, .border-pane .combo-box .list-cell:selected {
-    -fx-background-color: #E57B3C; /* selected orange */
-    -fx-text-fill: white;
+.border-pane .page-title { -fx-text-fill: #4A3428; }
+.border-pane .section-title, .border-pane .card-title { -fx-text-fill: #4A3428; }
+.border-pane .body-text { -fx-text-fill: #4A3428; }
+.border-pane .meta-text { -fx-text-fill: #6b4f3f; }
+
+.border-pane .table-view .column-header-background { -fx-background-color: transparent; }
+
+.border-pane .table-view .column-header .label {
+    -fx-background-color: #D98555;
+    -fx-text-fill: #FFFFFF;
+    -fx-background-radius: 6;
+    -fx-padding: 6 12;
 }
 
-/* ChoiceBox popup cells */
-.border-pane .choice-box .list-cell:hover {
-    -fx-background-color: #FFF3EA;
-}
-.border-pane .choice-box .list-cell:selected {
-    -fx-background-color: #E57B3C;
-    -fx-text-fill: white;
+.border-pane .table-row-cell:hover { -fx-background-color: rgba(217,133,85,0.08); }
+.border-pane .table-row-cell:odd { -fx-background-color: rgba(245,241,238,0.6); }
+
+.border-pane .combo-box, .border-pane .choice-box { -fx-background-color: #FFFFFF; -fx-border-color: #E8E5DF; -fx-text-fill: #4A3428; }
+.border-pane .combo-box .arrow-button .arrow { -fx-background-color: #6b4f3f; }
+
+.border-pane .combo-box:focused, .border-pane .choice-box:focused { -fx-border-color: #D98555; -fx-effect: none; }
+
+.border-pane .table-row-cell:selected { -fx-background-color: #D98555; }
+.border-pane .table-row-cell:selected .cell, .border-pane .table-row-cell:selected .label { -fx-text-fill: #1a1612; }
+
+.border-pane .meta-text { -fx-text-fill: #6b4f3f; }
+
+.border-pane .button, #contentArea .button, .dashboard-root .button {
+    -fx-background-color: #5C3D2E;
+    -fx-text-fill: #FFFFFF;
 }
 
-/* Arrow button: keep transparent but tint the arrow glyph if present */
-.border-pane .combo-box .arrow-button {
-    -fx-background-color: transparent;
-}
-.border-pane .combo-box .arrow-button .arrow {
-    -fx-shape: ""; /* do not force shape; color the region if skin exposes it */
-    -fx-background-color: #D98555; /* coral - may color glyph in some skins */
-}
+.border-pane .table-view .column-header-background { -fx-padding: 0; }
 
-/* Ensure prompt/prompt-text in TextField inside app is muted, but do not override login.form-input */
-.border-pane .text-field .prompt-text, .border-pane .text-field .text .prompt-text {
-    -fx-fill: #6b4f3f;
-}
-
-/* End minimal dropdown tweaks */
-
-/* Dashboard header and tasks sizing overrides */
-.page-title {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 24px; /* larger page title */
-    -fx-font-weight: 700;
-    -fx-text-fill: #4A3428;
-}
-
-.page-subtitle {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 14px; /* slightly larger subtitle */
-    -fx-font-weight: 400;
-    -fx-text-fill: #6b4f3f;
-}
-
-.tasks-header {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 16px; /* make tasks header more prominent */
-    -fx-font-weight: 700;
-    -fx-text-fill: #4A3428;
-}
-
-/* Welcome and user info in top bar */
-#welcomeLabel {
-    -fx-background-color: #FFFFFF;
-    -fx-background-radius: 14;
-    -fx-padding: 22 28 22 28;
-    -fx-text-fill: #4A3428;
-    -fx-font-size: 22px; /* increase welcome label size */
-    -fx-font-weight: 700;
-    -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.04), 10, 0.06, 0, 4);
-}
-
-#userInfoLabel {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 14px; /* slightly larger role text */
-    -fx-font-weight: 600;
-    -fx-text-fill: #6b4f3f;
-}
-
-/* Ensure the page-title selector (Label) also matches Label.page-title usage */
-Label.page-title {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 24px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #4A3428;
-}
-
-/* Ensure tasks header label gets priority */
-Label.tasks-header {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 16px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #4A3428;
-}
-
-/* Stronger, border-pane scoped header sizes to guarantee dashboard sizing */
-.border-pane Label.page-title,
-.border-pane .page-title {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 28px; /* restore larger title */
-    -fx-font-weight: 800;
-    -fx-text-fill: #4A3428;
-}
-
-.border-pane Label.page-subtitle,
-.border-pane .page-subtitle {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 15px; /* restore subtitle size */
-    -fx-font-weight: 400;
-    -fx-text-fill: #6b4f3f;
-}
-
-.border-pane Label.tasks-header,
-.border-pane .tasks-header {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 18px; /* restore tasks header prominence */
-    -fx-font-weight: 700;
-    -fx-text-fill: #4A3428;
-}
-
-.border-pane #welcomeLabel {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 22px; /* prominent welcome */
-    -fx-font-weight: 700;
-    -fx-text-fill: #4A3428;
-}
-
-.border-pane #userInfoLabel {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 14px;
-    -fx-font-weight: 600;
-    -fx-text-fill: #6b4f3f;
-}
-
-/* End of light theme */
+/* End light theme block */
 
 /* --------------------------------------------------
    Form controls: text fields, textareas, combo/choice, search
@@ -1019,7 +1058,7 @@ Label.tasks-header {
 .standard-table .table-row-cell:selected { -fx-background-color: #E57B3C; -fx-text-fill: white; }
 
 /* Recipes labels darker for readability */
-.recipes-title { -fx-text-fill: #4A3428; -fx-font-weight: 700; }
+.recipes-title { -fx-text-fill: #4A3428; -fx-font-weight: 700; -fx-font-size: 22px; }
 .recipes-subtitle { -fx-text-fill: #6b4f3f; }
 
 /* Dialog title/subtitle and recipe item styles */
@@ -1089,3 +1128,43 @@ Label.tasks-header {
     -fx-padding: 6 10 6 10;
     -fx-effect: dropshadow(gaussian, rgba(74,52,40,0.08), 6, 0.06, 0, 3);
 }
+
+/* Final overrides: ensure recipes title and tasks header take precedence */
+.border-pane Label.recipes-title, .border-pane .recipes-title {
+    -fx-font-size: 30px; /* larger to make Recepti clearly visible in light mode */
+    -fx-font-weight: 800;
+    -fx-text-fill: #4A3428;
+}
+
+.border-pane .tasks-header, .border-pane Label.tasks-header {
+    -fx-font-size: 24px; /* increase tasks header size for better hierarchy */
+    -fx-font-weight: 800;
+    -fx-text-fill: #4A3428;
+}
+
+/* Helpers: enforce large title sizes for specific labels */
+.border-pane .recipes-title-large, Label.recipes-title.recipes-title-large {
+    -fx-font-size: 30px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #4A3428;
+}
+
+.border-pane .tasks-header-large, Label.tasks-header.tasks-header-large {
+    -fx-font-size: 24px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #4A3428;
+}
+
+/* ID-targeted overrides to guarantee sizes regardless of other classes */
+#recipesTitle {
+    -fx-font-size: 30px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #4A3428;
+}
+
+#tasksHeaderLabel {
+    -fx-font-size: 24px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #4A3428;
+}
+

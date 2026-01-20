@@ -9,7 +9,7 @@
             <children>
                 <VBox spacing="4">
                     <children>
-                        <Label fx:id="titleLabel" text="Recepti" styleClass="page-title recipes-title" />
+                        <Label fx:id="titleLabel" id="recipesTitle" text="Recepti" styleClass="page-title recipes-title recipes-title-large" style="-fx-font-size:30px; -fx-font-weight:800;" />
                         <Label fx:id="subtitleLabel" text="Pregled recepata" styleClass="recipes-subtitle" />
                     </children>
                 </VBox>
