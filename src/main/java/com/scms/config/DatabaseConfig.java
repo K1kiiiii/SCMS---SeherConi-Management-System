@@ -5,36 +5,28 @@ import com.scms.util.PasswordUtil;
 import java.sql.*;
 
 public class DatabaseConfig {
-    /*
-
-    setup lokalne baze,,
-
-    private static final String HOST = "localhost";
-    private static final int PORT = 3306;
-    private static final String DB_NAME = "scms_db";
-
-    // Allow overriding DB credentials via environment variables to avoid committing secrets
-    private static final String DEFAULT_USER = "root";
-    private static final String DEFAULT_PASS = "Auth_*#13wow"; // fallback; prefer env var
-    private static final String USER;
-    private static final String PASS;
-
-    */
 
     private static final String BASE_URL = "jdbc:mysql://avnadmin:AVNS_nutl3nT8fn4JNvY39Bv@scms-db-scms.g.aivencloud.com:19009/defaultdb?ssl-mode=REQUIRED";
     private static final String USER = "avnadmin";
     private static final String PASS = "AVNS_nutl3nT8fn4JNvY39Bv";
-    private static final String HOST = "scms-db-scms.g.aivencloud.com";
-
 
     public static void initDatabase() {
-        try {
-            // 1) Connect to server (no DB) to create DB if not exists
-            try (Connection conn = DriverManager.getConnection(BASE_URL, USER, PASS);
-                 Statement st = conn.createStatement()) {
-                st.executeUpdate("CREATE DATABASE IF NOT EXISTS scms_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;");
+        // By default do NOT modify schema unless explicitly enabled via env var SCMS_RUN_MIGRATIONS=true
+        String runMigrationsEnv = System.getenv("SCMS_RUN_MIGRATIONS");
+        boolean runMigrations = "true".equalsIgnoreCase(runMigrationsEnv);
+        if (!runMigrations) {
+            // Quick connectivity check only - do not create or alter schema
+            try (Connection conn = DriverManager.getConnection(BASE_URL, USER, PASS)) {
+                System.out.println("Database connection OK (migrations skipped). URL=" + conn.getMetaData().getURL());
+            } catch (SQLException ex) {
+                System.err.println("Database connectivity failed (migrations skipped): " + ex.getMessage());
+                ex.printStackTrace();
             }
-            // 2) Connect to the created DB to create tables
+            return;
+        }
+
+        try {
+            // Connect to the same database the application uses (BASE_URL) so we don't create/switch to a different DB
             try (Connection conn = DriverManager.getConnection(BASE_URL, USER, PASS);
                  Statement st = conn.createStatement()) {
 
@@ -58,7 +50,7 @@ public class DatabaseConfig {
                     ) ENGINE=InnoDB;
                     """);
 
-                // placeholder tables (materials, assignments)
+                // materials table — include minimum_quantity and last_purchase_price so DAO updates match schema
                 st.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS materials (
                       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -66,10 +58,13 @@ public class DatabaseConfig {
                       quantity DOUBLE DEFAULT 0,
                       unit VARCHAR(30),
                       supplier VARCHAR(100),
+                      minimum_quantity DOUBLE NOT NULL DEFAULT 0,
+                      last_purchase_price DECIMAL(12,4) NULL,
                       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                     ) ENGINE=InnoDB;
                     """);
 
+                // assignments table — include processed_by / processed_at for audit
                 st.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS assignments (
                       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -79,8 +74,11 @@ public class DatabaseConfig {
                       assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                       status VARCHAR(50) DEFAULT 'CONFIRMED',
                       notes TEXT,
+                      processed_by INT NULL,
+                      processed_at TIMESTAMP NULL,
                       FOREIGN KEY (user_id) REFERENCES users(id),
-                      FOREIGN KEY (material_id) REFERENCES materials(id)
+                      FOREIGN KEY (material_id) REFERENCES materials(id),
+                      FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL
                     ) ENGINE=InnoDB;
                     """);
 
@@ -127,6 +125,60 @@ public class DatabaseConfig {
                     ) ENGINE=InnoDB;
                     """);
 
+                // After ensuring tables exist, attempt to ALTER existing tables to add missing columns
+                // so DAO UPDATE statements don't fail when schema is older.
+                try {
+                    // materials: add minimum_quantity, last_purchase_price
+                    st.executeUpdate("ALTER TABLE materials ADD COLUMN IF NOT EXISTS minimum_quantity DOUBLE NOT NULL DEFAULT 0");
+                } catch (SQLException ex) {
+                    try {
+                        st.executeUpdate("ALTER TABLE materials ADD COLUMN minimum_quantity DOUBLE NOT NULL DEFAULT 0");
+                    } catch (SQLException ex2) {
+                        System.err.println("materials.minimum_quantity already present or failed to add: " + ex2.getMessage());
+                    }
+                }
+
+                try {
+                    st.executeUpdate("ALTER TABLE materials ADD COLUMN IF NOT EXISTS last_purchase_price DECIMAL(12,4) NULL");
+                } catch (SQLException ex) {
+                    try {
+                        st.executeUpdate("ALTER TABLE materials ADD COLUMN last_purchase_price DECIMAL(12,4) NULL");
+                    } catch (SQLException ex2) {
+                        System.err.println("materials.last_purchase_price already present or failed to add: " + ex2.getMessage());
+                    }
+                }
+
+                try {
+                    st.executeUpdate("ALTER TABLE assignments ADD COLUMN IF NOT EXISTS processed_by INT NULL");
+                } catch (SQLException ex) {
+                    try { st.executeUpdate("ALTER TABLE assignments ADD COLUMN processed_by INT NULL"); } catch (SQLException ex2) { System.err.println("assignments.processed_by already present or failed to add: " + ex2.getMessage()); }
+                }
+
+                try {
+                    st.executeUpdate("ALTER TABLE assignments ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP NULL");
+                } catch (SQLException ex) {
+                    try { st.executeUpdate("ALTER TABLE assignments ADD COLUMN processed_at TIMESTAMP NULL"); } catch (SQLException ex2) { System.err.println("assignments.processed_at already present or failed to add: " + ex2.getMessage()); }
+                }
+
+                // Try adding foreign key for processed_by if not present (best-effort)
+                try {
+                    st.executeUpdate("ALTER TABLE assignments ADD CONSTRAINT fk_assignments_processed_by FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL");
+                } catch (SQLException ex) {
+                    System.err.println("Warning: could not add FK fk_assignments_processed_by (maybe exists): " + ex.getMessage());
+                }
+
+                // products: add task_id column if missing
+                try {
+                    st.executeUpdate("ALTER TABLE products ADD COLUMN IF NOT EXISTS task_id INT NULL");
+                } catch (SQLException ex) {
+                    try { st.executeUpdate("ALTER TABLE products ADD COLUMN task_id INT NULL"); } catch (SQLException ex2) { System.err.println("products.task_id already present or failed to add: " + ex2.getMessage()); }
+                }
+                try {
+                    st.executeUpdate("ALTER TABLE products ADD INDEX (task_id)");
+                } catch (SQLException ex) {
+                    // ignore if index exists
+                }
+
                 // Insert default roles if not present
                 st.executeUpdate("INSERT IGNORE INTO roles (name, description) VALUES ('admin','Administrator'),('worker','Worker'),('storekeeper','Storekeeper');");
 
@@ -152,7 +204,7 @@ public class DatabaseConfig {
         }
     }
 
-    // glavna veza sa bazom podataka
+    // glavna veza sa bazom podataka - restored to original BASE_URL so old data is visible
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(BASE_URL, USER, PASS);
     }

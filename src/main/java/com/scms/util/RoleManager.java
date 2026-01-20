@@ -13,16 +13,17 @@ public class RoleManager {
     public static boolean isAdmin() {
         if (loggedInUser == null ||  loggedInUser.getRole() == null) return false;
         String role = loggedInUser.getRole().toLowerCase();
-        return role.equals("admin");
+        return role.equals("admin") || role.equals("administrator");
     }
     public static boolean isRadnik() {
         if (loggedInUser == null ||  loggedInUser.getRole() == null) return false;
         String role = loggedInUser.getRole().toLowerCase();
-        return role.equals("radnik");
+        return role.equals("radnik") || role.equals("worker");
     }
     public static boolean isMagacioner() {
         if (loggedInUser == null ||  loggedInUser.getRole() == null) return false;
         String role = loggedInUser.getRole().toLowerCase();
-        return role.equals("magacioner");
+        // accept different DB/locale names: 'magacioner', 'storekeeper', 'warehouse_staff'
+        return role.equals("magacioner") || role.equals("storekeeper") || role.equals("warehouse_staff");
     }
 }

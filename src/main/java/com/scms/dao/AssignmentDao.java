@@ -168,11 +168,28 @@ public class AssignmentDao {
                 // update assignment with processed_by
                 int processorId = -1;
                 try { processorId = RoleManager.getLoggedInUser().getId(); } catch (Exception ignored) {}
-                try (PreparedStatement ps = conn.prepareStatement(updateAssignmentSql)) {
-                    if (processorId <= 0) ps.setNull(1, java.sql.Types.INTEGER); else ps.setInt(1, processorId);
-                    ps.setInt(2, assignmentId);
-                    int updated = ps.executeUpdate();
-                    if (updated <= 0) throw new SQLException("Failed to update assignment status for id=" + assignmentId);
+
+                try {
+                    try (PreparedStatement ps = conn.prepareStatement(updateAssignmentSql)) {
+                        if (processorId <= 0) ps.setNull(1, java.sql.Types.INTEGER); else ps.setInt(1, processorId);
+                        ps.setInt(2, assignmentId);
+                        int updated = ps.executeUpdate();
+                        if (updated <= 0) throw new SQLException("Failed to update assignment status for id=" + assignmentId);
+                    }
+                } catch (SQLException ex) {
+                    // If DB schema does not have processed_by/processed_at columns, fall back to simpler update
+                    String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+                    System.err.println("Warning: detailed assignment update failed: " + ex.getMessage());
+                    if (msg.contains("processed_by") || msg.contains("processed_at") || msg.contains("unknown column") || msg.contains("column not found")) {
+                        String fallback = "UPDATE assignments SET status = 'CONFIRMED', assigned_at = CURRENT_TIMESTAMP WHERE id = ?";
+                        try (PreparedStatement ps2 = conn.prepareStatement(fallback)) {
+                            ps2.setInt(1, assignmentId);
+                            int updated = ps2.executeUpdate();
+                            if (updated <= 0) throw new SQLException("Failed to update assignment status for id=" + assignmentId);
+                        }
+                    } else {
+                        throw ex;
+                    }
                 }
 
                 // insert OUT inventory movement linked to this assignment
@@ -207,14 +224,31 @@ public class AssignmentDao {
         String updateSql = "UPDATE assignments SET status = 'REJECTED', notes = CONCAT(IFNULL(notes, ''), ?), processed_by = ?, processed_at = CURRENT_TIMESTAMP WHERE id = ?";
         int processorId = -1;
         try { processorId = RoleManager.getLoggedInUser().getId(); } catch (Exception ignored) {}
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(updateSql)) {
-            String appended = "\n[REJECTED] " + (reason != null ? reason : "");
-            ps.setString(1, appended);
-            if (processorId <= 0) ps.setNull(2, java.sql.Types.INTEGER); else ps.setInt(2, processorId);
-            ps.setInt(3, assignmentId);
-            int updated = ps.executeUpdate();
-            if (updated > 0) return findById(assignmentId);
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            // try detailed update first
+            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                String appended = "\n[REJECTED] " + (reason != null ? reason : "");
+                ps.setString(1, appended);
+                if (processorId <= 0) ps.setNull(2, java.sql.Types.INTEGER); else ps.setInt(2, processorId);
+                ps.setInt(3, assignmentId);
+                int updated = ps.executeUpdate();
+                if (updated > 0) return findById(assignmentId);
+            } catch (SQLException ex) {
+                String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+                System.err.println("Warning: detailed reject update failed: " + ex.getMessage());
+                if (msg.contains("processed_by") || msg.contains("processed_at") || msg.contains("unknown column") || msg.contains("column not found")) {
+                    String fallback = "UPDATE assignments SET status = 'REJECTED', notes = CONCAT(IFNULL(notes, ''), ?) WHERE id = ?";
+                    try (PreparedStatement ps2 = conn.prepareStatement(fallback)) {
+                        String appended = "\n[REJECTED] " + (reason != null ? reason : "");
+                        ps2.setString(1, appended);
+                        ps2.setInt(2, assignmentId);
+                        int updated = ps2.executeUpdate();
+                        if (updated > 0) return findById(assignmentId);
+                    }
+                } else {
+                    throw ex;
+                }
+            }
             return Optional.empty();
         }
     }

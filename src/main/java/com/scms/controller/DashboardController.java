@@ -1,16 +1,19 @@
 package com.scms.controller;
 
+import com.scms.config.DatabaseConfig;
 import com.scms.dao.AssignmentDao;
 import com.scms.dao.MaterialDao;
 import com.scms.dao.UserDao;
 import com.scms.dao.TaskDao;
 import com.scms.dao.RecipeDao;
+import com.scms.dao.ProductDao;
 import com.scms.model.Assignment;
 import com.scms.model.Material;
 import com.scms.model.Task;
 import com.scms.model.User;
 import com.scms.model.Recipe;
 import com.scms.model.RecipeItem;
+import com.scms.model.Product;
 import com.scms.util.RoleManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -58,6 +61,7 @@ public class DashboardController {
     private final UserDao userDao = new UserDao();
     private final TaskDao taskDao = new TaskDao();
     private final RecipeDao recipeDao = new RecipeDao();
+    private final ProductDao productDao = new ProductDao();
 
     // no hard-coded threshold — use per-material minimum from DB
     private NotificationService notificationService;
@@ -746,7 +750,49 @@ public class DashboardController {
             try {
                 Double produced = Double.parseDouble(res.get());
                 boolean ok = taskDao.completeTask(t.getId(), produced);
-                if (ok) loadWorkerTasks();
+                if (ok) {
+                    // create product batch linked to this task
+                    try {
+                        Product p = new Product();
+                        p.setRecipeId(t.getRecipeId());
+                        p.setTaskId(t.getId());
+                        // try to use recipe name for product name
+                        String prodName = "Proizvod zadatka #" + t.getId();
+                        try { java.util.Optional<Recipe> rr = recipeDao.findById(t.getRecipeId()); if (rr.isPresent()) prodName = rr.get().getName() + " (batch #" + t.getId() + ")"; } catch (SQLException ignore) {}
+                        p.setName(prodName);
+                        p.setQuantityBoxes(produced);
+                        // price left null
+                        // debug: print DB URL before creating product
+                        try { DatabaseConfig.testConnection(); } catch (Exception ignore) {}
+                        Product created = productDao.create(p);
+                        // verification: if created id present, try findById; otherwise list last products
+                        boolean verified = false;
+                        if (created != null && created.getId() > 0) {
+                            try { java.util.Optional<Product> check = productDao.findById(created.getId()); if (check.isPresent()) verified = true; } catch (Exception ex) { /* continue to fallback */ }
+                        }
+                        if (!verified) {
+                            try { java.util.List<Product> all = productDao.findAll(); if (!all.isEmpty()) {
+                                Product last = all.get(all.size()-1);
+                                System.out.println("Products list last id=" + last.getId() + " name=" + last.getName());
+                                verified = last.getName() != null && last.getName().equals(prodName);
+                            } }
+                            catch (Exception ex) { System.err.println("Failed verifying created product: " + ex.getMessage()); }
+                        }
+                        if (created != null && created.getId() > 0 && verified) {
+                            System.out.println("Created product id=" + created.getId() + " for task=" + t.getId());
+                            showAlert(Alert.AlertType.INFORMATION, "Proizvod spremljen", "Proizvod je spremljen kao proizvod id=" + created.getId());
+                        } else if (verified) {
+                            showAlert(Alert.AlertType.INFORMATION, "Proizvod spremljen", "Proizvod je spremljen (nalazi se u bazi, ali ID nije vraćen).");
+                        } else {
+                            System.err.println("Product creation returned no id and could not verify existence for task=" + t.getId());
+                            showAlert(Alert.AlertType.WARNING, "Upozorenje", "Zadatak je završen, ali proizvod nije sačuvan (ne može se potvrditi u bazi). Molimo provjerite log).");
+                        }
+                    } catch (Exception ex) {
+                        logError(ex, "createProductFromTask");
+                        showAlert(Alert.AlertType.WARNING, "Upozorenje", "Zadatak je završen, ali ne mogu sačuvati proizvod: " + (ex.getMessage() == null ? "" : ex.getMessage()));
+                    }
+                    loadWorkerTasks();
+                }
             } catch (NumberFormatException ex) { logError(ex, "parseProduced"); }
             catch (SQLException ex) { logError(ex, "completeTask"); }
         }

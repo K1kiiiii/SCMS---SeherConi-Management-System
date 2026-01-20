@@ -13,19 +13,36 @@ public class MaterialDao {
 
     public Material create(Material m) throws SQLException {
         // include minimum_quantity and last_purchase_price when creating new material
-        String sql = "INSERT INTO materials (name, quantity, unit, supplier, minimum_quantity, last_purchase_price) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, m.getName());
-            ps.setDouble(2, m.getQuantity());
-            ps.setString(3, m.getUnit());
-            ps.setString(4, m.getSupplier());
-            ps.setDouble(5, m.getMinimumQuantity());
-            if (m.getLastPurchasePrice() == null) ps.setNull(6, java.sql.Types.DECIMAL); else ps.setDouble(6, m.getLastPurchasePrice());
-            ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) { if (keys.next()) m.setId(keys.getInt(1)); }
+        String sqlFull = "INSERT INTO materials (name, quantity, unit, supplier, minimum_quantity, last_purchase_price) VALUES (?, ?, ?, ?, ?, ?)";
+        String sqlFallback = "INSERT INTO materials (name, quantity, unit, supplier) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlFull, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, m.getName());
+                ps.setDouble(2, m.getQuantity());
+                ps.setString(3, m.getUnit());
+                ps.setString(4, m.getSupplier());
+                ps.setDouble(5, m.getMinimumQuantity());
+                if (m.getLastPurchasePrice() == null) ps.setNull(6, java.sql.Types.DECIMAL); else ps.setDouble(6, m.getLastPurchasePrice());
+                ps.executeUpdate();
+                try (ResultSet keys = ps.getGeneratedKeys()) { if (keys.next()) m.setId(keys.getInt(1)); }
+                return m;
+            } catch (SQLException ex) {
+                String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+                if (msg.contains("minimum_quantity") || msg.contains("last_purchase_price") || msg.contains("unknown column") || msg.contains("column not found")) {
+                    // fallback to legacy insert without optional columns
+                    try (PreparedStatement ps2 = conn.prepareStatement(sqlFallback, Statement.RETURN_GENERATED_KEYS)) {
+                        ps2.setString(1, m.getName());
+                        ps2.setDouble(2, m.getQuantity());
+                        ps2.setString(3, m.getUnit());
+                        ps2.setString(4, m.getSupplier());
+                        ps2.executeUpdate();
+                        try (ResultSet keys = ps2.getGeneratedKeys()) { if (keys.next()) m.setId(keys.getInt(1)); }
+                        return m;
+                    }
+                }
+                throw ex;
+            }
         }
-        return m;
     }
 
     public Optional<Material> findById(int id) throws SQLException {
@@ -61,20 +78,37 @@ public class MaterialDao {
     }
 
     public Optional<Material> update(Material m) throws SQLException {
-        String sql = "UPDATE materials SET name = ?, quantity = ?, unit = ?, supplier = ?, minimum_quantity = ?, last_purchase_price = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, m.getName());
-            ps.setDouble(2, m.getQuantity());
-            ps.setString(3, m.getUnit());
-            ps.setString(4, m.getSupplier());
-            ps.setDouble(5, m.getMinimumQuantity());
-            if (m.getLastPurchasePrice() == null) ps.setNull(6, java.sql.Types.DECIMAL); else ps.setDouble(6, m.getLastPurchasePrice());
-            ps.setInt(7, m.getId());
-            int updated = ps.executeUpdate();
-            if (updated > 0) return findById(m.getId());
+        String sqlFull = "UPDATE materials SET name = ?, quantity = ?, unit = ?, supplier = ?, minimum_quantity = ?, last_purchase_price = ? WHERE id = ?";
+        String sqlFallback = "UPDATE materials SET name = ?, quantity = ?, unit = ?, supplier = ? WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sqlFull)) {
+                ps.setString(1, m.getName());
+                ps.setDouble(2, m.getQuantity());
+                ps.setString(3, m.getUnit());
+                ps.setString(4, m.getSupplier());
+                ps.setDouble(5, m.getMinimumQuantity());
+                if (m.getLastPurchasePrice() == null) ps.setNull(6, java.sql.Types.DECIMAL); else ps.setDouble(6, m.getLastPurchasePrice());
+                ps.setInt(7, m.getId());
+                int updated = ps.executeUpdate();
+                if (updated > 0) return findById(m.getId());
+                return Optional.empty();
+            } catch (SQLException ex) {
+                String msg = ex.getMessage() == null ? "" : ex.getMessage().toLowerCase();
+                if (msg.contains("minimum_quantity") || msg.contains("last_purchase_price") || msg.contains("unknown column") || msg.contains("column not found")) {
+                    try (PreparedStatement ps2 = conn.prepareStatement(sqlFallback)) {
+                        ps2.setString(1, m.getName());
+                        ps2.setDouble(2, m.getQuantity());
+                        ps2.setString(3, m.getUnit());
+                        ps2.setString(4, m.getSupplier());
+                        ps2.setInt(5, m.getId());
+                        int updated = ps2.executeUpdate();
+                        if (updated > 0) return findById(m.getId());
+                        return Optional.empty();
+                    }
+                }
+                throw ex;
+            }
         }
-        return Optional.empty();
     }
 
     public boolean delete(int id) throws SQLException {

@@ -242,7 +242,11 @@ public class RequestsController {
                 info.setContentText("Zahtjev je uspješno odobren.");
                 info.showAndWait();
             } catch (ServiceException ex) {
-                showError("Greška pri odobravanju", ex.getMessage());
+                // show root cause (SQL message) if available to help troubleshooting (e.g. insufficient stock)
+                Throwable cause = ex.getCause();
+                String detailed = (cause != null && cause.getMessage() != null) ? cause.getMessage() : ex.getMessage();
+                System.err.println("Error approving request id=" + sel.getId() + ": " + detailed);
+                showError("Greška pri odobravanju", detailed);
             }
         }
     }
@@ -277,7 +281,10 @@ public class RequestsController {
                 info.setContentText("Zahtjev je odbijen.");
                 info.showAndWait();
             } catch (ServiceException ex) {
-                showError("Greška pri odbijanju", ex.getMessage());
+                Throwable cause = ex.getCause();
+                String detailed = (cause != null && cause.getMessage() != null) ? cause.getMessage() : ex.getMessage();
+                System.err.println("Error rejecting request id=" + sel.getId() + ": " + detailed);
+                showError("Greška pri odbijanju", detailed);
             }
         }
     }
