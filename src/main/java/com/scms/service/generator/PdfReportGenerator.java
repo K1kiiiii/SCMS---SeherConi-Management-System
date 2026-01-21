@@ -23,10 +23,28 @@ public class PdfReportGenerator {
         String title = String.format("Godišnji izvještaj - %d", year);
         LocalDate from = LocalDate.of(year, 1, 1);
         LocalDate to = LocalDate.of(year, 12, 31);
+        createReportDocument(out, title, from, to, rows, false);
+    }
+
+    // Deliveries (product exports) variants
+    public void createMonthlyDeliveriesReport(OutputStream out, int year, int month, List<InventoryRow> rows) throws IOException {
+        String title = String.format("Dostave - %02d.%d", month, year);
+        LocalDate from = LocalDate.of(year, month, 1);
+        LocalDate to = from.withDayOfMonth(from.lengthOfMonth());
         createReportDocument(out, title, from, to, rows, true);
     }
 
-    private void createReportDocument(OutputStream out, String title, LocalDate from, LocalDate to, List<InventoryRow> rows, boolean isYearly) throws IOException {
+    public void createYearlyDeliveriesReport(OutputStream out, int year, List<InventoryRow> rows) throws IOException {
+        String title = String.format("Dostave - %d", year);
+        LocalDate from = LocalDate.of(year, 1, 1);
+        LocalDate to = LocalDate.of(year, 12, 31);
+        createReportDocument(out, title, from, to, rows, true);
+    }
+
+    /**
+     * core: isDeliveries=true => deliveries layout (omit Ulaz(vrijednost), include Izlaz(vrijednost))
+     */
+    private void createReportDocument(OutputStream out, String title, LocalDate from, LocalDate to, List<InventoryRow> rows, boolean isDeliveries) throws IOException {
         Document doc = new Document(PageSize.A4, 36, 36, 64, 48);
         try {
             PdfWriter writer = PdfWriter.getInstance(doc, out);
@@ -45,7 +63,7 @@ public class PdfReportGenerator {
             addr.setSpacingAfter(8);
             doc.add(addr);
 
-            // Title and period
+            // Title and period (already drawn in header by HeaderFooterPageEvent, but keep center title as well)
             Font titleFont = new Font(Font.HELVETICA, 12, Font.BOLD);
             Paragraph pTitle = new Paragraph(title, titleFont);
             pTitle.setAlignment(Element.ALIGN_CENTER);
@@ -58,11 +76,17 @@ public class PdfReportGenerator {
             period.setSpacingAfter(10);
             doc.add(period);
 
-            // Table with columns: Šifra / Artikl | Naziv | Jedinica mjere | Ulaz | Izlaz | Stanje
-            // add two monetary columns for inflow/outflow values
-            PdfPTable table = new PdfPTable(new float[]{1.4f, 3.0f, 1.2f, 1.2f, 1.2f, 1.6f, 1.6f, 1.6f});
+            // Prepare table columns depending on type
+            PdfPTable table;
+            if (isDeliveries) {
+                // columns: Šifra | Naziv | Jedinica | Ulaz(kol) | Izlaz(kol) | Izlaz(vrijednost) | Stanje
+                table = new PdfPTable(new float[]{1.4f, 3.0f, 1.2f, 1.2f, 1.2f, 1.6f, 1.6f});
+            } else {
+                // materials: Šifra | Naziv | Jedinica | Ulaz(kol) | Izlaz(kol) | Ulaz(vrijednost) | Stanje
+                table = new PdfPTable(new float[]{1.4f, 3.0f, 1.2f, 1.2f, 1.2f, 1.6f, 1.6f});
+            }
             table.setWidthPercentage(100);
-            addTableHeader(table);
+            addTableHeader(table, isDeliveries);
 
             Font cellFont = new Font(Font.HELVETICA, 9);
             for (InventoryRow r : rows) {
@@ -71,8 +95,11 @@ public class PdfReportGenerator {
                 table.addCell(makeCell(r.getUnit(), cellFont));
                 table.addCell(makeCell(formatDouble(r.getInflow()), cellFont, Element.ALIGN_RIGHT));
                 table.addCell(makeCell(formatDouble(r.getOutflow()), cellFont, Element.ALIGN_RIGHT));
-                table.addCell(makeCell(formatDouble(r.getInflowValue()), cellFont, Element.ALIGN_RIGHT));
-                table.addCell(makeCell(formatDouble(r.getOutflowValue()), cellFont, Element.ALIGN_RIGHT));
+                if (isDeliveries) {
+                    table.addCell(makeCell(formatDouble(r.getOutflowValue()), cellFont, Element.ALIGN_RIGHT));
+                } else {
+                    table.addCell(makeCell(formatDouble(r.getInflowValue()), cellFont, Element.ALIGN_RIGHT));
+                }
                 table.addCell(makeCell(formatDouble(r.getBalance()), cellFont, Element.ALIGN_RIGHT));
             }
 
@@ -85,14 +112,14 @@ public class PdfReportGenerator {
 
             double tIn = rows.stream().mapToDouble(InventoryRow::getInflow).sum();
             double tOut = rows.stream().mapToDouble(InventoryRow::getOutflow).sum();
-            double tInVal = rows.stream().mapToDouble(InventoryRow::getInflowValue).sum();
-            double tOutVal = rows.stream().mapToDouble(InventoryRow::getOutflowValue).sum();
+            double tVal;
+            if (isDeliveries) tVal = rows.stream().mapToDouble(InventoryRow::getOutflowValue).sum();
+            else tVal = rows.stream().mapToDouble(InventoryRow::getInflowValue).sum();
             double tBal = rows.stream().mapToDouble(InventoryRow::getBalance).sum();
 
             table.addCell(makeCell(formatDouble(tIn), cellFont, Element.ALIGN_RIGHT));
             table.addCell(makeCell(formatDouble(tOut), cellFont, Element.ALIGN_RIGHT));
-            table.addCell(makeCell(formatDouble(tInVal), cellFont, Element.ALIGN_RIGHT));
-            table.addCell(makeCell(formatDouble(tOutVal), cellFont, Element.ALIGN_RIGHT));
+            table.addCell(makeCell(formatDouble(tVal), cellFont, Element.ALIGN_RIGHT));
             table.addCell(makeCell(formatDouble(tBal), cellFont, Element.ALIGN_RIGHT));
 
             doc.add(table);
@@ -114,15 +141,18 @@ public class PdfReportGenerator {
         return c;
     }
 
-    private void addTableHeader(PdfPTable table) {
+    private void addTableHeader(PdfPTable table, boolean isDeliveries) {
         Font bold = new Font(Font.HELVETICA, 10, Font.BOLD);
         table.addCell(new PdfPCell(new Phrase("Šifra / Artikl", bold)));
         table.addCell(new PdfPCell(new Phrase("Naziv", bold)));
         table.addCell(new PdfPCell(new Phrase("Jedinica mjere", bold)));
         table.addCell(new PdfPCell(new Phrase("Ulaz (količina)", bold)));
         table.addCell(new PdfPCell(new Phrase("Izlaz (količina)", bold)));
-        table.addCell(new PdfPCell(new Phrase("Ulaz (vrijednost)", bold)));
-        table.addCell(new PdfPCell(new Phrase("Izlaz (vrijednost)", bold)));
+        if (isDeliveries) {
+            table.addCell(new PdfPCell(new Phrase("Izlaz (vrijednost)", bold)));
+        } else {
+            table.addCell(new PdfPCell(new Phrase("Ulaz (vrijednost)", bold)));
+        }
         table.addCell(new PdfPCell(new Phrase("Stanje", bold)));
     }
 
@@ -148,6 +178,10 @@ public class PdfReportGenerator {
             // print date/time
             String printed = "Ispisano: " + java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
             ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, new Phrase(printed, footerFont), document.left() + 36, document.bottom() - 20, 0);
+            // header: title and period
+            Font headerFont = new Font(Font.HELVETICA, 10, Font.BOLD);
+            String header = title + " — " + from.format(DateTimeFormatter.ISO_DATE) + " - " + to.format(DateTimeFormatter.ISO_DATE);
+            ColumnText.showTextAligned(cb, Element.ALIGN_CENTER, new Phrase(header, headerFont), (document.right() + document.left())/2, document.top() + 10, 0);
         }
     }
 }

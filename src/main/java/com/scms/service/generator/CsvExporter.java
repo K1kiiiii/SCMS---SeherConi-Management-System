@@ -8,9 +8,9 @@ import java.util.List;
 
 public class CsvExporter {
 
+    // Materials CSV: includes Ulaz(količina), Izlaz(količina), Ulaz(vrijednost), Stanje
     public void exportInventoryCsv(Writer writer, List<InventoryRow> rows) throws IOException {
-        // Manual UTF-8 CSV writer, escaping quotes
-        String[] headers = new String[]{"Šifra / Artikl","Naziv","Jedinica mjere","Ulaz (količina)","Izlaz (količina)","Stanje"};
+        String[] headers = new String[]{"Šifra / Artikl","Naziv","Jedinica mjere","Ulaz (količina)","Izlaz (količina)","Ulaz (vrijednost)","Stanje"};
         writeRow(writer, headers);
         for (InventoryRow r : rows) {
             writeRow(writer, new String[]{
@@ -19,6 +19,25 @@ public class CsvExporter {
                     safe(r.getUnit()),
                     fmtDouble(r.getInflow()),
                     fmtDouble(r.getOutflow()),
+                    fmtDouble(r.getInflowValue()),
+                    fmtDouble(r.getBalance())
+            });
+        }
+        writer.flush();
+    }
+
+    // Deliveries CSV: typically for products - include Izlaz (vrijednost) and omit Ulaz (vrijednost)
+    public void exportDeliveriesCsv(Writer writer, List<InventoryRow> rows) throws IOException {
+        String[] headers = new String[]{"Šifra / Artikl","Naziv","Jedinica mjere","Ulaz (količina)","Izlaz (količina)","Izlaz (vrijednost)","Stanje"};
+        writeRow(writer, headers);
+        for (InventoryRow r : rows) {
+            writeRow(writer, new String[]{
+                    safe(r.getMaterialCode()),
+                    safe(r.getName()),
+                    safe(r.getUnit()),
+                    fmtDouble(r.getInflow()),
+                    fmtDouble(r.getOutflow()),
+                    fmtDouble(r.getOutflowValue()),
                     fmtDouble(r.getBalance())
             });
         }
@@ -44,5 +63,5 @@ public class CsvExporter {
     }
 
     private String safe(String s) { return s == null ? "" : s; }
-    private String fmtDouble(double v) { return String.format("%.2f", v); }
+    private String fmtDouble(double v) { return String.format("%,.2f", v); }
 }

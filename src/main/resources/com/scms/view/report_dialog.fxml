@@ -18,6 +18,16 @@
         <Label text="CSV export:" styleClass="form-label" />
         <Button text="Export CSV (period)" onAction="#onExportCsvForPeriod" />
     </HBox>
+
+    <!-- Deliveries (Dostave) section -->
+    <HBox spacing="8">
+        <Label text="Dostave (izvoz proizvoda):" styleClass="form-label" />
+        <ComboBox fx:id="cbMonth" visible="false" managed="false" />
+        <!-- reuse cbMonth/cbYear selection above; provide buttons for deliveries using same selectors -->
+        <Button text="Generiraj PDF (Dostave)" onAction="#onGenerateMonthlyDeliveriesPdf" />
+        <Button text="Export CSV (Dostave)" onAction="#onExportDeliveriesCsvForPeriod" />
+    </HBox>
+
     <HBox spacing="8">
         <Label text="Labela recepta:" styleClass="form-label" />
         <TextField fx:id="tfRecipeId" promptText="Recipe ID" />

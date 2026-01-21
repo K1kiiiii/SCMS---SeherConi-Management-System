@@ -31,7 +31,8 @@ public class ReportController {
         for (int m = 1; m <= 12; m++) cbMonth.getItems().add(m);
         int nowYear = LocalDate.now().getYear();
         for (int y = nowYear - 5; y <= nowYear + 1; y++) { cbYear.getItems().add(y); cbYear2.getItems().add(y); }
-        cbMonth.getSelectionModel().select(LocalDate.now().getMonthValue() - 1);
+        // months are 1-based in UI; select current month value
+        cbMonth.getSelectionModel().select((Integer)LocalDate.now().getMonthValue());
         cbYear.getSelectionModel().select((Integer)nowYear);
         cbYear2.getSelectionModel().select((Integer)nowYear);
     }
@@ -99,9 +100,8 @@ public class ReportController {
 
     @FXML
     public void onExportCsvForPeriod(ActionEvent ev) {
-        // for simplicity use month/year selection
         Integer month = cbMonth.getValue(); Integer year = cbYear.getValue(); if (month == null || year == null) return; if (!validateMonthYear(year, month)) return;
-        YearMonth ym = YearMonth.of(year, month);
+        java.time.YearMonth ym = java.time.YearMonth.of(year, month);
         LocalDate from = ym.atDay(1);
         LocalDate to = ym.atEndOfMonth();
         FileChooser fc = new FileChooser(); fc.setInitialFileName(String.format("report_%02d_%d.csv", month, year));
@@ -114,6 +114,46 @@ public class ReportController {
         } catch (Exception ex) {
             ex.printStackTrace();
             Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri exportu CSV: " + ex.getMessage(), ButtonType.OK);
+            DialogUtils.styleAlert(err);
+            err.showAndWait();
+        }
+    }
+
+    // Deliveries handlers
+    @FXML
+    public void onGenerateMonthlyDeliveriesPdf(ActionEvent ev) {
+        Integer month = cbMonth.getValue(); Integer year = cbYear.getValue(); if (month == null || year == null) return; if (!validateMonthYear(year, month)) return;
+        FileChooser fc = new FileChooser(); fc.setInitialFileName(String.format("deliveries_%02d_%d.pdf", month, year));
+        File f = fc.showSaveDialog(getWindow()); if (f == null) return;
+        try {
+            reportService.generateMonthlyDeliveriesPdf(year, month, f.toPath());
+            Alert ok = new Alert(Alert.AlertType.INFORMATION, "PDF (Dostave) uspješno generiran: " + f.getAbsolutePath(), ButtonType.OK);
+            DialogUtils.styleAlert(ok);
+            ok.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju PDF (Dostave): " + ex.getMessage(), ButtonType.OK);
+            DialogUtils.styleAlert(err);
+            err.showAndWait();
+        }
+    }
+
+    @FXML
+    public void onExportDeliveriesCsvForPeriod(ActionEvent ev) {
+        Integer month = cbMonth.getValue(); Integer year = cbYear.getValue(); if (month == null || year == null) return; if (!validateMonthYear(year, month)) return;
+        java.time.YearMonth ym = java.time.YearMonth.of(year, month);
+        LocalDate from = ym.atDay(1);
+        LocalDate to = ym.atEndOfMonth();
+        FileChooser fc = new FileChooser(); fc.setInitialFileName(String.format("deliveries_%02d_%d.csv", month, year));
+        File f = fc.showSaveDialog(getWindow()); if (f == null) return;
+        try {
+            reportService.exportDeliveriesCsvForPeriod(from, to, f.toPath());
+            Alert ok = new Alert(Alert.AlertType.INFORMATION, "CSV (Dostave) uspješno eksportiran: " + f.getAbsolutePath(), ButtonType.OK);
+            DialogUtils.styleAlert(ok);
+            ok.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri exportu CSV (Dostave): " + ex.getMessage(), ButtonType.OK);
             DialogUtils.styleAlert(err);
             err.showAndWait();
         }
