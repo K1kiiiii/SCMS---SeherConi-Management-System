@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.DeliveriesController">
+    <top>
+        <VBox>
+            <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding:8 0 8 0;">
+                <VBox spacing="4">
+                    <Label text="Dostave" styleClass="page-title" />
+                    <Label text="Pregled dostava" styleClass="page-subtitle" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+            </HBox>
+            <ToolBar>
+                <Button text="Novi izvoz" onAction="#handleNewDelivery" />
+                <Button text="Osvježi" onAction="#handleRefresh" />
+            </ToolBar>
+        </VBox>
+    </top>
+    <center>
+        <TableView fx:id="deliveriesTable">
+            <columns>
+                <TableColumn text="ID" fx:id="colId" />
+                <TableColumn text="Datum" fx:id="colDate" />
+                <TableColumn text="Artikal" fx:id="colItem" />
+                <TableColumn text="Količina" fx:id="colQty" />
+                <TableColumn text="Jedinica" fx:id="colUnit" />
+                <TableColumn text="Cijena (po kutiji)" fx:id="colUnitPrice" />
+                <TableColumn text="Ukupno" fx:id="colTotalPrice" />
+                <TableColumn text="Korisnik" fx:id="colUser" />
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

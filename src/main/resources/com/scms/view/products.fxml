@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.ProductsController">
+    <top>
+        <VBox>
+            <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding:8 0 8 0;">
+                <VBox spacing="4">
+                    <Label text="Proizvodi" styleClass="page-title" />
+                    <Label text="Pregled proizvoda" styleClass="page-subtitle" />
+                </VBox>
+                <Region HBox.hgrow="ALWAYS" />
+            </HBox>
+            <ToolBar>
+                <Button text="Novi proizvod" onAction="#handleNewProduct" />
+                <Button text="Uredi" onAction="#handleEditProduct" />
+                <Button text="Izbriši" onAction="#handleDeleteProduct" />
+                <Button text="Osvježi" onAction="#handleRefresh" />
+            </ToolBar>
+        </VBox>
+    </top>
+    <center>
+        <TableView fx:id="productsTable">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60" />
+                <TableColumn fx:id="colName" text="Naziv" prefWidth="220" />
+                <TableColumn fx:id="colQty" text="Količina (kutije)" prefWidth="120" />
+                <TableColumn fx:id="colPrice" text="Cijena po kutiji" prefWidth="120" />
+                <TableColumn fx:id="colRecipe" text="Recept ID" prefWidth="100" />
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>
