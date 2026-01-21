@@ -29,6 +29,8 @@
                 <TableColumn fx:id="colStatus" text="Status"/>
                 <TableColumn fx:id="colNotes" text="Napomene"/>
                 <TableColumn fx:id="colAssignedAt" text="Vrijeme"/>
+                <TableColumn fx:id="colProcessedBy" text="Obradio"/>
+                <TableColumn fx:id="colProcessedAt" text="Vrijeme obrade"/>
             </columns>
         </TableView>
     </center>

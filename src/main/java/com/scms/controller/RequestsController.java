@@ -10,6 +10,7 @@ import com.scms.service.UserService;
 import com.scms.util.DialogUtils;
 import com.scms.util.LoadingOverlay;
 import com.scms.util.RoleManager;
+import com.scms.util.TableUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -38,6 +39,8 @@ public class RequestsController {
     @FXML private TableColumn<Assignment, String> colStatus;
     @FXML private TableColumn<Assignment, String> colNotes;
     @FXML private TableColumn<Assignment, LocalDateTime> colAssignedAt;
+    @FXML private TableColumn<Assignment, Integer> colProcessedBy;
+    @FXML private TableColumn<Assignment, LocalDateTime> colProcessedAt;
     @FXML private ComboBox<String> statusFilter;
     @FXML private Button approveButton;
     @FXML private Button rejectButton;
@@ -90,6 +93,8 @@ public class RequestsController {
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         colNotes.setCellValueFactory(new PropertyValueFactory<>("notes"));
         colAssignedAt.setCellValueFactory(new PropertyValueFactory<>("assignedAt"));
+        colProcessedBy.setCellValueFactory(new PropertyValueFactory<>("processedBy"));
+        colProcessedAt.setCellValueFactory(new PropertyValueFactory<>("processedAt"));
 
         // Use cached maps to avoid hitting services per cell render
         colUser.setCellFactory(c -> new TableCell<>() {
@@ -123,6 +128,31 @@ public class RequestsController {
         });
 
         colAssignedAt.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) setText(null);
+                else setText(DATE_TIME_FORMATTER.format(item));
+            }
+        });
+
+        // processed by -> show username using userNameMap
+        colProcessedBy.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setText(null);
+                } else {
+                    Assignment a = (Assignment) getTableRow().getItem();
+                    Integer pid = a.getProcessedBy();
+                    if (pid == null) setText("");
+                    else setText(userNameMap.getOrDefault(pid, "#" + pid));
+                }
+            }
+        });
+
+        colProcessedAt.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(LocalDateTime item, boolean empty) {
                 super.updateItem(item, empty);
@@ -173,6 +203,9 @@ public class RequestsController {
             allRequests = FXCollections.observableArrayList(list);
             filteredRequests = new FilteredList<>(allRequests, r -> true);
             requestsTable.setItems(filteredRequests);
+            // auto-size columns to show full content by default
+            TableUtils.autoResizeColumnsToFitContent(requestsTable);
+
             Set<String> statuses = allRequests.stream()
                     .map(a -> a.getStatus() != null ? a.getStatus() : "")
                     .filter(s -> !s.isBlank())

@@ -5,6 +5,7 @@ import com.scms.service.ServiceException;
 import com.scms.service.UserService;
 import com.scms.util.DialogUtils;
 import com.scms.util.LoadingOverlay;
+import com.scms.util.TableUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -53,6 +54,8 @@ public class UserManagementController {
             allUsers = FXCollections.observableArrayList(fromDb);
             filteredUsers = new FilteredList<>(allUsers, u -> true);
             userTable.setItems(filteredUsers);
+            // auto-size columns so content is visible by default
+            TableUtils.autoResizeColumnsToFitContent(userTable);
             LoadingOverlay.hide(userTable);
         } catch (ServiceException ex) {
             LoadingOverlay.hide(userTable);

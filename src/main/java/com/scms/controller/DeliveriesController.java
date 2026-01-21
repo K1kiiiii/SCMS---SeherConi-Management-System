@@ -10,6 +10,7 @@ import com.scms.util.DialogUtils;
 import com.scms.util.LoadingOverlay;
 import com.scms.util.RoleManager;
 import com.scms.util.InputSanitizer;
+import com.scms.util.TableUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -115,6 +116,8 @@ public class DeliveriesController {
             List<InventoryMovement> list = task.getValue();
             items.setAll(list);
             deliveriesTable.setItems(items);
+            // auto-size columns
+            TableUtils.autoResizeColumnsToFitContent(deliveriesTable);
             LoadingOverlay.hide(deliveriesTable);
         });
         task.setOnFailed(ev -> {

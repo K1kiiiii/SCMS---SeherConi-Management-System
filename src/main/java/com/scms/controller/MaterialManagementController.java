@@ -8,6 +8,7 @@ import com.scms.util.RoleManager;
 import com.scms.util.DialogUtils;
 import com.scms.util.LoadingOverlay;
 import com.scms.util.InputSanitizer;
+import com.scms.util.TableUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -89,6 +90,8 @@ public class MaterialManagementController {
             allMaterials = FXCollections.observableArrayList(fromDb);
             filteredMaterials = new FilteredList<>(allMaterials, m -> true);
             materialTable.setItems(filteredMaterials);
+            // ensure columns show full content
+            TableUtils.autoResizeColumnsToFitContent(materialTable);
             LoadingOverlay.hide(materialTable);
         } catch (ServiceException ex) {
             LoadingOverlay.hide(materialTable);

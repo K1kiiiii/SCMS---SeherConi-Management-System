@@ -10,6 +10,7 @@ import com.scms.util.DialogUtils;
 import com.scms.util.LoadingOverlay;
 import com.scms.util.RoleManager;
 import com.scms.util.InputSanitizer;
+import com.scms.util.TableUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -100,6 +101,8 @@ public class ProductsController {
             refreshRecipeAndTaskCaches();
             items.setAll(list);
             productsTable.setItems(items);
+            // auto size columns
+            TableUtils.autoResizeColumnsToFitContent(productsTable);
         } catch (Exception ex) {
             System.err.println("Failed loading products: " + ex.getMessage());
         }
@@ -136,6 +139,8 @@ public class ProductsController {
             List<Product> list = task.getValue();
             items.setAll(list);
             productsTable.setItems(items);
+            // auto-size columns
+            TableUtils.autoResizeColumnsToFitContent(productsTable);
             LoadingOverlay.hide(productsTable);
         });
         task.setOnFailed(ev -> {

@@ -1199,152 +1199,58 @@ Label.tasks-header {
 
 /* End of dark theme */
 
-/* Standard table pattern (dark theme counterpart) */
-.standard-table {
-    -fx-background-color: #2a2319; /* dark surface */
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-padding: 6;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 8, 0.08, 0, 3);
-    -fx-border-color: rgba(217,133,85,0.12);
-    -fx-border-width: 1;
-}
-.standard-table .column-header-background { -fx-background-color: #D98555; -fx-background-radius: 8 8 0 0; }
-.standard-table .column-header .label { -fx-text-fill: white; -fx-font-weight: 600; }
-.standard-table .cell { -fx-text-fill: #E8DFD8; }
-.standard-table .table-row-cell:hover { -fx-background-color: rgba(217,133,85,0.06); }
-.standard-table .table-row-cell:selected { -fx-background-color: #D98555; -fx-text-fill: #1a1612; }
+/* ----------------------------
+   TableView header & selection final fixes (dark)
+   - Ensure header filler / corner doesn't render as a bright/resizable bar
+   - Ensure selected rows use coral/orange background with readable text
+   - Placed late to override prior conflicting rules
+   ---------------------------- */
 
-/* Recipes labels in dark theme */
-.recipes-title { -fx-text-fill: #E8DFD8; -fx-font-weight: 700; }
-.recipes-subtitle { -fx-text-fill: #D9CBBF; }
-
-/* Recipes title/subtitle: keep title visible but make recipe names darker for emphasis */
-.recipes-title { -fx-text-fill: #E8DFD8; -fx-font-weight: 800; -fx-font-size: 22px; }
-.recipes-subtitle { -fx-text-fill: #D9CBBF; -fx-font-size: 13px; }
-
-/* Make actual recipe names (list items) a readable, stronger light-beige in dark mode */
-.recipe-name, .recipe-label {
-    -fx-text-fill: #5C3D2E; /* darker brown for recipe names in dark mode per request */
-    -fx-font-weight: 700;
-}
-
-/* Header: match side menu background (use same linear gradient) */
-.border-pane > .hbox, .border-pane > StackPane > HBox {
-    -fx-background-color: linear-gradient(#2a2319, #332920);
-    -fx-background-radius: 0 0 12 12;
-}
-
-/* Ensure ScrollPane and FlowPane used on recipes page adopt transparent/dark background in dark mode */
-.border-pane ScrollPane, .border-pane .scroll-pane {
+/* Make the header row itself transparent and remove extra padding that caused a visible strip */
+.table-view .table-header-row {
     -fx-background-color: transparent;
-    -fx-border-color: transparent;
+    -fx-padding: 0;
 }
 
-/* viewport inside ScrollPane should be transparent so card backgrounds show correctly */
-.border-pane ScrollPane .viewport, .border-pane .scroll-pane .viewport {
+/* Hide any filler/corner regions that can show as a bright bar */
+.table-view .column-header-background .filler,
+.table-view .column-header-background .corner,
+.table-view .corner,
+.table-view .column-header-background .corner {
     -fx-background-color: transparent;
-    -fx-background: transparent;
+    -fx-padding: 0;
 }
 
-/* Recipes FlowPane container: ensure it's transparent and doesn't force a bright box */
-.border-pane #recipesPane, .border-pane .flow-pane, .border-pane FlowPane#recipesPane {
-    -fx-background-color: transparent;
-    -fx-padding: 8;
+/* Force the column-header background to not render extra internal artifacts */
+.table-view .column-header-background {
+    -fx-background-insets: 0;
 }
 
-/* Make sure task-card (recipe cards) has dark background in dark mode (reinforce) */
-.task-card {
-    -fx-background-color: #2a2319; /* dark card */
-    -fx-background-radius: 12;
-    -fx-border-radius: 12;
-}
-
-/* Loading overlay adjustments for dark theme */
-.loading-indicator {
-    -fx-progress-color: #E8915D; /* lighter coral accent for dark mode */
-}
-.loading-label {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 13px;
-    -fx-text-fill: #E8DFD8;
-    -fx-font-weight: 600;
-}
-#loading-overlay {
-    -fx-background-color: rgba(20,20,20,0.7);
-}
-
-/* Loading overlay (dark) */
-.loading-overlay {
-    -fx-background-color: rgba(26,22,18,0.8);
-}
-.loading-overlay .loading-indicator {
-    -fx-progress-color: #F4A76D; /* warm accent */
-}
-.loading-overlay .loading-label {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 14px;
-    -fx-text-fill: #E8DFD8;
-    -fx-font-weight: 700;
-}
-#loading-overlay { -fx-background-color: rgba(26,22,18,0.85); }
-
-/* ToolBar (top-of-page or view toolbars) - ensure dark background and button styles in dark mode */
-.tool-bar {
-    -fx-background-color: linear-gradient(#231a13, #2a2319);
+/* Consolidate selected-row appearance for dark theme under .border-pane */
+.border-pane .table-view .table-row-cell:selected,
+.border-pane .table-view .table-row-cell:selected .table-cell,
+.border-pane .table-view .table-row-cell:selected .cell {
+    -fx-background-color: #D98555; /* coral/orange selection for dark */
+    -fx-background-insets: 0;
     -fx-background-radius: 8;
-    -fx-padding: 6 8;
-    -fx-spacing: 6;
-    -fx-border-color: transparent;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 6, 0.06, 0, 2);
 }
 
-/* Buttons inside toolbars should use the main app button styling (but keep login and sidebar untouched) */
-.tool-bar .button {
-    -fx-background-color: #5C3D2E; /* dark brown */
-    -fx-text-fill: #FFFFFF;
-    -fx-font-weight: 600;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-padding: 6 12;
+/* Ensure selected text is readable (dark text on coral/orange) */
+.border-pane .table-view .table-row-cell:selected .label,
+.border-pane .table-view .table-row-cell:selected .cell {
+    -fx-text-fill: #1a1612;
 }
 
-.tool-bar .button:hover { -fx-background-color: #6A4A36; }
-.tool-bar .button:pressed { -fx-background-color: #4E2F26; -fx-translate-y: 1; }
+/* Safety fallback to prevent accidental white backgrounds on selection */
+.table-view .table-row-cell:selected { -fx-background-color: #D98555; }
+.table-view .table-row-cell:selected .cell, .table-view .table-row-cell:selected .label { -fx-text-fill: #1a1612; }
 
-/* Make sure toolbar separators (if any) use subtle divider color */
-.tool-bar .separator { -fx-background-color: rgba(255,255,255,0.03); }
+/* Ensure header label area keeps the intended orange header look without showing a separate bright strip */
+.table-view .column-header { -fx-background-color: transparent; }
 
-/* Ensure the ToolBar inside the app content area uses dark background; keep border-pane toolbars transparent */
-.border-pane .tool-bar { -fx-background-color: transparent; }
-#contentArea .tool-bar { -fx-background-color: linear-gradient(#231a13, #2a2319); -fx-background-radius:8; }
+/* Ensure the virtual-flow sits flush under header */
+.table-view .virtual-flow { -fx-padding: 0; -fx-background-insets: 0; }
 
-/* Final overrides: ensure recipes title and tasks header take precedence in dark theme */
-.border-pane Label.recipes-title, .border-pane .recipes-title {
-    -fx-font-size: 30px; /* match light mode sizing */
-    -fx-font-weight: 800;
-    -fx-text-fill: #E8DFD8;
-}
+/* End of TableView header & selection fixes for dark theme */
 
-.border-pane .tasks-header, .border-pane Label.tasks-header {
-    -fx-font-size: 24px; /* match light mode tasks header sizing */
-    -fx-font-weight: 800;
-    -fx-text-fill: #E8DFD8;
-}
-
-/* ID-targeted label overrides (dark theme) */
-Label#recipesTitle {
-    -fx-font-size: 30px;
-    -fx-font-weight: 800;
-    -fx-text-fill: #E8DFD8;
-}
-
-Label#tasksHeaderLabel {
-    -fx-font-size: 24px;
-    -fx-font-weight: 800;
-    -fx-text-fill: #E8DFD8;
-}
-
-/* End ID-targeted overrides */
-
-/* End of high-specificity overrides for dark theme */
+/* ...existing code... */

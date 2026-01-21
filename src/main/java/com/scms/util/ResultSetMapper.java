@@ -51,6 +51,9 @@ public class ResultSetMapper {
         if (t != null) a.setAssignedAt(t.toLocalDateTime());
         try { a.setStatus(rs.getString("status")); } catch (SQLException ignored) {}
         try { a.setNotes(rs.getString("notes")); } catch (SQLException ignored) {}
+        // map processed_by and processed_at if present
+        try { int pb = rs.getInt("processed_by"); if (!rs.wasNull()) a.setProcessedBy(pb); } catch (SQLException ignored) {}
+        try { Timestamp pt = rs.getTimestamp("processed_at"); if (pt != null) a.setProcessedAt(pt.toLocalDateTime()); } catch (SQLException ignored) {}
         return a;
     }
 

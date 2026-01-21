@@ -8,6 +8,7 @@ import com.scms.model.User;
 import com.scms.model.Recipe;
 import com.scms.util.RoleManager;
 import com.scms.util.LoadingOverlay;
+import com.scms.util.TableUtils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -116,11 +117,11 @@ public class AdminTasksController {
                 }).collect(Collectors.toList());
 
                 // update UI on FX thread
-                javafx.application.Platform.runLater(() -> { items.setAll(rows); LoadingOverlay.hide(tasksTable); });
+                javafx.application.Platform.runLater(() -> { items.setAll(rows); LoadingOverlay.hide(tasksTable); TableUtils.autoResizeColumnsToFitContent(tasksTable); });
             } catch (Exception ex) {
                 // fallback: map minimally and set
                 List<TaskRow> rows = all.stream().map(t -> new TaskRow(t.getId(), "#" + t.getRecipeId(), t.getAssignedTo() == null ? "-" : String.valueOf(t.getAssignedTo()), String.format("%.2f %s", t.getQuantityTarget(), t.getUnit() == null ? "" : t.getUnit()), t.getStatus() == null ? "-" : t.getStatus(), t.getStartedAt() == null ? "-" : t.getStartedAt().toString())).collect(Collectors.toList());
-                javafx.application.Platform.runLater(() -> { items.setAll(rows); LoadingOverlay.hide(tasksTable); });
+                javafx.application.Platform.runLater(() -> { items.setAll(rows); LoadingOverlay.hide(tasksTable); TableUtils.autoResizeColumnsToFitContent(tasksTable); });
             }
         });
 

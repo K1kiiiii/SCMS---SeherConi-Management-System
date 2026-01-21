@@ -10,6 +10,9 @@ public class Assignment {
     private LocalDateTime assignedAt;
     private String status; // e.g. PENDING, CONFIRMED
     private String notes;
+    // new fields to track who processed the request and when
+    private Integer processedBy;
+    private LocalDateTime processedAt;
 
     public Assignment() {}
 
@@ -51,4 +54,11 @@ public class Assignment {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    // new getters/setters
+    public Integer getProcessedBy() { return processedBy; }
+    public void setProcessedBy(Integer processedBy) { this.processedBy = processedBy; }
+
+    public LocalDateTime getProcessedAt() { return processedAt; }
+    public void setProcessedAt(LocalDateTime processedAt) { this.processedAt = processedAt; }
 }

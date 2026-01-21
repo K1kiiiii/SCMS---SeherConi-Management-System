@@ -1168,3 +1168,58 @@ Label.recipe-name, .recipe-name { -fx-text-fill: #D98555; -fx-font-weight: 700; 
     -fx-text-fill: #4A3428;
 }
 
+/* ----------------------------
+   TableView header & selection final fixes (light)
+   - Ensure header filler / corner doesn't render as a white/resizable bar
+   - Ensure selected rows use orange background with white text (no accidental white-on-white)
+   - Placed late to override prior conflicting rules
+   ---------------------------- */
+
+/* Make the header row itself transparent and remove extra padding that caused a visible strip */
+.table-view .table-header-row {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* Hide any filler/corner regions that can show as a white bar */
+.table-view .column-header-background .filler,
+.table-view .column-header-background .corner,
+.table-view .corner,
+.table-view .column-header-background .corner {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* Force the column-header background (the orange bar) to not render extra internal artifacts */
+.table-view .column-header-background {
+    -fx-background-insets: 0;
+}
+
+/* Consolidate selected-row appearance for light theme: strong specificity under .border-pane */
+.border-pane .table-view .table-row-cell:selected,
+.border-pane .table-view .table-row-cell:selected .table-cell,
+.border-pane .table-view .table-row-cell:selected .cell {
+    -fx-background-color: #E57B3C; /* orange selection */
+    -fx-background-insets: 0;
+    -fx-background-radius: 8;
+}
+
+/* Make sure selected text is white and has priority */
+.border-pane .table-view .table-row-cell:selected .label,
+.border-pane .table-view .table-row-cell:selected .cell {
+    -fx-text-fill: white;
+}
+
+/* If any other rule attempts to set selection to white, prefer these values */
+.table-view .table-row-cell:selected { -fx-background-color: #E57B3C; }
+.table-view .table-row-cell:selected .cell, .table-view .table-row-cell:selected .label { -fx-text-fill: white; }
+
+/* Ensure header label area keeps the intended orange header look without showing a separate white strip */
+.table-view .column-header {
+    -fx-background-color: transparent; /* let the column-header-background color show without extra boxes */
+}
+
+/* Small safety: ensure the virtual-flow sits flush under header */
+.table-view .virtual-flow { -fx-padding: 0; -fx-background-insets: 0; }
+
+/* End of TableView header & selection fixes for light theme */
