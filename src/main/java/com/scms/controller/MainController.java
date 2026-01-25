@@ -14,19 +14,25 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.stage.Screen;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+@SuppressWarnings("unused")
 public class MainController {
+
+    private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
 
     @FXML private Label welcomeLabel;
     @FXML private Label userInfoLabel;
     @FXML private StackPane contentArea;
-    @FXML private ImageView logoImage;
-    @FXML private Label titleLabel;
+    @SuppressWarnings("unused") @FXML private ImageView logoImage;
+    @SuppressWarnings("unused") @FXML private Label titleLabel;
 
     // side menu and buttons
-    @FXML private VBox sideMenu;
+    @SuppressWarnings("unused") @FXML private VBox sideMenu;
     @FXML private Button btnDashboard;
     @FXML private Button btnWarehouse;
     @FXML private Button btnRequests;
@@ -35,8 +41,8 @@ public class MainController {
     @FXML private Button btnStatistics;
     @FXML private Button btnReports;
     @FXML private Button btnDeliveries;
-    @FXML private Button btnProducts; // Added button for Products
-    @FXML private Button btnAdminTasks; // admin-only tasks view
+    @FXML private Button btnProducts;
+    @FXML private Button btnAdminTasks;
 
     @FXML
     public void initialize() {
@@ -56,18 +62,23 @@ public class MainController {
         // highlight dashboard as active
         setActiveButton(btnDashboard);
 
-        // Ensure the app stylesheet is applied to the main scene; the scene may not be available yet
         Platform.runLater(() -> {
             if (contentArea == null) return;
             Scene scene = contentArea.getScene();
             if (scene != null) {
                 addAppStylesheet(scene);
             } else {
-                // listen for when the scene becomes available
-                contentArea.sceneProperty().addListener((obs, oldScene, newScene) -> {
+                contentArea.sceneProperty().addListener(change -> {
+                    Scene newScene = contentArea.getScene();
                     if (newScene != null) addAppStylesheet(newScene);
                 });
             }
+
+            // Set the application window to full size
+            Stage stage = (Stage) contentArea.getScene().getWindow();
+            stage.setMaximized(false); // Disable maximized mode
+            stage.setWidth(Screen.getPrimary().getVisualBounds().getWidth()); // Set width to full screen width
+            stage.setHeight(Screen.getPrimary().getVisualBounds().getHeight()); // Set height to full screen height
         });
     }
 
@@ -82,42 +93,28 @@ public class MainController {
             String darkCss = darkUrl == null ? null : darkUrl.toExternalForm();
             String lightCss = lightUrl == null ? null : lightUrl.toExternalForm();
 
-            // debug: print resolved css URLs
-            System.out.println("[DEBUG] addAppStylesheet: darkCss=" + darkCss + " lightCss=" + lightCss + " scene.stylesheets=" + scene.getStylesheets());
-
-            // remove both if present from scene
-            // clear all to avoid inconsistent stacking
-            scene.getStylesheets().clear();
-
-            // also remove from root stylesheets as a fallback
-            try {
-                if (scene.getRoot() != null) {
-                    scene.getRoot().getStylesheets().clear();
-                }
-            } catch (Exception ignore) { }
+            scene.getStylesheets().removeIf(s -> s.contains("/com/scms/css/light-theme.css") || s.contains("/com/scms/css/dark-theme.css"));
 
             if (dark) {
                 if (darkCss != null) {
                     scene.getStylesheets().add(darkCss);
-                    System.out.println("[DEBUG] added dark stylesheet: " + darkCss);
+                    LOGGER.fine("added dark stylesheet: " + darkCss);
                 }
                 try { if (scene.getRoot() != null) scene.getRoot().setStyle("-fx-background-color: #1F1F1F;"); } catch (Exception ignore) {}
                 try { scene.setFill(javafx.scene.paint.Color.web("#1F1F1F")); } catch (Exception ignore) {}
             } else {
                 if (lightCss != null) {
                     scene.getStylesheets().add(lightCss);
-                    System.out.println("[DEBUG] added light stylesheet: " + lightCss);
+                    LOGGER.fine("added light stylesheet: " + lightCss);
                 }
                 try { if (scene.getRoot() != null) scene.getRoot().setStyle("-fx-background-color: #F5F3EF;"); } catch (Exception ignore) {}
                 try { scene.setFill(javafx.scene.paint.Color.web("#F5F3EF")); } catch (Exception ignore) {}
             }
 
-            System.out.println("[DEBUG] final scene.stylesheets=" + scene.getStylesheets());
-            try { System.out.println("[DEBUG] root.stylesheets=" + (scene.getRoot() == null ? "null" : scene.getRoot().getStylesheets())); } catch (Exception ignore) {}
+            LOGGER.fine("final scene.stylesheets=" + scene.getStylesheets());
 
         } catch (Exception ex) {
-            System.err.println("Could not load app stylesheet: " + ex.getMessage());
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Could not load app stylesheet: " + ex.getMessage(), ex);
         }
     }
 
@@ -151,11 +148,12 @@ public class MainController {
             // radnik nema pristup izvještajima i receptima
             if (btnReports != null) { btnReports.setVisible(false); btnReports.setManaged(false); }
             if (btnRecipes != null) { btnRecipes.setVisible(false); btnRecipes.setManaged(false); }
-            // radnik should not see products
+            // radnik should not see products or deliveries
             if (btnProducts != null) { btnProducts.setVisible(false); btnProducts.setManaged(false); }
+            if (btnDeliveries != null) { btnDeliveries.setVisible(false); btnDeliveries.setManaged(false); }
             if (btnAdminTasks != null) { btnAdminTasks.setVisible(false); btnAdminTasks.setManaged(false); }
             // radnik should still be able to view statistics (personal stats only)
-            return;
+            // fall through
         }
     }
 
@@ -166,7 +164,7 @@ public class MainController {
 
             java.net.URL loginUrl = getClass().getResource("/com/scms/view/login.fxml");
             if (loginUrl == null) {
-                System.err.println("Login FXML resource missing");
+                LOGGER.severe("Login FXML resource missing");
                 return;
             }
 
@@ -179,7 +177,7 @@ public class MainController {
             stage.show();
 
         } catch (IOException e) {
-            System.err.println("Failed to open login view: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Failed to open login view: " + e.getMessage(), e);
         }
     }
 
@@ -212,15 +210,13 @@ public class MainController {
         try {
             java.net.URL reportUrl = getClass().getResource("/com/scms/view/report_dialog.fxml");
             if (reportUrl == null) {
-                System.err.println("Report dialog resource missing");
+                LOGGER.severe("Report dialog resource missing");
                 return;
             }
-            // show overlay while creating report window
             LoadingOverlay.show(contentArea);
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(reportUrl);
             javafx.scene.Parent root = loader.load();
             javafx.scene.Scene scene = new javafx.scene.Scene(root);
-            // apply theme based on preferences
             addAppStylesheet(scene);
             javafx.stage.Stage stage = new javafx.stage.Stage();
             stage.setTitle("Izvještaji");
@@ -229,7 +225,7 @@ public class MainController {
             stage.show();
             LoadingOverlay.hide(contentArea);
         } catch (Exception ex) {
-            System.err.println("Failed to open reports window: " + ex.getMessage());
+            LOGGER.log(Level.SEVERE, "Failed to open reports window: " + ex.getMessage(), ex);
             LoadingOverlay.hide(contentArea);
         }
     }
@@ -253,6 +249,12 @@ public class MainController {
 
     @FXML
     private void handleViewDeliveries() {
+        User currentUser = RoleManager.getLoggedInUser();
+        if (currentUser == null || !"ADMIN".equals(currentUser.getRole())) {
+            btnDeliveries.setVisible(false);
+            btnDeliveries.setManaged(false);
+            return;
+        }
         setActiveButton(btnDeliveries);
         loadPage("/com/scms/view/dostave.fxml");
     }
@@ -269,7 +271,6 @@ public class MainController {
         loadPage("/com/scms/view/admin_tasks.fxml");
     }
 
-    // helper to mark active menu button using CSS class
     private void setActiveButton(Button active) {
         Button[] buttons = new Button[]{btnDashboard, btnWarehouse, btnAdminTasks, btnRequests, btnRecipes, btnReports, btnDeliveries, btnProducts, btnUsers, btnStatistics};
         for (Button b : buttons) {
@@ -287,33 +288,23 @@ public class MainController {
         try {
             java.net.URL pageUrl = getClass().getResource(fxmlPath);
             if (pageUrl == null) {
-                System.err.println("Missing page resource: " + fxmlPath);
+                LOGGER.severe("Missing page resource: " + fxmlPath);
                 return;
             }
 
-            // show loading overlay while loading FXML off the FX thread
             LoadingOverlay.show(contentArea);
 
-            // load page on FX thread to avoid tricky background FXMLLoader issues
-            Platform.runLater(() -> {
-                try {
-                    Parent view = FXMLLoader.load(pageUrl);
-                    if (view != null) {
-                        try { view.setStyle("-fx-background-color: transparent;"); } catch (Exception ignore) {}
-                        contentArea.getChildren().setAll(view);
-                    } else {
-                        contentArea.getChildren().clear();
-                    }
-                } catch (Throwable ex) {
-                    System.err.println("Failed to load page '" + fxmlPath + "' on FX thread: " + (ex == null ? "unknown" : ex.toString()));
-                    if (ex != null) ex.printStackTrace();
-                } finally {
-                    LoadingOverlay.hide(contentArea);
-                }
-            });
+            Parent view = FXMLLoader.load(pageUrl);
+            if (view != null) {
+                view.setStyle("-fx-background-color: transparent;");
+                contentArea.getChildren().setAll(view);
+            } else {
+                contentArea.getChildren().clear();
+            }
 
         } catch (Exception e) {
-            System.err.println("Error loading page: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error loading page: " + e.getMessage(), e);
+        } finally {
             LoadingOverlay.hide(contentArea);
         }
     }

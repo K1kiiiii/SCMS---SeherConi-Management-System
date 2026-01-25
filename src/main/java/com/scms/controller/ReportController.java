@@ -12,8 +12,12 @@ import javafx.stage.Window;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ReportController {
+
+    private static final Logger LOGGER = Logger.getLogger(ReportController.class.getName());
 
     @FXML private ComboBox<Integer> cbMonth;
     @FXML private ComboBox<Integer> cbYear;
@@ -28,24 +32,39 @@ public class ReportController {
 
     @FXML
     public void initialize() {
-        for (int m = 1; m <= 12; m++) cbMonth.getItems().add(m);
+        // Populate month dropdown
+        cbMonth.getItems().clear();
+        for (int m = 1; m <= 12; m++) {
+            cbMonth.getItems().add(m);
+        }
+
+        // Populate year dropdowns
+        cbYear.getItems().clear();
+        cbYear2.getItems().clear();
         int nowYear = LocalDate.now().getYear();
-        for (int y = nowYear - 5; y <= nowYear + 1; y++) { cbYear.getItems().add(y); cbYear2.getItems().add(y); }
-        // months are 1-based in UI; select current month value
-        cbMonth.getSelectionModel().select((Integer)LocalDate.now().getMonthValue());
-        cbYear.getSelectionModel().select((Integer)nowYear);
-        cbYear2.getSelectionModel().select((Integer)nowYear);
+        for (int y = nowYear - 5; y <= nowYear + 1; y++) {
+            cbYear.getItems().add(y);
+            cbYear2.getItems().add(y);
+        }
+
+        // Set default selections
+        cbMonth.getSelectionModel().select((Integer) LocalDate.now().getMonthValue());
+        cbYear.getSelectionModel().select((Integer) nowYear);
+        cbYear2.getSelectionModel().select((Integer) nowYear);
+
+        // Log initialization for debugging
+        LOGGER.info("Month and Year dropdowns initialized with default values.");
     }
 
     private boolean validateMonthYear(int year, int month) {
         LocalDate from = YearMonth.of(year, month).atDay(1);
-        if (from.isBefore(MIN_DATE)) {
-            Alert a = new Alert(Alert.AlertType.WARNING, "Izabrani datum ne može biti prije 01.01.2026.", ButtonType.OK);
-            DialogUtils.styleAlert(a);
-            a.showAndWait();
-            return false;
+        if (!from.isBefore(MIN_DATE)) {
+            return true;
         }
-        return true;
+        Alert a = new Alert(Alert.AlertType.WARNING, "Izabrani datum ne može biti prije 01.01.2026.", ButtonType.OK);
+        DialogUtils.styleAlert(a);
+        a.showAndWait();
+        return false;
     }
 
     private boolean validateYear(int year) {
@@ -62,7 +81,12 @@ public class ReportController {
     @FXML
     public void onGenerateMonthlyPdf(ActionEvent ev) {
         Integer month = cbMonth.getValue(); Integer year = cbYear.getValue();
-        if (month == null || year == null) return;
+        if (month == null || year == null) {
+            Alert a = new Alert(Alert.AlertType.WARNING, "Molimo odaberite mjesec i godinu.", ButtonType.OK);
+            DialogUtils.styleAlert(a);
+            a.showAndWait();
+            return;
+        }
         if (!validateMonthYear(year, month)) return;
         FileChooser fc = new FileChooser(); fc.setInitialFileName(String.format("report_%02d_%d.pdf", month, year));
         File f = fc.showSaveDialog(getWindow());
@@ -73,7 +97,7 @@ public class ReportController {
             DialogUtils.styleAlert(ok);
             ok.showAndWait();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Greška pri generiranju PDF", ex);
             Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju PDF: " + ex.getMessage(), ButtonType.OK);
             DialogUtils.styleAlert(err);
             err.showAndWait();
@@ -91,7 +115,7 @@ public class ReportController {
             DialogUtils.styleAlert(ok);
             ok.showAndWait();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Greška pri generiranju PDF", ex);
             Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju PDF: " + ex.getMessage(), ButtonType.OK);
             DialogUtils.styleAlert(err);
             err.showAndWait();
@@ -112,7 +136,7 @@ public class ReportController {
             DialogUtils.styleAlert(ok);
             ok.showAndWait();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Greška pri exportu CSV", ex);
             Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri exportu CSV: " + ex.getMessage(), ButtonType.OK);
             DialogUtils.styleAlert(err);
             err.showAndWait();
@@ -131,7 +155,7 @@ public class ReportController {
             DialogUtils.styleAlert(ok);
             ok.showAndWait();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Greška pri generiranju PDF (Dostave)", ex);
             Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju PDF (Dostave): " + ex.getMessage(), ButtonType.OK);
             DialogUtils.styleAlert(err);
             err.showAndWait();
@@ -152,7 +176,7 @@ public class ReportController {
             DialogUtils.styleAlert(ok);
             ok.showAndWait();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Greška pri exportu CSV (Dostave)", ex);
             Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri exportu CSV (Dostave): " + ex.getMessage(), ButtonType.OK);
             DialogUtils.styleAlert(err);
             err.showAndWait();
@@ -184,7 +208,7 @@ public class ReportController {
             DialogUtils.styleAlert(w);
             w.showAndWait();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Greška pri generiranju preview-a", ex);
             Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju preview-a: " + ex.getMessage(), ButtonType.OK);
             DialogUtils.styleAlert(err);
             err.showAndWait();
@@ -207,7 +231,7 @@ public class ReportController {
             DialogUtils.styleAlert(w);
             w.showAndWait();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Greška pri generiranju labela", ex);
             Alert err = new Alert(Alert.AlertType.ERROR, "Greška pri generiranju labela: " + ex.getMessage(), ButtonType.OK);
             DialogUtils.styleAlert(err);
             err.showAndWait();

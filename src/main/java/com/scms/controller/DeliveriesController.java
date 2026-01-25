@@ -23,8 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DeliveriesController {
+
+    private static final Logger LOGGER = Logger.getLogger(DeliveriesController.class.getName());
 
     @FXML private TableView<InventoryMovement> deliveriesTable;
     @FXML private TableColumn<InventoryMovement, Integer> colId;
@@ -39,7 +43,7 @@ public class DeliveriesController {
     private final InventoryMovementDao imDao = new InventoryMovementDao();
     private final ProductDao productDao = new ProductDao();
     private final MaterialDao materialDao = new MaterialDao();
-    private ObservableList<InventoryMovement> items = FXCollections.observableArrayList();
+    private final ObservableList<InventoryMovement> items = FXCollections.observableArrayList();
 
     // caches for names to avoid DB calls during cell rendering
     private final Map<Integer, String> productNameMap = new HashMap<>();
@@ -71,7 +75,6 @@ public class DeliveriesController {
         if (pid != null) {
             String n = productNameMap.get(pid);
             if (n != null) return n;
-            // fallback to id if not cached
             return "Prod#" + pid;
         }
         Integer mid = mv.getMaterialId();
@@ -96,34 +99,28 @@ public class DeliveriesController {
             materialNameMap.clear();
             for (Material m : ms) materialNameMap.put(m.getId(), m.getName());
         } catch (Exception ex) {
-            // ignore
         }
     }
 
     private void loadDeliveriesAsync() {
-        // show overlay while loading deliveries
         LoadingOverlay.show(deliveriesTable);
         javafx.concurrent.Task<List<InventoryMovement>> task = new javafx.concurrent.Task<>() {
             @Override
             protected List<InventoryMovement> call() throws Exception {
-                // fetch movements (here items list may be loaded later)
                 return imDao.findAll();
             }
         };
         task.setOnSucceeded(ev -> {
-            // populate name caches (best-effort)
             loadCaches();
             List<InventoryMovement> list = task.getValue();
             items.setAll(list);
             deliveriesTable.setItems(items);
-            // auto-size columns
             TableUtils.autoResizeColumnsToFitContent(deliveriesTable);
             LoadingOverlay.hide(deliveriesTable);
         });
         task.setOnFailed(ev -> {
             Throwable ex = task.getException();
-            System.err.println("Failed loading deliveries async: " + (ex == null ? "unknown" : ex.toString()));
-            if (ex != null) ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed loading deliveries async", ex);
             LoadingOverlay.hide(deliveriesTable);
         });
         Thread th = new Thread(task, "deliveries-loader"); th.setDaemon(true); th.start();
@@ -181,15 +178,14 @@ public class DeliveriesController {
                     try { mv.setUserId(RoleManager.getLoggedInUser().getId()); } catch (Exception ignored) {}
                     mv.setCreatedAt(java.time.LocalDateTime.now());
 
-                    // insert movement
-                    try { imDao.insert(mv); } catch (Exception ex) { System.err.println("Failed inserting delivery: " + ex.getMessage()); }
+                    try { imDao.insert(mv); } catch (Exception ex) { LOGGER.log(Level.SEVERE, "Failed inserting delivery", ex); }
 
                     // reduce product quantity (by boxes)
                     try {
                         p.setQuantityBoxes(p.getQuantityBoxes() - qty);
                         if (up != null) p.setPricePerBox(up);
                         productDao.update(p);
-                    } catch (Exception ex) { System.err.println("Failed updating product quantity: " + ex.getMessage()); }
+                    } catch (Exception ex) { LOGGER.log(Level.SEVERE, "Failed updating product quantity", ex); }
 
                     return true;
                 } catch (Exception ex) {

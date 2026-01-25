@@ -22,8 +22,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+@SuppressWarnings("unused")
 public class ProductsController {
+
+    private static final Logger LOGGER = Logger.getLogger(ProductsController.class.getName());
 
     @FXML private TableView<Product> productsTable;
     @FXML private TableColumn<Product, Integer> colId;
@@ -31,7 +36,7 @@ public class ProductsController {
     @FXML private TableColumn<Product, Double> colQty;
     @FXML private TableColumn<Product, Double> colPrice;
     @FXML private TableColumn<Product, Integer> colRecipe;
-    @FXML private TableColumn<Product, Integer> colTask;
+    @SuppressWarnings("unused") @FXML private TableColumn<Product, Integer> colTask;
 
     private final ProductDao productDao = new ProductDao();
     private final RecipeDao recipeDao = new RecipeDao();
@@ -45,56 +50,59 @@ public class ProductsController {
 
     @FXML
     public void initialize() {
-        // Initialize table columns bindings (simple property accessors)
         try {
             colId.setCellValueFactory(cd -> new javafx.beans.property.SimpleObjectProperty<>(cd.getValue().getId()));
             colName.setCellValueFactory(cd -> new javafx.beans.property.SimpleStringProperty(cd.getValue().getName()));
             colQty.setCellValueFactory(cd -> new javafx.beans.property.SimpleObjectProperty<>(cd.getValue().getQuantityBoxes()));
             colPrice.setCellValueFactory(cd -> new javafx.beans.property.SimpleObjectProperty<>(cd.getValue().getPricePerBox()));
 
-            // recipe column: show recipe name when available
             colRecipe.setCellValueFactory(cd -> new javafx.beans.property.SimpleObjectProperty<>(cd.getValue().getRecipeId()));
-            colRecipe.setCellFactory(column -> new TableCell<>() {
-                @Override
-                protected void updateItem(Integer item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                        setText(null);
-                    } else {
-                        Product p = (Product) getTableRow().getItem();
-                        Integer rid = p.getRecipeId();
-                        if (rid == null) setText("");
-                        else setText(recipeNameMap.getOrDefault(rid, "#" + rid));
-                    }
-                }
-            });
-
-            // task column: show task display string
-            if (colTask != null) {
-                colTask.setCellValueFactory(cd -> new javafx.beans.property.SimpleObjectProperty<>(cd.getValue().getTaskId()));
-                colTask.setCellFactory(column -> new TableCell<>() {
+            colRecipe.setCellFactory(col -> {
+                final TableColumn<Product, ?> colRef = col;
+                return new TableCell<>() {
                     @Override
                     protected void updateItem(Integer item, boolean empty) {
                         super.updateItem(item, empty);
+                        String hdr = colRef == null ? "" : colRef.getText();
                         if (empty || getTableRow() == null || getTableRow().getItem() == null) {
                             setText(null);
                         } else {
-                            Product p = (Product) getTableRow().getItem();
-                            Integer tid = p.getTaskId();
-                            if (tid == null) setText("");
-                            else setText(taskDisplayMap.getOrDefault(tid, "#" + tid));
+                            Product p = getTableRow().getItem();
+                            Integer rid = p.getRecipeId();
+                            if (rid == null) setText("");
+                            else setText(recipeNameMap.getOrDefault(rid, "#" + rid));
                         }
                     }
+                };
+            });
+
+            if (colTask != null) {
+                colTask.setCellValueFactory(cd -> new javafx.beans.property.SimpleObjectProperty<>(cd.getValue().getTaskId()));
+                colTask.setCellFactory(col -> {
+                    final TableColumn<Product, ?> colRef = col;
+                    return new TableCell<>() {
+                        @Override
+                        protected void updateItem(Integer item, boolean empty) {
+                            super.updateItem(item, empty);
+                            String hdr = colRef == null ? "" : colRef.getText();
+                            if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                                setText(null);
+                            } else {
+                                Product p = getTableRow().getItem();
+                                Integer tid = p.getTaskId();
+                                if (tid == null) setText("");
+                                else setText(taskDisplayMap.getOrDefault(tid, "#" + tid));
+                            }
+                        }
+                    };
                 });
             }
         } catch (Exception ignore) { }
 
-        // Load products in background so FXML loading doesn't block when DB is slow/unavailable
         loadProductsAsync();
     }
 
     private void loadProducts() {
-        // synchronous load used by other parts if needed (keeps behavior)
         try {
             List<Product> list = productDao.findAll();
             // refresh caches
@@ -104,7 +112,7 @@ public class ProductsController {
             // auto size columns
             TableUtils.autoResizeColumnsToFitContent(productsTable);
         } catch (Exception ex) {
-            System.err.println("Failed loading products: " + ex.getMessage());
+            LOGGER.log(Level.SEVERE, "Failed loading products", ex);
         }
     }
 
@@ -125,28 +133,24 @@ public class ProductsController {
     }
 
     private void loadProductsAsync() {
-        // show overlay on the products table (will attach to contentArea when available)
         LoadingOverlay.show(productsTable);
         javafx.concurrent.Task<List<Product>> task = new javafx.concurrent.Task<>() {
             @Override
             protected List<Product> call() throws Exception {
-                // populate caches first
                 refreshRecipeAndTaskCaches();
                 return productDao.findAll();
             }
         };
-        task.setOnSucceeded(ev -> {
+        task.setOnSucceeded(event -> {
+            LOGGER.fine("products-loader succeeded: " + event);
             List<Product> list = task.getValue();
             items.setAll(list);
             productsTable.setItems(items);
-            // auto-size columns
             TableUtils.autoResizeColumnsToFitContent(productsTable);
             LoadingOverlay.hide(productsTable);
         });
-        task.setOnFailed(ev -> {
-            Throwable ex = task.getException();
-            System.err.println("Failed loading products async: " + (ex == null ? "unknown" : ex.toString()));
-            if (ex != null) ex.printStackTrace();
+        task.setOnFailed(event -> {
+            LOGGER.log(Level.SEVERE, "products-loader failed: " + event, task.getException());
             LoadingOverlay.hide(productsTable);
         });
         Thread t = new Thread(task, "products-loader");
@@ -185,39 +189,32 @@ public class ProductsController {
         grid.add(new Label("Cijena po kutiji:"), 0, 4); grid.add(priceField, 1, 4);
 
         dialog.getDialogPane().setContent(grid);
-        dialog.setResultConverter(btn -> {
-            if (btn == ButtonType.OK) {
-                try {
-                    Product p = new Product();
-                    p.setName(InputSanitizer.sanitizeText(nameField.getText()));
-                    if (cbRecipes.getValue() != null) p.setRecipeId(cbRecipes.getValue().getId());
-                    if (cbTasks.getValue() != null) p.setTaskId(cbTasks.getValue().getId());
-                    Double qty = InputSanitizer.parseDoubleOrNull(qtyField.getText());
-                    Double price = InputSanitizer.parseDoubleOrNull(priceField.getText());
-                    if (qty == null || price == null) throw new IllegalArgumentException("Provjerite unesene vrijednosti.");
-                    p.setQuantityBoxes(qty);
-                    p.setPricePerBox(price);
-                    return p;
-                } catch (Exception ex) {
-                    Alert a = new Alert(Alert.AlertType.WARNING); DialogUtils.styleAlert(a);
-                    a.setTitle("Neispravan unos"); a.setHeaderText(null); a.setContentText("Provjerite unesene vrijednosti."); a.showAndWait();
-                    return null;
-                }
-            }
-            return null;
-        });
+        dialog.setResultConverter(btn -> { if (btn == ButtonType.OK) { try {
+            Product p = new Product();
+            p.setName(InputSanitizer.sanitizeText(nameField.getText()));
+            if (cbRecipes.getValue() != null) p.setRecipeId(cbRecipes.getValue().getId());
+            if (cbTasks.getValue() != null) p.setTaskId(cbTasks.getValue().getId());
+            Double qty = InputSanitizer.parseDoubleOrNull(qtyField.getText());
+            Double price = InputSanitizer.parseDoubleOrNull(priceField.getText());
+            if (qty == null || price == null) throw new IllegalArgumentException("Provjerite unesene vrijednosti.");
+            p.setQuantityBoxes(qty);
+            p.setPricePerBox(price);
+            return p;
+        } catch (Exception ex) {
+            Alert a = new Alert(Alert.AlertType.WARNING); DialogUtils.styleAlert(a);
+            a.setTitle("Neispravan unos"); a.setHeaderText(null); a.setContentText("Provjerite unesene vrijednosti."); a.showAndWait();
+            return null; } } return null; });
 
         DialogUtils.styleDialog(dialog);
         Optional<Product> res = dialog.showAndWait();
         if (res.isPresent()) {
-            try { productDao.create(res.get()); loadProducts(); } catch (Exception ex) { System.err.println("Failed creating product: " + ex.getMessage()); }
+            try { productDao.create(res.get()); loadProducts(); } catch (Exception ex) { LOGGER.log(Level.SEVERE, "Failed creating product", ex); }
         }
     }
 
     @FXML
     private void handleEditProduct() {
-        Product sel = productsTable.getSelectionModel().getSelectedItem();
-        if (sel == null) return;
+        Product sel = productsTable.getSelectionModel().getSelectedItem(); if (sel == null) return;
         if (!(RoleManager.isAdmin() || RoleManager.isMagacioner())) {
             Alert a = new Alert(Alert.AlertType.WARNING); DialogUtils.styleAlert(a);
             a.setTitle("Pristup odbijen"); a.setHeaderText(null); a.setContentText("Nemate dozvolu za uređivanje cijene."); a.showAndWait();
@@ -252,12 +249,12 @@ public class ProductsController {
             sel.setTaskId(cbTasks.getValue()==null?null:cbTasks.getValue().getId());
             return sel; } catch (Exception ex) { return null; } } return null; });
         DialogUtils.styleDialog(dialog);
-        Optional<Product> res = dialog.showAndWait(); if (res.isPresent()) { try { productDao.update(res.get()); loadProducts(); } catch (Exception ex) { System.err.println("Failed updating product: " + ex.getMessage()); } }
+        Optional<Product> res = dialog.showAndWait(); if (res.isPresent()) { try { productDao.update(res.get()); loadProducts(); } catch (Exception ex) { LOGGER.log(Level.SEVERE, "Failed updating product", ex); } }
     }
 
     @FXML
     private void handleDeleteProduct() {
         Product sel = productsTable.getSelectionModel().getSelectedItem(); if (sel==null) return;
-        Alert c = new Alert(Alert.AlertType.CONFIRMATION); DialogUtils.styleAlert(c); c.setTitle("Brisanje"); c.setHeaderText(null); c.setContentText("Sigurno obrisati proizvod?"); Optional<ButtonType> r = c.showAndWait(); if (r.isPresent() && r.get()==ButtonType.OK) { try { productDao.delete(sel.getId()); loadProducts(); } catch (Exception ex) { System.err.println("Failed deleting product: " + ex.getMessage()); } }
+        Alert c = new Alert(Alert.AlertType.CONFIRMATION); DialogUtils.styleAlert(c); c.setTitle("Brisanje"); c.setHeaderText(null); c.setContentText("Sigurno obrisati proizvod?"); Optional<ButtonType> r = c.showAndWait(); if (r.isPresent() && r.get()==ButtonType.OK) { try { productDao.delete(sel.getId()); loadProducts(); } catch (Exception ex) { LOGGER.log(Level.SEVERE, "Failed deleting product", ex); } }
     }
 }

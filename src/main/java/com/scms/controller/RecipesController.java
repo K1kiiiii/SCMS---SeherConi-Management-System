@@ -7,7 +7,6 @@ import com.scms.service.ServiceException;
 import com.scms.util.DialogUtils;
 import com.scms.util.LoadingOverlay;
 import com.scms.util.InputSanitizer;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -16,7 +15,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +22,13 @@ import java.util.Optional;
 import com.scms.service.MaterialService;
 import com.scms.model.Material;
 
-/**
- * Controller for recipes view. Populates recipe cards and provides "Dodijeli radniku" button per recipe.
- */
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+@SuppressWarnings("unused")
 public class RecipesController {
+
+    private static final Logger LOGGER = Logger.getLogger(RecipesController.class.getName());
 
     @FXML private Label titleLabel;
     @FXML private Label subtitleLabel;
@@ -52,7 +53,7 @@ public class RecipesController {
                 recipesPane.getChildren().add(card);
             }
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed to load recipes", ex);
         } finally {
             LoadingOverlay.hide(recipesPane);
         }
@@ -76,11 +77,8 @@ public class RecipesController {
         card.getStyleClass().add("task-card");
         card.setPrefWidth(260);
 
-        // Make the card clickable to open recipe detail dialog. Keep assign button clickable separately.
         card.setOnMouseClicked(ev -> RecipeDetailDialog.show(recipeId));
-        // Improve affordance
         card.setStyle(card.getStyle() + " -fx-cursor: hand;");
-        // Prevent clicking the assign button from also triggering the card click
         assignBtn.setOnMouseClicked(evt -> { evt.consume(); openAssignDialog(recipeId); });
 
         return card;
@@ -94,13 +92,16 @@ public class RecipesController {
             dialog.setTitle("Dodijeli zadatak");
             javafx.scene.Scene s = new javafx.scene.Scene(loader.load());
             // ensure app stylesheet is applied so the dialog matches main app theme
-            try { s.getStylesheets().add(getClass().getResource("/com/scms/css/light-theme.css").toExternalForm()); } catch (Exception ignored) {}
+            try {
+                java.net.URL css = getClass().getResource("/com/scms/css/light-theme.css");
+                if (css != null) s.getStylesheets().add(css.toExternalForm());
+            } catch (Exception ignored) {}
             com.scms.controller.AssignTaskController c = loader.getController();
             c.setRecipeId(recipeId);
             dialog.setScene(s);
             dialog.showAndWait();
         } catch (java.io.IOException ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed to open assign dialog", ex);
         }
     }
 
@@ -128,27 +129,24 @@ public class RecipesController {
         grid.add(new Label("Opis:"), 0, 1);
         grid.add(descField, 1, 1);
 
-        // recipe items area: we'll add rows dynamically using a VBox containing GridPanes per item
         VBox itemsBox = new VBox(8);
         itemsBox.setPadding(new Insets(8,0,8,0));
 
         Button addItemBtn = new Button("Dodaj sirovinu");
         addItemBtn.setOnAction(evt -> {
-            GridPane row = createRecipeItemRow(null);
+            if (evt != null) evt.consume();
+            GridPane row = createRecipeItemRow();
             itemsBox.getChildren().add(row);
         });
 
-        // start with one empty row
-        itemsBox.getChildren().add(createRecipeItemRow(null));
+        itemsBox.getChildren().add(createRecipeItemRow());
 
         grid.add(new Label("Sirovine:"), 0, 2);
         grid.add(itemsBox, 1, 2);
         grid.add(addItemBtn, 1, 3);
 
-        // Wrap the content in a ScrollPane so the dialog becomes vertically scrollable
         javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(grid);
         scroll.setFitToWidth(true);
-        // reasonable default viewport height so many items will force scrolling
         scroll.setPrefViewportHeight(380);
         dialog.getDialogPane().setContent(scroll);
 
@@ -162,19 +160,19 @@ public class RecipesController {
                     return null;
                 }
 
-                // gather recipe items
                 List<RecipeItem> items = new ArrayList<>();
                 for (javafx.scene.Node n : itemsBox.getChildren()) {
-                    if (n instanceof GridPane) {
-                        GridPane gp = (GridPane) n;
-                        ComboBox<Material> materialCombo = (ComboBox<Material>) gp.getUserData();
+                    if (n instanceof GridPane gp) {
+                        Object ud = gp.getUserData();
+                        @SuppressWarnings("unchecked")
+                        ComboBox<Material> materialCombo = (ud instanceof ComboBox) ? (ComboBox<Material>) ud : null;
                         // children order: 0=Label,1=materialCombo,2=qtyField,3=unitField,4=remove
                         TextField qtyField = (TextField) gp.getChildren().get(2);
                         TextField unitField = (TextField) gp.getChildren().get(3);
 
-                        Material material = materialCombo.getValue();
+                        Material material = materialCombo == null ? null : materialCombo.getValue();
                         String unit = InputSanitizer.sanitizeText(unitField.getText());
-                        Double qty = 0.0;
+                        double qty = 0.0;
                         if (qtyField.getText() != null && !qtyField.getText().isBlank()) {
                             Double parsed = InputSanitizer.parseDoubleOrNull(qtyField.getText().trim());
                             if (parsed == null) {
@@ -197,7 +195,6 @@ public class RecipesController {
                     }
                 }
 
-                // create recipe with items
                 try {
                     Recipe r = new Recipe();
                     r.setName(name);
@@ -215,7 +212,6 @@ public class RecipesController {
         DialogUtils.styleDialog(dialog);
         Optional<List<RecipeItem>> res = dialog.showAndWait();
         if (res.isPresent()) {
-            // reload recipes
             loadRecipes();
             Alert info = new Alert(Alert.AlertType.INFORMATION);
             DialogUtils.styleAlert(info);
@@ -226,7 +222,7 @@ public class RecipesController {
         }
     }
 
-    private GridPane createRecipeItemRow(RecipeItem existing) {
+    private GridPane createRecipeItemRow() {
         GridPane row = new GridPane();
         row.setHgap(8);
         row.setVgap(4);
@@ -238,7 +234,6 @@ public class RecipesController {
             List<Material> mats = materialService.listMaterials();
             materialCombo.setItems(javafx.collections.FXCollections.observableArrayList(mats));
         } catch (ServiceException ex) {
-            // ignore; leave combo empty
         }
         materialCombo.setCellFactory(lv -> new javafx.scene.control.ListCell<>() {
             @Override protected void updateItem(Material item, boolean empty) { super.updateItem(item, empty); setText(empty || item == null ? null : item.getName()); }
@@ -251,7 +246,7 @@ public class RecipesController {
         unitField.setPromptText("jed.");
 
         Button remove = new Button("Ukloni");
-        remove.setOnAction(evt -> ((VBox)row.getParent()).getChildren().remove(row));
+        remove.setOnAction(evt -> { if (evt != null) evt.consume(); ((VBox)row.getParent()).getChildren().remove(row); });
 
         row.add(new Label("Sirovina:"), 0, 0);
         row.add(materialCombo, 1, 0);
@@ -259,7 +254,6 @@ public class RecipesController {
         row.add(unitField, 3, 0);
         row.add(remove, 4, 0);
 
-        // store ref to combo so we can extract selected material id later
         row.setUserData(materialCombo);
         return row;
     }

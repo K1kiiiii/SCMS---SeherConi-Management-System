@@ -2,31 +2,30 @@ package com.scms.util;
 
 import javafx.application.Platform;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Utility helpers for TableView column sizing.
- *
- * Usage: after setting items on a TableView, call
- * TableUtils.autoResizeColumnsToFitContent(table);
- *
- * This sets the table resize policy to UNCONSTRAINED and computes
- * a reasonable preferred width for each visible column based on
- * header text and a sample of cell values.
  */
 public final class TableUtils {
+
+    private static final Logger LOGGER = Logger.getLogger(TableUtils.class.getName());
 
     private TableUtils() {}
 
     public static void autoResizeColumnsToFitContent(TableView<?> table) {
         if (table == null) return;
-        // Allow columns to have widths independent of table width
         table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
 
         Platform.runLater(() -> {
@@ -36,32 +35,29 @@ public final class TableUtils {
                 for (TableColumn<?, ?> col : table.getColumns()) {
                     resizeColumnToFitContent(col, items, sampleSize);
                 }
-                // attach a simple context menu so users can re-run autosize or switch policies
                 attachSimpleContextMenu(table);
             } catch (Exception ex) {
-                // defensive: don't crash UI if measuring fails
-                ex.printStackTrace();
+                LOGGER.log(Level.SEVERE, "Error in auto-resizing columns", ex);
             }
         });
     }
 
-    @SuppressWarnings({"rawtypes","unchecked"})
+    @SuppressWarnings("unchecked")
     private static void resizeColumnToFitContent(TableColumn<?, ?> column, List<?> items, int sampleSize) {
-        double padding = 28; // extra padding for cell graphic and padding
-        double max = 80; // minimum reasonable width
+        double padding = 28;
+        double max = 80;
 
-        // measure header text
         String header = column.getText() == null ? "" : column.getText();
         double headerWidth = computeTextWidth(header, Font.getDefault());
         if (headerWidth > max) max = headerWidth;
 
-        // measure a sample of cell values
         if (items != null && !items.isEmpty()) {
             int limit = Math.min(sampleSize, items.size());
             for (int i = 0; i < limit; i++) {
                 Object row = items.get(i);
                 try {
-                    TableColumn raw = (TableColumn) column;
+                    // Use a typed reference so getCellData accepts Object parameter for static analysis
+                    TableColumn<Object, Object> raw = (TableColumn<Object, Object>) column;
                     Object cellValue = raw.getCellData(row);
                     String s = cellValue == null ? "" : cellValue.toString();
                     double w = computeTextWidth(s, Font.getDefault());
@@ -73,7 +69,6 @@ public final class TableUtils {
         }
 
         double pref = Math.ceil(max + padding);
-        // clamp to a reasonable max to avoid absurdly wide columns
         double maxAllowed = 1000;
         if (pref > maxAllowed) pref = maxAllowed;
         if (pref < 60) pref = 60;
@@ -85,11 +80,7 @@ public final class TableUtils {
     private static double computeTextWidth(String text, Font font) {
         if (text == null || text.isEmpty()) return 0;
         Text t = new Text(text);
-        try {
-            t.setFont(font == null ? Font.getDefault() : font);
-        } catch (Exception ex) {
-            t.setFont(Font.getDefault());
-        }
+        try { t.setFont(font == null ? Font.getDefault() : font); } catch (Exception ex) { t.setFont(Font.getDefault()); }
         return t.getLayoutBounds().getWidth();
     }
 
@@ -99,16 +90,37 @@ public final class TableUtils {
             try {
                 ContextMenu menu = new ContextMenu();
                 MenuItem autosize = new MenuItem("Auto-size columns");
-                autosize.setOnAction(e -> autoResizeColumnsToFitContent(table));
+                autosize.setOnAction(e -> { autoResizeColumnsToFitContent(table); if (e != null) e.consume(); });
                 MenuItem fit = new MenuItem("Fit columns to table width");
-                fit.setOnAction(e -> table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY));
+                // CONSTRAINED_RESIZE_POLICY is deprecated but acceptable for user convenience here
+                @SuppressWarnings("deprecation")
+                final javafx.event.EventHandler<javafx.event.ActionEvent> fitHandler = e -> { table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY); if (e != null) e.consume(); };
+                fit.setOnAction(fitHandler);
                 MenuItem unconstrain = new MenuItem("Allow independent column widths");
-                unconstrain.setOnAction(e -> table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY));
+                unconstrain.setOnAction(e -> { table.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY); if (e != null) e.consume(); });
                 menu.getItems().addAll(autosize, fit, unconstrain);
                 table.setOnContextMenuRequested(evt -> menu.show(table, evt.getScreenX(), evt.getScreenY()));
             } catch (Exception ignore) {
                 // non-critical
             }
         });
+    }
+
+    @SuppressWarnings("unused")
+    public static HBox createColumnActionsMenu(TableView<?> table) {
+        HBox h = new HBox();
+        try {
+            MenuButton menu = new MenuButton("Columns");
+            for (TableColumn<?, ?> column : table.getColumns()) {
+                CheckMenuItem item = new CheckMenuItem(column.getText());
+                item.setSelected(column.isVisible());
+                item.selectedProperty().addListener((obs, oldV, newV) -> column.setVisible(newV));
+                menu.getItems().add(item);
+            }
+            h.getChildren().add(menu);
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, "Failed to create column actions menu", ex);
+        }
+        return h;
     }
 }

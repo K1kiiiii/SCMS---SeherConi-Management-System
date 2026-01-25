@@ -81,7 +81,7 @@ public class RecipeDetailDialog {
             VBox.setVgrow(scroll, Priority.ALWAYS);
             content.getChildren().add(scroll);
 
-            // Button bar: Close always present; Edit visible only to ADMIN
+            // samo admin moze uređivati
             HBox buttonBar = new HBox(8);
             buttonBar.setPadding(new Insets(8,0,0,0));
 
@@ -95,7 +95,6 @@ public class RecipeDetailDialog {
                 Button editBtn = new Button("Uredi");
                 editBtn.getStyleClass().addAll("primary-button");
                 editBtn.setOnAction(evt -> { evt.consume();
-                    // Open a simple edit dialog for name/description
                     Dialog<Recipe> edit = new Dialog<>();
                     edit.setTitle("Uredi recept");
                     edit.setHeaderText("Uredi naziv i opis recepta");
@@ -176,25 +175,20 @@ public class RecipeDetailDialog {
                         }
                     }
                 });
-                // place edit button to the left of close (primary on right visually)
-                // add edit button (before close) - use add(editBtn) to avoid IDE suggestion warnings
                 buttonBar.getChildren().add(editBtn);
             }
 
             content.getChildren().add(buttonBar);
 
             Scene scene = new Scene(content, 520, 360);
-            // apply main app stylesheet to the scene root safely
             try {
                 java.net.URL cssUrl = RecipeDetailDialog.class.getResource("/com/scms/css/light-theme.css");
                 if (cssUrl != null) scene.getStylesheets().add(cssUrl.toExternalForm());
             } catch (Exception ignored) {}
 
-            // add a root style class so dialog content follows app theming
             if (!content.getStyleClass().contains("border-pane")) content.getStyleClass().add("border-pane");
 
             dialog.setScene(scene);
-            // do not call DialogUtils.styleDialog on a Stage; style Dialogs only
             dialog.showAndWait();
 
         } catch (SQLException ex) {

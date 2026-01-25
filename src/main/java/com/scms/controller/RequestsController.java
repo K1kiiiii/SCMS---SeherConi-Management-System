@@ -15,7 +15,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.concurrent.Task;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -29,7 +28,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public class RequestsController {
+
+    private static final java.util.logging.Logger LOGGER = java.util.logging.Logger.getLogger(RequestsController.class.getName());
 
     @FXML private TableView<Assignment> requestsTable;
     @FXML private TableColumn<Assignment, Integer> colId;
@@ -52,7 +54,6 @@ public class RequestsController {
     private FilteredList<Assignment> filteredRequests;
     private final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
-    // caches to avoid per-cell DB calls
     private final Map<Integer, String> userNameMap = new HashMap<>();
     private final Map<Integer, String> materialNameMap = new HashMap<>();
 
@@ -71,7 +72,7 @@ public class RequestsController {
 
     private void applyRolePermissions() {
         boolean canManage = RoleManager.isAdmin() || RoleManager.isMagacioner();
-        // initially disable/enable based on role; selection will refine this
+        // initially disable/enable based on role,,, selection will refine this
         approveButton.setDisable(!canManage);
         rejectButton.setDisable(!canManage);
         updateActionButtons();
@@ -96,7 +97,6 @@ public class RequestsController {
         colProcessedBy.setCellValueFactory(new PropertyValueFactory<>("processedBy"));
         colProcessedAt.setCellValueFactory(new PropertyValueFactory<>("processedAt"));
 
-        // Use cached maps to avoid hitting services per cell render
         colUser.setCellFactory(c -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -163,9 +163,7 @@ public class RequestsController {
     }
 
     private void loadRequests() {
-        // show general overlay while loading (reverted to previous behavior)
         LoadingOverlay.show(requestsTable);
-        // Run DB/service work off the FX thread
         Task<List<Assignment>> task = new Task<>() {
             @Override
             protected List<Assignment> call() throws Exception {
@@ -177,13 +175,11 @@ public class RequestsController {
                     list = assignmentService.listAssignmentsForUser(current.getId());
                 }
 
-                // populate caches
                 try {
                     List<User> users = userService.getAllUsers();
                     userNameMap.clear();
                     for (User u : users) userNameMap.put(u.getId(), u.getUsername());
                 } catch (ServiceException ex) {
-                    // ignore here; UI will still show ids
                 }
 
                 try {
@@ -191,7 +187,6 @@ public class RequestsController {
                     materialNameMap.clear();
                     for (Material m : materials) materialNameMap.put(m.getId(), m.getName());
                 } catch (ServiceException ex) {
-                    // ignore here; UI will still show ids
                 }
 
                 return list;
@@ -203,7 +198,6 @@ public class RequestsController {
             allRequests = FXCollections.observableArrayList(list);
             filteredRequests = new FilteredList<>(allRequests, r -> true);
             requestsTable.setItems(filteredRequests);
-            // auto-size columns to show full content by default
             TableUtils.autoResizeColumnsToFitContent(requestsTable);
 
             Set<String> statuses = allRequests.stream()
@@ -214,7 +208,6 @@ public class RequestsController {
             statusFilter.getItems().add("Svi");
             statuses.stream().sorted(String.CASE_INSENSITIVE_ORDER).forEach(statusFilter.getItems()::add);
             statusFilter.getSelectionModel().selectFirst();
-            // hide overlay
             LoadingOverlay.hide(requestsTable);
         });
 
@@ -252,7 +245,6 @@ public class RequestsController {
             showError("Nije odabran zahtjev", "Molimo odaberite zahtjev za odobravanje.");
             return;
         }
-        // runtime guard: only approve pending
         if (sel.getStatus() == null || !sel.getStatus().equalsIgnoreCase("PENDING")) {
             showError("Nevažeći zahtjev", "Samo zahtjevi u statusu PENDING mogu se odobriti.");
             return;
@@ -275,10 +267,10 @@ public class RequestsController {
                 info.setContentText("Zahtjev je uspješno odobren.");
                 info.showAndWait();
             } catch (ServiceException ex) {
-                // show root cause (SQL message) if available to help troubleshooting (e.g. insufficient stock)
+                // SQL message if available za troubleshooting
                 Throwable cause = ex.getCause();
                 String detailed = (cause != null && cause.getMessage() != null) ? cause.getMessage() : ex.getMessage();
-                System.err.println("Error approving request id=" + sel.getId() + ": " + detailed);
+                LOGGER.log(java.util.logging.Level.SEVERE, "Error approving request id=" + sel.getId() + ": " + detailed, ex);
                 showError("Greška pri odobravanju", detailed);
             }
         }
@@ -316,7 +308,7 @@ public class RequestsController {
             } catch (ServiceException ex) {
                 Throwable cause = ex.getCause();
                 String detailed = (cause != null && cause.getMessage() != null) ? cause.getMessage() : ex.getMessage();
-                System.err.println("Error rejecting request id=" + sel.getId() + ": " + detailed);
+                LOGGER.log(java.util.logging.Level.SEVERE, "Error rejecting request id=" + sel.getId() + ": " + detailed, ex);
                 showError("Greška pri odbijanju", detailed);
             }
         }

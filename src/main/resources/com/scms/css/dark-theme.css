@@ -1011,194 +1011,6 @@ Label.tasks-header {
 
 /* End of dark theme */
 
-/* --------------------
-   SHARED: semantic typography & component layout
-   (Safe to paste into both theme files; does NOT touch login selectors)
-   -------------------- */
-
-/* Typography scale (semantic classes) */
-.page-title {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 26px;
-    -fx-font-weight: 700;
-    -fx-padding: 0 0 8 0;
-}
-
-.section-title, .card-title {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 16px;
-    -fx-font-weight: 600;
-    -fx-padding: 0 0 6 0;
-}
-
-.table-header {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 13px;
-    -fx-font-weight: 600;
-    -fx-padding: 6 8 6 8;
-}
-
-.body-text {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 14px;
-    -fx-font-weight: 400;
-}
-
-.meta-text {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 12px;
-    -fx-font-weight: 400;
-    -fx-opacity: 0.92;
-}
-
-.card-body {
-    -fx-padding: 12;
-    -fx-background-radius: 12;
-}
-
-/* TableView visual cleanup & UX improvements (shared) */
-.table-view {
-    -fx-table-cell-border-color: transparent;
-    -fx-table-header-border-color: transparent;
-    -fx-background-color: transparent;
-}
-
-.table-view .column-header-background {
-    -fx-background-color: transparent;
-    -fx-padding: 0;
-}
-
-.table-view .column-header .label {
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-weight: 600;
-    -fx-font-size: 13px;
-    -fx-padding: 8 12;
-    -fx-background-radius: 6;
-    -fx-background-insets: 0;
-    -fx-alignment: CENTER_LEFT;
-}
-
-.table-view .column-header .separator,
-.table-view .column-header .column-header-background .separator {
-    -fx-background-color: transparent;
-}
-
-.table-view .cell {
-    -fx-padding: 10 12;
-    -fx-alignment: CENTER_LEFT;
-    -fx-background-color: transparent;
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 13px;
-}
-
-.table-row-cell:even { -fx-background-color: transparent; }
-.table-row-cell:odd { -fx-background-color: transparent; }
-
-.table-row-cell:hover { -fx-background-color: rgba(0,0,0,0.03); }
-
-.table-row-cell:selected {
-    -fx-background-color: -fx-selection-bar;
-    -fx-background-insets: 0;
-    -fx-background-radius: 6;
-}
-.table-row-cell:selected .cell, .table-row-cell:selected .label {
-    -fx-text-fill: -fx-selection-bar-text;
-}
-
-.table-view .scroll-bar { -fx-pref-width: 10; }
-.table-view .column-header .label { -fx-wrap-text: false; -fx-text-overrun: CLIP; }
-
-/* ComboBox / ChoiceBox improvements (shared) */
-.combo-box, .choice-box {
-    -fx-background-radius: 12;
-    -fx-border-radius: 12;
-    -fx-padding: 6 36 6 10;
-    -fx-font-family: "League Spartan", sans-serif;
-    -fx-font-size: 14px;
-}
-
-.combo-box .arrow-button {
-    -fx-background-color: transparent;
-    -fx-padding: 6 10 6 10;
-}
-
-.combo-box .arrow-button .arrow {
-    -fx-shape: "M0 0 L6 0 L3 4 Z";
-    -fx-background-color: -fx-text-fill;
-    -fx-padding: 0;
-    -fx-scale-x: 1;
-    -fx-scale-y: 1;
-}
-
-.combo-box .list-cell,
-.choice-box .list-cell {
-    -fx-min-height: 28px;
-    -fx-padding: 6 10;
-    -fx-background-radius: 8;
-    -fx-border-radius: 8;
-    -fx-alignment: CENTER_LEFT;
-}
-
-.combo-box:focused, .choice-box:focused { -fx-border-color: -fx-focus-color; -fx-effect: none; }
-.combo-box .list-view, .choice-box .list-view { -fx-background-color: transparent; }
-
-.body-text, .meta-text, .card-title, .section-title, .page-title, .table-header { -fx-font-family: "League Spartan", sans-serif; }
-.meta-text { -fx-wrap-text: true; -fx-text-overrun: CLIP; }
-
-/* --------------------------------------------------
-   Final contrast fixes (overrides to catch dark-on-dark cases)
-   - Ensure all dashboard and page labels are light on dark cards
-   - Keep button text dark on orange/coral buttons (intentional)
-   - Scoped to .border-pane so login CSS remains untouched
-   -------------------------------------------------- */
-
-/* Header label forced light for contrast */
-.border-pane > .hbox > .label, .border-pane > .hbox Label {
-    -fx-text-fill: #E8DFD8 !important;
-}
-
-/* Dashboard cards and task areas: ensure readable labels */
-.border-pane .dashboard-card Label,
-.border-pane .dashboard-card .label,
-.border-pane .dashboard-card .card-title,
-.border-pane .dashboard-card .card-meta,
-.border-pane .dashboard-card .meta,
-.border-pane .tasks-list Label,
-.border-pane .tasks-list .label,
-.border-pane .task-row Label,
-.border-pane .task-title,
-.border-pane .task-meta,
-.border-pane .page-title,
-.border-pane .page-subtitle,
-.border-pane .card-value,
-.border-pane .recipe-name {
-    -fx-text-fill: #E8DFD8 !important;
-}
-
-/* Muted text (meta, subtitles) slightly lighter for readability */
-.border-pane .dashboard-card .card-meta,
-.border-pane .task-meta,
-.border-pane .stat-card .card-title,
-.border-pane #userInfoLabel,
-.border-pane .page-subtitle {
-    -fx-text-fill: #D9CBBF !important;
-}
-
-/* Ensure any label inside critical card remains light or accent where appropriate */
-.border-pane #criticalCard Label,
-.border-pane #criticalCard .critical-item {
-    -fx-text-fill: #FF6B6B !important;
-}
-
-/* If any unexpected dark text appears inside content area, prefer light color */
-#contentArea .label, #contentArea Label, #contentArea .text, #contentArea .cell {
-    -fx-text-fill: #E8DFD8;
-}
-
-/* End contrast fixes */
-
-/* End of dark theme */
-
 /* ----------------------------
    TableView header & selection final fixes (dark)
    - Ensure header filler / corner doesn't render as a bright/resizable bar
@@ -1253,4 +1065,47 @@ Label.tasks-header {
 
 /* End of TableView header & selection fixes for dark theme */
 
-/* ...existing code... */
+/* Adjusting ComboBox for better readability in dark mode */
+.combo-box {
+    -fx-background-color: #2B2B2B;
+    -fx-text-fill: #F5F3EF; /* Light text for contrast */
+    -fx-border-color: #D98555; /* Coral border */
+    -fx-border-radius: 24px;
+    -fx-background-radius: 24px;
+    -fx-padding: 8px;
+}
+
+.combo-box .arrow {
+    -fx-background-color: #D98555; /* Coral arrow */
+    -fx-padding: 4px;
+    -fx-shape: "M0,0 L1,0.5 L0,1 Z"; /* Triangle shape */
+}
+
+.combo-box:hover {
+    -fx-background-color: #3A3A3A; /* Slightly lighter background on hover */
+}
+
+.combo-box:focused {
+    -fx-background-color: #3A3A3A; /* Slightly lighter background on focus */
+    -fx-border-color: #E57B3C; /* Lighter coral for focus */
+}
+
+.combo-box .list-cell {
+    -fx-background-color: #2B2B2B; /* Match dropdown background */
+    -fx-text-fill: #F5F3EF; /* Light text for dropdown items */
+}
+
+.combo-box .list-cell:hover {
+    -fx-background-color: #3A3A3A; /* Slightly lighter background on hover */
+}
+
+.combo-box .list-cell:selected {
+    -fx-background-color: #D98555; /* Coral background for selected item */
+    -fx-text-fill: #FFFFFF; /* White text for selected item */
+}
+
+/* Pie chart labels in dark mode */
+.chart-pie .chart-legend-item {
+    -fx-text-fill: white; /* Set text color to white for better readability */
+}
+

@@ -6,19 +6,22 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DBTestInsert {
+    private static final Logger LOGGER = Logger.getLogger(DBTestInsert.class.getName());
     public static void main(String[] args) {
-        System.out.println("DBTestInsert: ensuring inventory_movements table exists...");
+        LOGGER.info("DBTestInsert: ensuring inventory_movements table exists...");
         DatabaseConfig.ensureInventoryMovementsTableExists();
 
         try (Connection c = DatabaseConfig.getConnection()) {
             try (Statement st = c.createStatement(); ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM inventory_movements")) {
                 rs.next();
                 int cnt = rs.getInt(1);
-                System.out.println("Current inventory_movements count: " + cnt);
+                LOGGER.info("Current inventory_movements count: " + cnt);
                 if (cnt == 0) {
-                    System.out.println("Inserting a test inventory_movements row...");
+                    LOGGER.info("Inserting a test inventory_movements row...");
                     String insertSql = "INSERT INTO inventory_movements (material_id, product_id, type, quantity, unit_price, total_price, user_id, related_assignment_id, related_task_id, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
                     try (PreparedStatement ps = c.prepareStatement(insertSql)) {
                         ps.setNull(1, java.sql.Types.INTEGER);
@@ -32,15 +35,15 @@ public class DBTestInsert {
                         ps.setNull(9, java.sql.Types.INTEGER);
                         ps.setString(10, "test insert from DBTestInsert");
                         int updated = ps.executeUpdate();
-                        System.out.println("Inserted rows: " + updated);
+                        LOGGER.info("Inserted rows: " + updated);
                     }
                 }
             }
 
-            System.out.println("Listing up to 10 rows from inventory_movements:");
+            LOGGER.info("Listing up to 10 rows from inventory_movements:");
             try (PreparedStatement ps2 = c.prepareStatement("SELECT id, material_id, product_id, type, quantity, notes, created_at FROM inventory_movements ORDER BY created_at DESC LIMIT 10"); ResultSet rs2 = ps2.executeQuery()) {
                 while (rs2.next()) {
-                    System.out.printf("id=%d material_id=%s product_id=%s type=%s qty=%s notes=%s created_at=%s\n",
+                    LOGGER.info(String.format("id=%d material_id=%s product_id=%s type=%s qty=%s notes=%s created_at=%s",
                             rs2.getInt("id"),
                             rs2.getObject("material_id") == null ? "NULL" : rs2.getObject("material_id").toString(),
                             rs2.getObject("product_id") == null ? "NULL" : rs2.getObject("product_id").toString(),
@@ -48,16 +51,15 @@ public class DBTestInsert {
                             rs2.getObject("quantity") == null ? "NULL" : rs2.getObject("quantity").toString(),
                             rs2.getString("notes"),
                             rs2.getTimestamp("created_at")
-                    );
+                    ));
                 }
             }
 
         } catch (Exception ex) {
-            System.err.println("DBTestInsert failed: " + ex.getClass().getName() + " - " + ex.getMessage());
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "DBTestInsert failed: " + ex.getClass().getName() + " - " + ex.getMessage(), ex);
             System.exit(2);
         }
 
-        System.out.println("DBTestInsert finished.");
+        LOGGER.info("DBTestInsert finished.");
     }
 }

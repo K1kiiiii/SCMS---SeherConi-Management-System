@@ -19,6 +19,7 @@ import javafx.scene.layout.GridPane;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
 public class UserManagementController {
     @FXML private TableView<User> userTable;
     @FXML private TableColumn<User, Integer> colId;
@@ -54,7 +55,6 @@ public class UserManagementController {
             allUsers = FXCollections.observableArrayList(fromDb);
             filteredUsers = new FilteredList<>(allUsers, u -> true);
             userTable.setItems(filteredUsers);
-            // auto-size columns so content is visible by default
             TableUtils.autoResizeColumnsToFitContent(userTable);
             LoadingOverlay.hide(userTable);
         } catch (ServiceException ex) {
@@ -92,7 +92,6 @@ public class UserManagementController {
                 if (created != null) {
                     allUsers.add(created);
                 } else {
-                    // fallback: ponovno učitavanje svega
                     loadUsers();
                 }
             } catch (ServiceException ex) {

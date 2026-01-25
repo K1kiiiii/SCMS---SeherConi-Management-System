@@ -5,88 +5,88 @@
 <?import javafx.scene.chart.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.StatisticsController" spacing="12" alignment="TOP_LEFT" style="-fx-padding:20;" styleClass="border-pane">
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.scms.controller.StatisticsController" spacing="12" alignment="TOP_LEFT" style="-fx-padding:20;" styleClass="stats-page">
     <children>
-        <Label text="Statistika" styleClass="page-title" style="-fx-font-size:16px; -fx-font-weight:bold;" />
+        <Label text="Statistika" styleClass="page-title" />
 
         <!-- Admin controls: choose user to filter personal stats -->
         <HBox spacing="8" alignment="CENTER_LEFT" fx:id="adminControls" visible="false" managed="false">
-            <Label text="Filter po zaposleniku:" />
-            <ComboBox fx:id="cbUsers" promptText="Odaberite zaposlenika" />
-            <Button text="Prikaži" onAction="#onShowForSelectedUser" />
+            <Label text="Filter po zaposleniku:" styleClass="stats-label" />
+            <ComboBox fx:id="cbUsers" promptText="Odaberite zaposlenika" styleClass="stats-dropdown" />
+            <Button text="Prikaži" onAction="#onShowForSelectedUser" styleClass="stats-button" />
         </HBox>
 
         <HBox spacing="18">
             <!-- Global stats area (visible for admin) -->
-            <VBox spacing="6" fx:id="globalStatsBox" visible="false" managed="false">
-                <Label text="Globalne statistike" style="-fx-font-weight:bold;" />
+            <VBox spacing="12" fx:id="globalStatsBox" visible="false" managed="false" styleClass="stats-card">
+                <Label text="Globalne statistike" styleClass="stats-section-title" />
                 <GridPane hgap="10" vgap="6">
                     <columnConstraints>
                         <ColumnConstraints halignment="RIGHT" />
                         <ColumnConstraints hgrow="ALWAYS" />
                     </columnConstraints>
                     <children>
-                        <Label text="Ukupno korisnika:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-                        <Label fx:id="lblTotalUsers" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        <Label text="Ukupno korisnika:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblTotalUsers" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Ukupno materijala:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
-                        <Label fx:id="lblTotalMaterials" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                        <Label text="Ukupno materijala:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblTotalMaterials" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Zahtjevi (PENDING):" GridPane.rowIndex="2" GridPane.columnIndex="0" />
-                        <Label fx:id="lblPendingAssignments" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                        <Label text="Zahtjevi (PENDING):" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblPendingAssignments" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Zahtjevi (CONFIRMED):" GridPane.rowIndex="3" GridPane.columnIndex="0" />
-                        <Label fx:id="lblConfirmedAssignments" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                        <Label text="Zahtjevi (CONFIRMED):" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblConfirmedAssignments" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Završeni zadaci:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
-                        <Label fx:id="lblCompletedTasks" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+                        <Label text="Završeni zadaci:" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblCompletedTasks" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Ukupna vrijednost uvoza:" GridPane.rowIndex="5" GridPane.columnIndex="0" />
-                        <Label fx:id="lblTotalImportValue" text="-" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+                        <Label text="Ukupna vrijednost uvoza:" GridPane.rowIndex="5" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblTotalImportValue" text="-" GridPane.rowIndex="5" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Ukupna vrijednost izvoza:" GridPane.rowIndex="6" GridPane.columnIndex="0" />
-                        <Label fx:id="lblTotalExportValue" text="-" GridPane.rowIndex="6" GridPane.columnIndex="1" />
+                        <Label text="Ukupna vrijednost izvoza:" GridPane.rowIndex="6" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblTotalExportValue" text="-" GridPane.rowIndex="6" GridPane.columnIndex="1" styleClass="stats-value" />
                     </children>
                 </GridPane>
 
-                <Label text="Raspodjela zahtjeva" style="-fx-font-weight:bold; -fx-padding:6 0 0 0;" />
-                <PieChart fx:id="globalAssignmentsChart" prefWidth="300" prefHeight="200" />
+                <Label text="Raspodjela zahtjeva" styleClass="stats-section-title" />
+                <PieChart fx:id="globalAssignmentsChart" prefWidth="300" prefHeight="200" styleClass="stats-chart" />
 
-                <Label text="Stanje zadataka" style="-fx-font-weight:bold; -fx-padding:6 0 0 0;" />
-                <PieChart fx:id="globalTasksChart" prefWidth="300" prefHeight="200" />
+                <Label text="Stanje zadataka" styleClass="stats-section-title" />
+                <PieChart fx:id="globalTasksChart" prefWidth="300" prefHeight="200" styleClass="stats-chart" />
             </VBox>
 
             <!-- Personal stats area (for selected user or logged in user) -->
-            <VBox spacing="6" fx:id="personalStatsBox">
-                <Label text="Personalne statistike" style="-fx-font-weight:bold;" />
+            <VBox spacing="12" fx:id="personalStatsBox" styleClass="stats-card">
+                <Label text="Personalne statistike" styleClass="stats-section-title" />
                 <GridPane hgap="10" vgap="6">
                     <columnConstraints>
                         <ColumnConstraints halignment="RIGHT" />
                         <ColumnConstraints hgrow="ALWAYS" />
                     </columnConstraints>
                     <children>
-                        <Label text="Korisnik:" GridPane.rowIndex="0" GridPane.columnIndex="0" />
-                        <Label fx:id="lblUserName" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                        <Label text="Korisnik:" GridPane.rowIndex="0" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblUserName" text="-" GridPane.rowIndex="0" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Uloga:" GridPane.rowIndex="1" GridPane.columnIndex="0" />
-                        <Label fx:id="lblUserRole" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                        <Label text="Uloga:" GridPane.rowIndex="1" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblUserRole" text="-" GridPane.rowIndex="1" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Zahtjevi (PENDING):" GridPane.rowIndex="2" GridPane.columnIndex="0" />
-                        <Label fx:id="lblUserPendingAssignments" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1" />
+                        <Label text="Zahtjevi (PENDING):" GridPane.rowIndex="2" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblUserPendingAssignments" text="-" GridPane.rowIndex="2" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Zahtjevi (CONFIRMED):" GridPane.rowIndex="3" GridPane.columnIndex="0" />
-                        <Label fx:id="lblUserConfirmedAssignments" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" />
+                        <Label text="Zahtjevi (CONFIRMED):" GridPane.rowIndex="3" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblUserConfirmedAssignments" text="-" GridPane.rowIndex="3" GridPane.columnIndex="1" styleClass="stats-value" />
 
-                        <Label text="Završeni zadaci:" GridPane.rowIndex="4" GridPane.columnIndex="0" />
-                        <Label fx:id="lblUserCompletedTasks" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1" />
+                        <Label text="Završeni zadaci:" GridPane.rowIndex="4" GridPane.columnIndex="0" styleClass="stats-label" />
+                        <Label fx:id="lblUserCompletedTasks" text="-" GridPane.rowIndex="4" GridPane.columnIndex="1" styleClass="stats-value" />
                     </children>
                 </GridPane>
 
-                <Label text="Raspodjela zahtjeva (korisnik)" style="-fx-font-weight:bold; -fx-padding:6 0 0 0;" />
-                <PieChart fx:id="personalAssignmentsChart" prefWidth="300" prefHeight="200" />
+                <Label text="Raspodjela zahtjeva (korisnik)" styleClass="stats-section-title" />
+                <PieChart fx:id="personalAssignmentsChart" prefWidth="300" prefHeight="200" styleClass="stats-chart" />
 
-                <Label text="Zadaci (korisnik)" style="-fx-font-weight:bold; -fx-padding:6 0 0 0;" />
-                <PieChart fx:id="personalTasksChart" prefWidth="300" prefHeight="200" />
+                <Label text="Zadaci (korisnik)" styleClass="stats-section-title" />
+                <PieChart fx:id="personalTasksChart" prefWidth="300" prefHeight="200" styleClass="stats-chart" />
             </VBox>
         </HBox>
 

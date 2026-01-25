@@ -24,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("unused")
 public class MaterialManagementController {
 
     @FXML private TableView<Material> materialTable;
@@ -55,7 +56,6 @@ public class MaterialManagementController {
     @FXML
     public void initialize() {
         setupTableColumns();
-        // show general overlay while loading
         LoadingOverlay.show(materialTable);
         loadMaterials();
         setupFilters();
@@ -90,7 +90,7 @@ public class MaterialManagementController {
             allMaterials = FXCollections.observableArrayList(fromDb);
             filteredMaterials = new FilteredList<>(allMaterials, m -> true);
             materialTable.setItems(filteredMaterials);
-            // ensure columns show full content
+            // kolone prikazuju full sadržaj
             TableUtils.autoResizeColumnsToFitContent(materialTable);
             LoadingOverlay.hide(materialTable);
         } catch (ServiceException ex) {

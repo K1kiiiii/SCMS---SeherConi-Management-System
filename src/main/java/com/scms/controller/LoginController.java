@@ -31,8 +31,7 @@ public class LoginController {
     public void initialize() {
         if (messageLabel != null) messageLabel.setText("");
 
-        // apply persisted dark mode preference if scene is already available
-        // use Platform.runLater to ensure the scene is ready
+
         javafx.application.Platform.runLater(() -> {
             Scene s = loginButton == null ? null : loginButton.getScene();
             if (s != null) {
@@ -40,24 +39,19 @@ public class LoginController {
                 applyThemeToScene(s, dark);
                 updateToggleIcon(dark);
 
-                // ensure dark mode toggle is on top and clickable
                 if (darkModeToggle != null && darkModeToggle.getParent() != null) {
                     darkModeToggle.toFront();
                 }
 
-                // ensure toggle text color is visible regardless of theme
                 if (darkModeToggle != null) {
                     darkModeToggle.setStyle("-fx-text-fill: #4A3428;");
                 }
 
-                // listen for scene changes (if FXML is embedded later)
                 s.windowProperty().addListener((obsW, oldW, newW) -> {
-                    // when window changes, re-apply theme to ensure consistent visuals
                     boolean curDark = prefs.getBoolean(PREF_DARK, false);
                     applyThemeToScene(s, curDark);
                 });
             } else {
-                // if scene not available yet, listen for it
                 if (loginButton != null) {
                     loginButton.sceneProperty().addListener((obs, oldScene, newScene) -> {
                         if (newScene != null) {
@@ -83,7 +77,6 @@ public class LoginController {
         applyThemeToScene(s, isDark);
         updateToggleIcon(isDark);
 
-        // ensure toggle icon visible (use styleClass toggling instead of setStyle)
         if (darkModeToggle != null) {
             darkModeToggle.getStyleClass().removeAll("dark", "light");
             darkModeToggle.getStyleClass().add(isDark ? "dark" : "light");
@@ -93,12 +86,10 @@ public class LoginController {
     private void updateToggleIcon(boolean dark) {
         if (darkModeToggle == null) return;
         darkModeToggle.setText(dark ? "☀️" : "🌙");
-        // ensure icon contrast via styleClass rather than inline style
         darkModeToggle.getStyleClass().removeAll("dark", "light");
         darkModeToggle.getStyleClass().add(dark ? "dark" : "light");
     }
 
-    // Centralized theme application helper used by login and main controllers
     private void applyThemeToScene(Scene scene, boolean dark) {
         try {
             java.net.URL darkUrl = getClass().getResource(DARK_CSS);
@@ -106,7 +97,6 @@ public class LoginController {
             String darkCss = darkUrl == null ? null : darkUrl.toExternalForm();
             String lightCss = lightUrl == null ? null : lightUrl.toExternalForm();
 
-            // Clear existing stylesheets to avoid inconsistent stacking
             scene.getStylesheets().clear();
 
             if (dark) {
@@ -127,7 +117,6 @@ public class LoginController {
     }
 
     private void setDarkMode(Scene scene, boolean dark) {
-        // Deprecated: keep for compatibility but redirect to applyThemeToScene
         applyThemeToScene(scene, dark);
      }
 
@@ -155,15 +144,15 @@ public class LoginController {
                     Parent root = FXMLLoader.load(mainUrl);
                     Stage stage = (Stage) loginButton.getScene().getWindow();
 
-                    // show loading overlay while we prepare main scene
+                    // show loading overlay while preparing main scene
                     LoadingOverlay.show(loginButton);
 
-                    // create scene and apply user preferred theme immediately
                     Scene mainScene = new Scene(root);
                     boolean darkPref = prefs.getBoolean(PREF_DARK, false);
                     setDarkMode(mainScene, darkPref);
                     stage.setScene(mainScene);
                     stage.setTitle("SCMS - Dashboard (" + auth.getUsername() + ")");
+                    stage.setMaximized(true);
 
                     // hide overlay after short delay to ensure scene fully rendered
                     javafx.application.Platform.runLater(() -> LoadingOverlay.hide(loginButton));
@@ -173,7 +162,6 @@ public class LoginController {
                 }
             }
         } catch (ServiceException se) {
-            // Provide additional detail if there is a SQLException cause to help diagnose local DB issues
             String msg = se.getMessage();
             if (("auth.error").equals(msg) && se.getCause() != null) {
                 if (messageLabel != null) messageLabel.setText("Login failed (DB): " + se.getCause().getMessage());

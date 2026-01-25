@@ -6,10 +6,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DBInitRunner {
+    private static final Logger LOGGER = Logger.getLogger(DBInitRunner.class.getName());
+
     public static void main(String[] args) {
-        System.out.println("Running DatabaseConfig.initDatabase()...");
+        LOGGER.info("Running DatabaseConfig.initDatabase()...");
         DatabaseConfig.initDatabase();
 
         // Try to connect to server and list databases
@@ -21,18 +25,16 @@ public class DBInitRunner {
         if (pass == null) pass = "root123";
         String url = "jdbc:mysql://" + host + ":" + port + "/?serverTimezone=UTC&allowPublicKeyRetrieval=true";
 
-        System.out.println("Connecting to server to list databases...");
+        LOGGER.info("Connecting to server to list databases...");
         try (Connection c = DriverManager.getConnection(url, user, pass);
              Statement st = c.createStatement();
              ResultSet rs = st.executeQuery("SHOW DATABASES")) {
-            System.out.println("Databases:");
+            LOGGER.info("Databases:");
             while (rs.next()) {
-                System.out.println(" - " + rs.getString(1));
+                LOGGER.info(" - " + rs.getString(1));
             }
         } catch (Exception ex) {
-            System.err.println("Failed listing databases: " + ex.getClass().getName() + " - " + ex.getMessage());
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed listing databases: " + ex.getClass().getName() + " - " + ex.getMessage(), ex);
         }
     }
 }
-

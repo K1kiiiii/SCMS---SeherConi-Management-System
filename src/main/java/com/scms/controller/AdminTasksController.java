@@ -23,13 +23,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Admin tasks view — optimized to precompute display values off the FX thread
- * to avoid per-cell DB calls and UI freezes when the task list is large.
- */
 public class AdminTasksController {
 
-    // Use a lightweight DTO for table rows with precomputed display properties
+    // lightweight DTO
     public static class TaskRow {
         private final SimpleIntegerProperty id = new SimpleIntegerProperty();
         private final SimpleStringProperty recipe = new SimpleStringProperty();

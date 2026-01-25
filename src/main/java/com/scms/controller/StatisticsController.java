@@ -17,8 +17,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class StatisticsController {
+
+    private static final Logger LOGGER = Logger.getLogger(StatisticsController.class.getName());
 
     @FXML private HBox adminControls;
     @FXML private ComboBox<User> cbUsers;
@@ -60,25 +64,23 @@ public class StatisticsController {
                 if (globalStatsBox != null) { globalStatsBox.setVisible(true); globalStatsBox.setManaged(true); }
                 loadGlobalStats();
                 populateUsers();
-                // default: show aggregated personal stats for ALL users
+                // default: stats za ALL users
                 showPersonalStatsFor(null);
                 return;
             }
 
-            // Non-admin: hide admin controls and global box, show personal stats for logged-in user
+            // hide admin controls and global box, show personal stats for logged-in user za ostale uloge
             if (adminControls != null) { adminControls.setVisible(false); adminControls.setManaged(false); }
             if (globalStatsBox != null) { globalStatsBox.setVisible(false); globalStatsBox.setManaged(false); }
 
             if (current != null) {
                 showPersonalStatsFor(current.getId());
             } else {
-                // no user: clear
                 showPersonalStatsFor(-1);
             }
 
         } catch (Exception ex) {
-            System.err.println("Failed initializing statistics controller: " + ex.getMessage());
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed initializing statistics controller: " + ex.getMessage(), ex);
         }
     }
 
@@ -160,13 +162,13 @@ public class StatisticsController {
                 }
             } catch (Exception ex) {
                 // ignore if table doesn't exist
+                LOGGER.log(Level.FINE, "inventory_movements may be absent or query failed", ex);
             }
             if (lblTotalImportValue != null) lblTotalImportValue.setText(String.format("%,.2f", totalImportValue));
             if (lblTotalExportValue != null) lblTotalExportValue.setText(String.format("%,.2f", totalExportValue));
 
         } catch (Exception ex) {
-            System.err.println("Failed loading global stats: " + ex.getMessage());
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed loading global stats: " + ex.getMessage(), ex);
         }
     }
 
@@ -193,8 +195,7 @@ public class StatisticsController {
                 cbUsers.getSelectionModel().clearSelection();
             }
         } catch (Exception ex) {
-            System.err.println("Failed populating users combobox: " + ex.getMessage());
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed populating users combobox: " + ex.getMessage(), ex);
         }
     }
 
@@ -203,14 +204,12 @@ public class StatisticsController {
         try {
             User sel = cbUsers == null ? null : cbUsers.getSelectionModel().getSelectedItem();
             if (sel == null) {
-                // treat null selection as ALL for admins
                 showPersonalStatsFor(null);
             } else {
                 showPersonalStatsFor(sel.getId());
             }
         } catch (Exception ex) {
-            System.err.println("Failed showing stats for selected user: " + ex.getMessage());
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed showing stats for selected user: " + ex.getMessage(), ex);
         }
     }
 
@@ -277,6 +276,7 @@ public class StatisticsController {
                     }
                 }
                 lblUserCompletedTasks.setText(String.valueOf(completedTasks));
+
                 ObservableList<PieChart.Data> ptData = FXCollections.observableArrayList();
                 ptData.add(new PieChart.Data("COMPLETED", completedTasks));
                 ptData.add(new PieChart.Data("IN_PROGRESS", inProgress));
@@ -316,7 +316,7 @@ public class StatisticsController {
                                 }
                             }
                         } catch (Exception ex2) {
-                            System.err.println("Failed counting assignments for magacioner: " + ex2.getMessage());
+                            LOGGER.log(Level.WARNING, "Failed counting assignments for magacioner", ex2);
                         }
                     }
 
@@ -349,7 +349,7 @@ public class StatisticsController {
                                 if (rs.next()) topResource = rs.getString("name");
                             }
                         } catch (Exception ex2) {
-                            // give up, leave topResource = "-"
+                            LOGGER.log(Level.WARNING, "Failed querying top resource for magacioner", ex2);
                         }
                     }
 
@@ -405,8 +405,7 @@ public class StatisticsController {
             }
 
         } catch (Exception ex) {
-            System.err.println("Failed loading personal stats: " + ex.getMessage());
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Failed loading personal stats: " + ex.getMessage(), ex);
             // clear to safe defaults
             lblUserPendingAssignments.setText("0");
             lblUserConfirmedAssignments.setText("0");

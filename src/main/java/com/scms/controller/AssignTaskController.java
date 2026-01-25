@@ -18,7 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Controller for the "Assign Task" dialog. Used by admin to assign a recipe task to a worker.
+ * used by admin to assign a recipe task to a worker.
  */
 public class AssignTaskController {
 
@@ -32,7 +32,6 @@ public class AssignTaskController {
 
     private int recipeId;
 
-    // called by opener to set the recipe id
     public void setRecipeId(int recipeId) { this.recipeId = recipeId; }
 
     @FXML

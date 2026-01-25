@@ -9,7 +9,6 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <!-- Use a real Java version that matches JavaFX 21 (set to 21) -->
         <java.version>25</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -21,7 +20,6 @@
 
 
     <dependencies>
-        <!-- JavaFX modules used (add platform classifier so runtime native libs are pulled) -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -49,8 +47,7 @@
             <version>0.4</version>
         </dependency>
 
-        <!-- PDF and CSV generation libraries removed; using built-in fallback implementations to avoid hard runtime dependencies -->
-        <!-- OpenPDF for real PDF generation -->
+        <!-- OpenPDF for PDF generation -->
         <dependency>
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
@@ -61,7 +58,6 @@
 
     <build>
         <plugins>
-            <!-- Compiler plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -71,8 +67,6 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
-
-            <!-- JavaFX Maven plugin for running -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
